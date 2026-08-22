@@ -27,6 +27,8 @@ export function RateSessionPage() {
   const [existingRating, setExistingRating] = useState<Rating | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isMember, setIsMember] = useState(false)
   const [rating, setRating] = useState({
     score: 5,
     comment: '',
@@ -37,6 +39,7 @@ export function RateSessionPage() {
     if (sessionId && user) {
       fetchSession()
       fetchExistingRating()
+      checkMembership()
     }
   }, [sessionId, user])
 
@@ -52,13 +55,32 @@ export function RateSessionPage() {
     }
   }
 
+  const checkMembership = async () => {
+    const { data: sessionData } = await insforge.database
+      .from('sessions')
+      .select('course_id')
+      .eq('id', sessionId)
+      .single()
+
+    if (sessionData) {
+      const { data: memberData } = await insforge.database
+        .from('course_members')
+        .select('id')
+        .eq('course_id', sessionData.course_id)
+        .eq('user_id', user?.id)
+        .maybeSingle()
+
+      setIsMember(!!memberData)
+    }
+  }
+
   const fetchExistingRating = async () => {
     const { data, error } = await insforge.database
       .from('ratings')
       .select('*')
       .eq('session_id', sessionId)
       .eq('student_id', user?.id)
-      .single()
+      .maybeSingle()
 
     if (!error && data) {
       setExistingRating(data as Rating)
@@ -73,9 +95,10 @@ export function RateSessionPage() {
 
   const submitRating = async () => {
     setSaving(true)
+    setError(null)
 
     if (existingRating) {
-      const { error } = await insforge.database
+      const { error: updateError } = await insforge.database
         .from('ratings')
         .update({
           score: rating.score,
@@ -84,11 +107,13 @@ export function RateSessionPage() {
         })
         .eq('id', existingRating.id)
 
-      if (!error) {
-        navigate(-1)
+      if (updateError) {
+        setError('Error al actualizar: ' + updateError.message)
+        setSaving(false)
+        return
       }
     } else {
-      const { error } = await insforge.database
+      const { error: insertError } = await insforge.database
         .from('ratings')
         .insert([{
           session_id: sessionId,
@@ -98,15 +123,33 @@ export function RateSessionPage() {
           suggestion: rating.suggestion
         }])
 
-      if (!error) {
-        navigate(-1)
+      if (insertError) {
+        setError('Error al guardar: ' + insertError.message)
+        setSaving(false)
+        return
       }
     }
+    navigate(-1)
     setSaving(false)
   }
 
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
+  }
+
+  if (!isMember) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <header className="mb-xl">
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+        </header>
+        <div className="bg-error-container border border-error rounded-xl p-lg">
+          <p className="font-body-md text-body-md text-on-error-container">
+            No puedes evaluar esta sesión porque no eres miembro del curso.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -115,6 +158,12 @@ export function RateSessionPage() {
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{session?.title}</p>
       </header>
+
+      {error && (
+        <div className="mb-lg bg-error-container border border-error rounded-xl p-md">
+          <p className="font-body-sm text-body-sm text-on-error-container">{error}</p>
+        </div>
+      )}
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg">
         <div className="mb-lg">
