@@ -20,7 +20,8 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
-  signInWithMicrosoft: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signInWithGithub: () => Promise<void>
   signOut: () => Promise<void>
@@ -66,7 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(data.user as User)
 
-      // Fetch user profile with role
       const profileData = await fetchProfile(data.user.id)
 
       if (!cancelled) {
@@ -80,11 +80,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
-  const signInWithMicrosoft = async () => {
-    const { error } = await insforge.auth.signInWithOAuth('microsoft', {
-      redirectTo: window.location.origin
-    })
+  const signInWithEmail = async (email: string, password: string) => {
+    const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
+    if (data?.user) {
+      setUser(data.user as User)
+      const profileData = await fetchProfile(data.user.id)
+      setProfile(profileData)
+    }
+  }
+
+  const signUpWithEmail = async (email: string, password: string, name: string) => {
+    const { data, error } = await insforge.auth.signUp({ email, password, name })
+    if (error) throw error
+    if (data?.user) {
+      setUser(data.user as User)
+      const profileData = await fetchProfile(data.user.id)
+      setProfile(profileData)
+    }
   }
 
   const signInWithGoogle = async () => {
@@ -109,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithMicrosoft, signInWithGoogle, signInWithGithub, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithGithub, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )

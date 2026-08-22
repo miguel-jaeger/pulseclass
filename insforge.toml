@@ -1,6 +1,6 @@
 [auth]
 allowed_redirect_urls = ["http://localhost:3000"]
-require_email_verification = true
+require_email_verification = false
 verify_email_method = "code"
 reset_password_method = "code"
 disable_signup = false
