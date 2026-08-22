@@ -13,10 +13,7 @@ interface CourseMember {
   id: string
   course_id: string
   user_id: string
-  profiles: {
-    name: string
-    email: string
-  }
+  profiles: { name: string; email: string } | null
 }
 
 interface UserProfile {
@@ -40,11 +37,15 @@ export function CourseMembersPage() {
 
   useEffect(() => {
     if (courseId) {
-      fetchCourse()
-      fetchMembers()
-      fetchAllUsers()
+      loadAll()
     }
   }, [courseId])
+
+  const loadAll = async () => {
+    setLoading(true)
+    await Promise.all([fetchCourse(), fetchMembers(), fetchAllUsers()])
+    setLoading(false)
+  }
 
   const fetchCourse = async () => {
     const { data, error } = await insforge.database
@@ -61,19 +62,19 @@ export function CourseMembersPage() {
   const fetchMembers = async () => {
     const { data, error } = await insforge.database
       .from('course_members')
-      .select('*, profiles:user_id(name, email)')
+      .select('id, course_id, user_id, profiles:user_id(name, email)')
       .eq('course_id', courseId)
 
     if (!error && data) {
-      setMembers(data as CourseMember[])
+      setMembers(data as unknown as CourseMember[])
     }
-    setLoading(false)
   }
 
   const fetchAllUsers = async () => {
     const { data, error } = await insforge.database
       .from('profiles')
       .select('user_id, name, email')
+      .order('name')
 
     if (!error && data) {
       setAllUsers(data as UserProfile[])
@@ -86,7 +87,7 @@ export function CourseMembersPage() {
       .insert([{ course_id: courseId, user_id: userId }])
 
     if (!error) {
-      fetchMembers()
+      await loadAll()
       setAddSearchQuery('')
       setShowAdd(false)
     }
@@ -101,7 +102,7 @@ export function CourseMembersPage() {
       .eq('id', memberId)
 
     if (!error) {
-      fetchMembers()
+      await loadAll()
     }
   }
 
