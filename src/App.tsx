@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AdminPage } from './pages/AdminPage'
 import { CoursesPage } from './pages/CoursesPage'
+import { SessionsPage } from './pages/SessionsPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -51,6 +52,11 @@ function AppRoutes() {
       <Route path="/courses" element={
         <ProtectedRoute>
           <CoursesPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/courses/:courseId/sessions" element={
+        <ProtectedRoute>
+          <SessionsPage />
         </ProtectedRoute>
       } />
     </Routes>

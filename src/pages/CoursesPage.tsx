@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 
@@ -155,6 +156,12 @@ export function CoursesPage() {
             <h3 className="text-lg font-semibold mb-2">{course.name}</h3>
             <p className="text-gray-600 mb-4">{course.description}</p>
             <div className="flex gap-2">
+              <Link
+                to={`/courses/${course.id}/sessions`}
+                className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+              >
+                Sesiones
+              </Link>
               <button
                 onClick={() => openMembersModal(course)}
                 className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
