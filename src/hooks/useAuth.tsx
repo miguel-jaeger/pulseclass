@@ -21,6 +21,8 @@ interface AuthContextType {
   profile: Profile | null
   loading: boolean
   signInWithMicrosoft: () => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  signInWithGithub: () => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -85,6 +87,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  const signInWithGoogle = async () => {
+    const { error } = await insforge.auth.signInWithOAuth('google', {
+      redirectTo: window.location.origin
+    })
+    if (error) throw error
+  }
+
+  const signInWithGithub = async () => {
+    const { error } = await insforge.auth.signInWithOAuth('github', {
+      redirectTo: window.location.origin
+    })
+    if (error) throw error
+  }
+
   const signOut = async () => {
     const { error } = await insforge.auth.signOut()
     if (error) throw error
@@ -93,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithMicrosoft, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithMicrosoft, signInWithGoogle, signInWithGithub, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
