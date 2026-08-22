@@ -22,6 +22,7 @@ interface AuthContextType {
   loading: boolean
   signInWithMicrosoft: () => Promise<void>
   signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -30,6 +31,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const fetchProfile = async (userId: string) => {
+    const { data: profileData } = await insforge.database
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    return profileData as Profile | null
+  }
+
+  const refreshProfile = async () => {
+    if (!user) return
+    const profileData = await fetchProfile(user.id)
+    setProfile(profileData)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -48,14 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.user as User)
 
       // Fetch user profile with role
-      const { data: profileData } = await insforge.database
-        .from('profiles')
-        .select('*')
-        .eq('user_id', data.user.id)
-        .single()
+      const profileData = await fetchProfile(data.user.id)
 
-      if (!cancelled && profileData) {
-        setProfile(profileData as Profile)
+      if (!cancelled) {
+        setProfile(profileData)
       }
 
       setLoading(false)
@@ -80,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithMicrosoft, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithMicrosoft, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
