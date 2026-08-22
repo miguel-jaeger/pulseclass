@@ -2,53 +2,59 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function DashboardPage() {
-  const { user, profile, signOut } = useAuth()
+  const { profile } = useAuth()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold text-gray-900">PulseClass</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.email}</span>
-            <span className={`text-xs px-2 py-1 rounded ${
-              profile?.role === 'admin' ? 'bg-red-100 text-red-800' :
-              profile?.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
-              'bg-green-100 text-green-800'
-            }`}>
-              {profile?.role || 'loading...'}
-            </span>
-            <button
-              onClick={signOut}
-              className="text-sm text-red-600 hover:text-red-800"
-            >
-              Cerrar sesión
-            </button>
-          </div>
+    <div>
+      <header className="mb-xl flex justify-between items-end">
+        <div>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Dashboard</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Resumen de tus cursos actuales.</p>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Bienvenido, {profile?.name || user?.email}</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {(profile?.role === 'admin' || profile?.role === 'teacher') && (
-            <Link to="/admin" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <h3 className="text-lg font-semibold mb-2">Gestión de Usuarios</h3>
-              <p className="text-gray-600">Administrar usuarios y roles del sistema</p>
-            </Link>
-          )}
-
-          <Link to="/courses" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-lg font-semibold mb-2">Mis Cursos</h3>
-            <p className="text-gray-600">Ver y gestionar cursos asignados</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
+          <Link to="/admin" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
+            <div className="flex justify-between items-start mb-md">
+              <div>
+                <span className="font-label-sm text-label-sm text-on-surface-variant block mb-xs">ADMIN</span>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">Gestión de Usuarios</h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Administrar usuarios y roles</p>
+              </div>
+              <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">admin_panel_settings</span>
+              </div>
+            </div>
           </Link>
+        )}
 
-          <div className="block p-6 bg-white rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-2">Sesiones</h3>
-            <p className="text-gray-600">Gestionar sesiones de clase</p>
+        <Link to="/courses" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
+          <div className="flex justify-between items-start mb-md">
+            <div>
+              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-xs">CURSOS</span>
+              <h2 className="font-headline-sm text-headline-sm text-on-surface">Mis Cursos</h2>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Ver y gestionar cursos asignados</p>
+            </div>
+            <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">menu_book</span>
+            </div>
           </div>
-        </div>
-      </main>
+        </Link>
+
+        <Link to="/courses" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
+          <div className="flex justify-between items-start mb-md">
+            <div>
+              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-xs">SESIONES</span>
+              <h2 className="font-headline-sm text-headline-sm text-on-surface">Sesiones</h2>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Gestionar sesiones de clase</p>
+            </div>
+            <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">event</span>
+            </div>
+          </div>
+        </Link>
+      </div>
     </div>
   )
 }

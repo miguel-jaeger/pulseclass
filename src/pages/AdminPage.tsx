@@ -6,6 +6,7 @@ interface UserProfile {
   id: string
   user_id: string
   name: string
+  email: string
   role: 'admin' | 'teacher' | 'student'
   created_at: string
 }
@@ -44,58 +45,69 @@ export function AdminPage() {
 
   if (profile?.role !== 'admin') {
     return (
-      <div className="p-8">
-        <p className="text-red-600">Acceso denegado. Solo administradores pueden ver esta página.</p>
+      <div className="p-lg">
+        <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores pueden ver esta página.</p>
       </div>
     )
   }
 
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6">Gestión de Usuarios</h2>
+    <div>
+      <header className="mb-xl">
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
+      </header>
 
       {loading ? (
-        <p>Cargando...</p>
+        <p className="font-body-md text-body-md text-on-surface-variant">Cargando usuarios...</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-left border-b">Nombre</th>
-                <th className="px-4 py-2 text-left border-b">Email</th>
-                <th className="px-4 py-2 text-left border-b">Rol</th>
-                <th className="px-4 py-2 text-left border-b">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border-b">{user.name}</td>
-                  <td className="px-4 py-2 border-b">{user.user_id}</td>
-                  <td className="px-4 py-2 border-b">
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                      user.role === 'teacher' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 border-b">
-                    <select
-                      value={user.role}
-                      onChange={(e) => updateRole(user.user_id, e.target.value as 'admin' | 'teacher' | 'student')}
-                      className="border rounded px-2 py-1 text-sm"
-                    >
-                      <option value="student">Estudiante</option>
-                      <option value="teacher">Profesor</option>
-                      <option value="admin">Administrador</option>
-                    </select>
-                  </td>
+        <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-surface-container-low border-b border-outline-variant">
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Nombre</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant hidden md:table-cell">Email</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Rol</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+                    <td className="px-md py-3">
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium">{user.name}</div>
+                      <div className="font-body-sm text-body-sm text-on-surface-variant md:hidden">{user.email}</div>
+                    </td>
+                    <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant hidden md:table-cell">{user.email}</td>
+                    <td className="px-md py-3">
+                      <span className={`inline-flex items-center px-sm py-xs rounded-full font-label-sm text-label-sm ${
+                        user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                        user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
+                        'bg-secondary-container text-on-secondary-container'
+                      }`}>
+                        <span className="material-symbols-outlined text-sm mr-xs">
+                          {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
+                        </span>
+                        {user.role === 'admin' ? 'Admin' : user.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                      </span>
+                    </td>
+                    <td className="px-md py-3">
+                      <select
+                        value={user.role}
+                        onChange={(e) => updateRole(user.user_id, e.target.value as 'admin' | 'teacher' | 'student')}
+                        className="border border-outline-variant rounded-xl px-sm py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                      >
+                        <option value="student">Estudiante</option>
+                        <option value="teacher">Profesor</option>
+                        <option value="admin">Administrador</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

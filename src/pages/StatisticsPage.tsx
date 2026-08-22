@@ -64,13 +64,11 @@ export function StatisticsPage() {
       setRatings(ratingsData)
       setTotalRatings(ratingsData.length)
 
-      // Calculate average score
       if (ratingsData.length > 0) {
         const sum = ratingsData.reduce((acc, r) => acc + r.score, 0)
         setAvgScore(sum / ratingsData.length)
       }
 
-      // Calculate score distribution
       const distribution: ScoreDistribution[] = []
       for (let i = 1; i <= 10; i++) {
         const count = ratingsData.filter(r => r.score === i).length
@@ -82,43 +80,48 @@ export function StatisticsPage() {
   }
 
   if (loading) {
-    return <div className="p-8">Cargando...</div>
+    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando estadísticas...</div>
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <Link to={`/sessions/${sessionId}`} className="text-blue-600 hover:underline">
-          ← Volver a detalles de sesión
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-lg">
+        <Link to={`/sessions/${sessionId}`} className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline">
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          Volver a detalles de sesión
         </Link>
       </div>
 
-      <h2 className="text-2xl font-bold mb-2">Estadísticas de {session?.title}</h2>
-      <p className="text-gray-600 mb-8">
-        {new Date(session?.date || '').toLocaleDateString('es-ES', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}
-      </p>
+      <header className="mb-xl">
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{session?.title}</p>
+      </header>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Total de Evaluaciones</h3>
-          <p className="text-3xl font-bold text-blue-600">{totalRatings}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">assessment</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Total Evaluaciones</h3>
+          </div>
+          <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalRatings}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Promedio de Satisfacción</h3>
-          <p className="text-3xl font-bold text-green-600">{avgScore.toFixed(1)}</p>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">trending_up</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Promedio</h3>
+          </div>
+          <p className="font-headline-lg text-headline-lg text-primary font-bold">{avgScore.toFixed(1)}</p>
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-500 mb-2">Nivel de Satisfacción</h3>
-          <p className={`text-3xl font-bold ${
-            avgScore >= 8 ? 'text-green-600' :
-            avgScore >= 5 ? 'text-yellow-600' :
-            'text-red-600'
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">emoji_emotions</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Nivel</h3>
+          </div>
+          <p className={`font-headline-lg text-headline-lg font-bold ${
+            avgScore >= 8 ? 'text-primary' :
+            avgScore >= 5 ? 'text-tertiary' :
+            'text-error'
           }`}>
             {avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'}
           </p>
@@ -126,24 +129,22 @@ export function StatisticsPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Score Distribution Bar Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">Distribución de Puntuaciones</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg mb-xl">
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución de Puntuaciones</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={scoreDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="score" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5bdbb" />
+              <XAxis dataKey="score" stroke="#5c403f" />
+              <YAxis stroke="#5c403f" />
               <Tooltip />
-              <Bar dataKey="count" fill="#3B82F6" />
+              <Bar dataKey="count" fill="#9e001f" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Score Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold mb-4">Distribución por Categorías</h3>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución por Categorías</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -160,9 +161,9 @@ export function StatisticsPage() {
                 fill="#8884d8"
                 dataKey="value"
               >
-                <Cell fill="#22C55E" />
-                <Cell fill="#EAB308" />
-                <Cell fill="#EF4444" />
+                <Cell fill="#9e001f" />
+                <Cell fill="#c8c6c5" />
+                <Cell fill="#ba1a1a" />
               </Pie>
               <Tooltip />
             </PieChart>
@@ -171,26 +172,25 @@ export function StatisticsPage() {
       </div>
 
       {/* Top Comments */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Principales Comentarios</h3>
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+        <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Principales Comentarios</h3>
         {ratings.filter(r => r.comment).length === 0 ? (
-          <p className="text-gray-500">No hay comentarios disponibles.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios disponibles.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-md">
             {ratings
               .filter(r => r.comment)
               .sort((a, b) => b.score - a.score)
               .slice(0, 5)
               .map((rating) => (
-                <div key={rating.id} className="border-l-4 border-blue-500 pl-4 py-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-blue-600">{rating.score}/10</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-sm text-gray-500">
+                <div key={rating.id} className="border-l-[3px] border-primary pl-md py-sm">
+                  <div className="flex items-center gap-sm mb-xs">
+                    <span className="font-semibold text-primary">{rating.score}/10</span>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant">
                       {new Date(rating.created_at).toLocaleDateString('es-ES')}
                     </span>
                   </div>
-                  <p className="text-gray-700">{rating.comment}</p>
+                  <p className="font-body-md text-body-md text-on-surface">{rating.comment}</p>
                 </div>
               ))}
           </div>
@@ -198,18 +198,18 @@ export function StatisticsPage() {
       </div>
 
       {/* Top Suggestions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-semibold mb-4">Principales Sugerencias</h3>
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+        <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Principales Sugerencias</h3>
         {ratings.filter(r => r.suggestion).length === 0 ? (
-          <p className="text-gray-500">No hay sugerencias disponibles.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias disponibles.</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-md">
             {ratings
               .filter(r => r.suggestion)
               .slice(0, 5)
               .map((rating) => (
-                <div key={rating.id} className="bg-blue-50 rounded p-4">
-                  <p className="text-blue-800">{rating.suggestion}</p>
+                <div key={rating.id} className="bg-surface-container-low rounded-xl p-md">
+                  <p className="font-body-md text-body-md text-on-surface">{rating.suggestion}</p>
                 </div>
               ))}
           </div>

@@ -75,7 +75,6 @@ export function RateSessionPage() {
     setSaving(true)
 
     if (existingRating) {
-      // Update existing rating
       const { error } = await insforge.database
         .from('ratings')
         .update({
@@ -89,7 +88,6 @@ export function RateSessionPage() {
         navigate(-1)
       }
     } else {
-      // Create new rating
       const { error } = await insforge.database
         .from('ratings')
         .insert([{
@@ -108,75 +106,77 @@ export function RateSessionPage() {
   }
 
   if (loading) {
-    return <div className="p-8">Cargando...</div>
+    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-2">Evaluar Sesión</h2>
-      <p className="text-gray-600 mb-6">{session?.title}</p>
+    <div className="max-w-2xl mx-auto">
+      <header className="mb-xl">
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{session?.title}</p>
+      </header>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+        <div className="mb-lg">
+          <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción (1-10)
           </label>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-md">
             <input
               type="range"
               min="1"
               max="10"
               value={rating.score}
               onChange={(e) => setRating({ ...rating, score: parseInt(e.target.value) })}
-              className="flex-1"
+              className="flex-1 accent-primary"
             />
-            <span className="text-2xl font-bold text-blue-600 w-12 text-center">
+            <span className="font-headline-lg text-headline-lg text-primary w-16 text-center">
               {rating.score}
             </span>
           </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant mt-xs">
             <span>1 - Muy insatisfecho</span>
             <span>10 - Muy satisfecho</span>
           </div>
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="mb-lg">
+          <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Comentario (opcional)
           </label>
           <textarea
             value={rating.comment}
             onChange={(e) => setRating({ ...rating, comment: e.target.value })}
             placeholder="¿Por qué diste esta puntuación?"
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             rows={4}
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="mb-lg">
+          <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Sugerencias para mejorar (opcional)
           </label>
           <textarea
             value={rating.suggestion}
             onChange={(e) => setRating({ ...rating, suggestion: e.target.value })}
             placeholder="¿Qué puede hacer el profesor para mejorar?"
-            className="w-full border rounded px-3 py-2"
+            className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             rows={4}
           />
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-sm">
           <button
             onClick={() => navigate(-1)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={submitRating}
             disabled={saving}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {saving ? 'Guardando...' : existingRating ? 'Actualizar' : 'Enviar'}
           </button>

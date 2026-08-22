@@ -133,83 +133,100 @@ export function CoursesPage() {
   }
 
   if (loading) {
-    return <div className="p-8">Cargando...</div>
+    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando cursos...</div>
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Cursos</h2>
+    <div>
+      <header className="mb-xl flex justify-between items-end">
+        <div>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Cursos</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tus cursos y estudiantes.</p>
+        </div>
         {(profile?.role === 'admin' || profile?.role === 'teacher') && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
           >
             Crear Curso
           </button>
         )}
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {courses.map((course) => (
-          <div key={course.id} className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold mb-2">{course.name}</h3>
-            <p className="text-gray-600 mb-4">{course.description}</p>
-            <div className="flex gap-2">
+          <article key={course.id} className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
+            <div className="flex justify-between items-start mb-md">
+              <div>
+                <h2 className="font-headline-sm text-headline-sm text-on-surface">{course.name}</h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{course.description}</p>
+              </div>
+              <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">menu_book</span>
+              </div>
+            </div>
+            <div className="mt-auto flex gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+                className="flex-1 text-center bg-surface-container border border-primary text-primary font-bold py-2 rounded-full font-label-md text-label-md hover:bg-primary-container transition-colors"
               >
                 Sesiones
               </Link>
               <button
                 onClick={() => openMembersModal(course)}
-                className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+                className="flex-1 text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 rounded-full font-label-md text-label-md hover:bg-secondary-container transition-colors"
               >
                 Miembros
               </button>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => deleteCourse(course.id)}
-                  className="text-sm text-red-600 px-3 py-1 rounded hover:bg-red-50"
+                  className="text-center bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container transition-colors"
                 >
-                  Eliminar
+                  <span className="material-symbols-outlined text-lg">delete</span>
                 </button>
               )}
             </div>
-          </div>
+          </article>
         ))}
       </div>
 
+      {courses.length === 0 && (
+        <div className="text-center py-xl">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay cursos creados aún.</p>
+        </div>
+      )}
+
       {/* Create Course Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h3 className="text-lg font-semibold mb-4">Crear Curso</h3>
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Curso</h3>
             <input
               type="text"
               placeholder="Nombre del curso"
               value={newCourse.name}
               onChange={(e) => setNewCourse({ ...newCourse, name: e.target.value })}
-              className="w-full border rounded px-3 py-2 mb-3"
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
             <textarea
               placeholder="Descripción"
               value={newCourse.description}
               onChange={(e) => setNewCourse({ ...newCourse, description: e.target.value })}
-              className="w-full border rounded px-3 py-2 mb-4"
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-lg bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               rows={3}
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-sm">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={createCourse}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
               >
                 Crear
               </button>
@@ -220,13 +237,13 @@ export function CoursesPage() {
 
       {/* Members Modal */}
       {showMembersModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md max-h-[80vh] overflow-y-auto border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">
               Miembros de {selectedCourse.name}
             </h3>
 
-            <div className="mb-4">
+            <div className="mb-lg">
               <select
                 onChange={(e) => {
                   if (e.target.value) {
@@ -234,7 +251,7 @@ export function CoursesPage() {
                     e.target.value = ''
                   }
                 }}
-                className="w-full border rounded px-3 py-2"
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               >
                 <option value="">Agregar estudiante...</option>
                 {allUsers
@@ -247,13 +264,13 @@ export function CoursesPage() {
               </select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-sm">
               {courseMembers.map((member) => (
-                <div key={member.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span>{member.profiles?.name}</span>
+                <div key={member.id} className="flex justify-between items-center p-sm bg-surface-container-low rounded-xl">
+                  <span className="font-body-sm text-body-sm text-on-surface">{member.profiles?.name}</span>
                   <button
                     onClick={() => removeMember(member.id, selectedCourse.id)}
-                    className="text-red-600 text-sm hover:text-red-800"
+                    className="text-error font-label-sm text-label-sm hover:underline"
                   >
                     Quitar
                   </button>
@@ -261,10 +278,10 @@ export function CoursesPage() {
               ))}
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-lg flex justify-end">
               <button
                 onClick={() => setShowMembersModal(false)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
               >
                 Cerrar
               </button>
