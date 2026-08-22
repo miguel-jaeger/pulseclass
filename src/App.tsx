@@ -7,6 +7,7 @@ import { CoursesPage } from './pages/CoursesPage'
 import { SessionsPage } from './pages/SessionsPage'
 import { RateSessionPage } from './pages/RateSessionPage'
 import { SessionDetailPage } from './pages/SessionDetailPage'
+import { StatisticsPage } from './pages/StatisticsPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -69,6 +70,11 @@ function AppRoutes() {
       <Route path="/sessions/:sessionId" element={
         <ProtectedRoute>
           <SessionDetailPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/sessions/:sessionId/stats" element={
+        <ProtectedRoute>
+          <StatisticsPage />
         </ProtectedRoute>
       } />
     </Routes>
