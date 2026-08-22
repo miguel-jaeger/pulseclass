@@ -130,6 +130,12 @@ export function SessionsPage() {
                 </div>
                 <div className="flex gap-2">
                   <Link
+                    to={`/sessions/${session.id}`}
+                    className="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-gray-200"
+                  >
+                    Ver detalles
+                  </Link>
+                  <Link
                     to={`/sessions/${session.id}/rate`}
                     className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
                   >
