@@ -73,15 +73,24 @@ export function CourseMembersPage() {
       return
     }
 
-    const userIds = rows.map((r: { user_id: string }) => r.user_id)
+    const baseUrl = import.meta.env.VITE_INSFORGE_URL as string
+    const res = await fetch(`${baseUrl}/rest/v1/rpc/get_course_member_profiles`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cid: courseId }),
+    })
 
-    const { data: profiles } = await insforge.database
-      .from('profiles')
-      .select('user_id, name, email, role')
-      .in('user_id', userIds)
+    if (!res.ok) {
+      setMembers(rows.map((r: { id: string; course_id: string; user_id: string }) => ({
+        id: r.id, course_id: r.course_id, user_id: r.user_id,
+        name: '', email: '', role: 'student' as const,
+      })))
+      return
+    }
 
+    const profiles = await res.json()
     const profileMap = new Map(
-      (profiles as UserProfile[] || []).map(p => [p.user_id, p])
+      (profiles as UserProfile[]).map((p: UserProfile) => [p.user_id, p])
     )
 
     const merged = rows.map((r: { id: string; course_id: string; user_id: string }) => ({
