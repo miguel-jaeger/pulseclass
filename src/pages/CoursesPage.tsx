@@ -116,20 +116,20 @@ export function CoursesPage() {
             <div className="mt-auto flex gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="flex-1 text-center bg-surface-container border border-primary text-primary font-bold py-2 rounded-full font-label-md text-label-md hover:bg-primary-container transition-colors"
+                className="flex-1 text-center bg-surface-container border border-primary text-primary font-bold py-2 rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors"
               >
                 Sesiones
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
-                className="flex-1 text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 rounded-full font-label-md text-label-md hover:bg-secondary-container transition-colors"
+                className="flex-1 text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
               >
                 Miembros
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => deleteCourse(course.id, course.name)}
-                  className="text-center bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container transition-colors"
+                  className="text-center bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">delete</span>
                 </button>

@@ -158,7 +158,7 @@ export function SessionsPage() {
                 <div className="flex gap-sm">
                   <Link
                     to={`/sessions/${session.id}`}
-                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container transition-colors"
+                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
                   >
                     Detalles
                   </Link>
@@ -171,7 +171,7 @@ export function SessionsPage() {
                   {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                     <button
                       onClick={() => deleteSession(session.id)}
-                      className="bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container transition-colors"
+                      className="bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
                     >
                       <span className="material-symbols-outlined text-lg">delete</span>
                     </button>
