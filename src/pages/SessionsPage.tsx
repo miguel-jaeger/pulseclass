@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 
@@ -129,12 +129,12 @@ export function SessionsPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => window.location.href = `/sessions/${session.id}/rate`}
+                  <Link
+                    to={`/sessions/${session.id}/rate`}
                     className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
                   >
                     Evaluar
-                  </button>
+                  </Link>
                   {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                     <button
                       onClick={() => deleteSession(session.id)}
