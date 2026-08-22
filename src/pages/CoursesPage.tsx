@@ -24,13 +24,50 @@ export function CoursesPage() {
   }, [])
 
   const fetchCourses = async () => {
-    const { data, error } = await insforge.database
-      .from('courses')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      setCourses(data as Course[])
+    if (profile?.role === 'admin') {
+      const { data, error } = await insforge.database
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (!error && data) setCourses(data as Course[])
+    } else if (profile?.role === 'teacher') {
+      const { data: owned } = await insforge.database
+        .from('courses')
+        .select('*')
+        .eq('created_by', profile.user_id)
+      const { data: memberRows } = await insforge.database
+        .from('course_members')
+        .select('course_id')
+        .eq('user_id', profile.user_id)
+      const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
+      let memberCourses: Course[] = []
+      if (memberIds.length > 0) {
+        const { data } = await insforge.database
+          .from('courses')
+          .select('*')
+          .in('id', memberIds)
+        memberCourses = (data as Course[]) || []
+      }
+      const all = [...(owned as Course[] || []), ...memberCourses]
+      const unique = all.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
+      unique.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setCourses(unique)
+    } else {
+      const { data: memberRows } = await insforge.database
+        .from('course_members')
+        .select('course_id')
+        .eq('user_id', profile?.user_id)
+      const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
+      if (memberIds.length > 0) {
+        const { data } = await insforge.database
+          .from('courses')
+          .select('*')
+          .in('id', memberIds)
+          .order('created_at', { ascending: false })
+        if (data) setCourses(data as Course[])
+      } else {
+        setCourses([])
+      }
     }
     setLoading(false)
   }
