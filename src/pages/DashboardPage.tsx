@@ -38,10 +38,10 @@ export function DashboardPage() {
             </Link>
           )}
 
-          <div className="block p-6 bg-white rounded-lg shadow-md">
+          <Link to="/courses" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <h3 className="text-lg font-semibold mb-2">Mis Cursos</h3>
-            <p className="text-gray-600">Ver cursos asignados</p>
-          </div>
+            <p className="text-gray-600">Ver y gestionar cursos asignados</p>
+          </Link>
 
           <div className="block p-6 bg-white rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-2">Sesiones</h3>
