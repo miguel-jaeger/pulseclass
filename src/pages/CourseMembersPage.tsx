@@ -13,7 +13,8 @@ interface CourseMember {
   id: string
   course_id: string
   user_id: string
-  profiles: { name: string; email: string } | null
+  name: string
+  email: string
 }
 
 interface UserProfile {
@@ -60,14 +61,36 @@ export function CourseMembersPage() {
   }
 
   const fetchMembers = async () => {
-    const { data, error } = await insforge.database
+    const { data: rows, error: rowsErr } = await insforge.database
       .from('course_members')
-      .select('id, course_id, user_id, profiles:user_id(name, email)')
+      .select('id, course_id, user_id')
       .eq('course_id', courseId)
 
-    if (!error && data) {
-      setMembers(data as unknown as CourseMember[])
+    if (rowsErr || !rows || rows.length === 0) {
+      setMembers([])
+      return
     }
+
+    const userIds = rows.map((r: { user_id: string }) => r.user_id)
+
+    const { data: profiles } = await insforge.database
+      .from('profiles')
+      .select('user_id, name, email')
+      .in('user_id', userIds)
+
+    const profileMap = new Map(
+      (profiles as UserProfile[] || []).map(p => [p.user_id, p])
+    )
+
+    const merged = rows.map((r: { id: string; course_id: string; user_id: string }) => ({
+      id: r.id,
+      course_id: r.course_id,
+      user_id: r.user_id,
+      name: profileMap.get(r.user_id)?.name || '',
+      email: profileMap.get(r.user_id)?.email || '',
+    }))
+
+    setMembers(merged)
   }
 
   const fetchAllUsers = async () => {
@@ -107,8 +130,8 @@ export function CourseMembersPage() {
   }
 
   const filteredMembers = members.filter((m) =>
-    m.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const availableUsers = allUsers
@@ -219,8 +242,8 @@ export function CourseMembersPage() {
                   <span className="material-symbols-outlined text-on-surface-variant">person</span>
                 </div>
                 <div>
-                  <div className="font-body-md text-body-md text-on-surface">{member.profiles?.name || 'Sin nombre'}</div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">{member.profiles?.email}</div>
+                  <div className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</div>
+                  <div className="font-body-sm text-body-sm text-on-surface-variant">{member.email}</div>
                 </div>
               </div>
               {canManage && (
