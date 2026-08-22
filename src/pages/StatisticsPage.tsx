@@ -83,6 +83,20 @@ export function StatisticsPage() {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando estadísticas...</div>
   }
 
+  if (!session) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-lg">
+          <span className="material-symbols-outlined text-lg">arrow_back</span>
+          Volver a cursos
+        </Link>
+        <div className="bg-error-container border border-error rounded-xl p-lg">
+          <p className="font-body-md text-body-md text-on-error-container">No se pudo cargar la sesión.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-lg">
