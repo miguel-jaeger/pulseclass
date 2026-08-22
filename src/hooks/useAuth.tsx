@@ -30,6 +30,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const TOKEN_KEY = 'insforge_access_token'
+
+function persistToken(token: string | null) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token)
+  } else {
+    localStorage.removeItem(TOKEN_KEY)
+  }
+}
+
+function getPersistedToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -55,25 +69,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function hydrateAuth() {
-      const { data, error } = await insforge.auth.getCurrentUser()
-      if (cancelled) return
+      const savedToken = getPersistedToken()
 
-      if (error || !data?.user) {
-        setUser(null)
-        setProfile(null)
-        setLoading(false)
-        return
+      if (savedToken) {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_INSFORGE_URL}/auth/v1/user`,
+            {
+              headers: { Authorization: `Bearer ${savedToken}` },
+            }
+          )
+
+          if (response.ok) {
+            const userData = await response.json()
+            if (!cancelled) {
+              setUser(userData as User)
+              const profileData = await fetchProfile(userData.id)
+              if (!cancelled) setProfile(profileData)
+            }
+          } else {
+            persistToken(null)
+            if (!cancelled) {
+              setUser(null)
+              setProfile(null)
+            }
+          }
+        } catch {
+          persistToken(null)
+          if (!cancelled) {
+            setUser(null)
+            setProfile(null)
+          }
+        }
+      } else {
+        const { data, error } = await insforge.auth.getCurrentUser()
+        if (cancelled) return
+
+        if (error || !data?.user) {
+          setUser(null)
+          setProfile(null)
+        } else {
+          setUser(data.user as User)
+          const profileData = await fetchProfile(data.user.id)
+          if (!cancelled) setProfile(profileData)
+        }
       }
 
-      setUser(data.user as User)
-
-      const profileData = await fetchProfile(data.user.id)
-
-      if (!cancelled) {
-        setProfile(profileData)
-      }
-
-      setLoading(false)
+      if (!cancelled) setLoading(false)
     }
 
     void hydrateAuth()
@@ -84,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
     if (data?.user) {
+      persistToken(data.accessToken)
       setUser(data.user as User)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
@@ -94,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
     if (data?.user) {
+      persistToken(data.accessToken)
       setUser(data.user as User)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
@@ -117,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     const { error } = await insforge.auth.signOut()
     if (error) throw error
+    persistToken(null)
     setUser(null)
     setProfile(null)
   }

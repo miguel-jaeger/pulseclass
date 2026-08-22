@@ -15,12 +15,14 @@ interface CourseMember {
   user_id: string
   name: string
   email: string
+  role: 'admin' | 'teacher' | 'student'
 }
 
 interface UserProfile {
   user_id: string
   name: string
   email: string
+  role: 'admin' | 'teacher' | 'student'
 }
 
 export function CourseMembersPage() {
@@ -75,7 +77,7 @@ export function CourseMembersPage() {
 
     const { data: profiles } = await insforge.database
       .from('profiles')
-      .select('user_id, name, email')
+      .select('user_id, name, email, role')
       .in('user_id', userIds)
 
     const profileMap = new Map(
@@ -88,6 +90,7 @@ export function CourseMembersPage() {
       user_id: r.user_id,
       name: profileMap.get(r.user_id)?.name || '',
       email: profileMap.get(r.user_id)?.email || '',
+      role: profileMap.get(r.user_id)?.role || 'student',
     }))
 
     setMembers(merged)
@@ -242,7 +245,19 @@ export function CourseMembersPage() {
                   <span className="material-symbols-outlined text-on-surface-variant">person</span>
                 </div>
                 <div>
-                  <div className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</div>
+                  <div className="flex items-center gap-sm">
+                    <span className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</span>
+                    <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
+                      member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                      member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
+                      'bg-secondary-container text-on-secondary-container'
+                    }`}>
+                      <span className="material-symbols-outlined text-xs mr-[2px]">
+                        {member.role === 'admin' ? 'admin_panel_settings' : member.role === 'teacher' ? 'school' : 'person'}
+                      </span>
+                      {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                    </span>
+                  </div>
                   <div className="font-body-sm text-body-sm text-on-surface-variant">{member.email}</div>
                 </div>
               </div>
