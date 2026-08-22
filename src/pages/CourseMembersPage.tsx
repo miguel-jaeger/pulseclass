@@ -9,17 +9,20 @@ interface Course {
   description: string
 }
 
-interface CourseMember {
+interface CourseMemberRow {
   id: string
   course_id: string
+  user_id: string
+}
+
+interface MemberProfile {
   user_id: string
   name: string
   email: string
   role: 'admin' | 'teacher' | 'student'
 }
 
-interface UserProfile {
-  user_id: string
+interface CourseMember extends CourseMemberRow {
   name: string
   email: string
   role: 'admin' | 'teacher' | 'student'
@@ -30,7 +33,7 @@ export function CourseMembersPage() {
   const { profile } = useAuth()
   const [course, setCourse] = useState<Course | null>(null)
   const [members, setMembers] = useState<CourseMember[]>([])
-  const [allUsers, setAllUsers] = useState<UserProfile[]>([])
+  const [allProfiles, setAllProfiles] = useState<MemberProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [addSearchQuery, setAddSearchQuery] = useState('')
@@ -39,14 +42,12 @@ export function CourseMembersPage() {
   const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
 
   useEffect(() => {
-    if (courseId) {
-      loadAll()
-    }
+    if (courseId) loadAll()
   }, [courseId])
 
   const loadAll = async () => {
     setLoading(true)
-    await Promise.all([fetchCourse(), fetchMembers(), fetchAllUsers()])
+    await Promise.all([fetchCourse(), fetchMembers(), fetchAllProfiles()])
     setLoading(false)
   }
 
@@ -56,10 +57,7 @@ export function CourseMembersPage() {
       .select('*')
       .eq('id', courseId)
       .single()
-
-    if (!error && data) {
-      setCourse(data as Course)
-    }
+    if (!error && data) setCourse(data as Course)
   }
 
   const fetchMembers = async () => {
@@ -73,47 +71,35 @@ export function CourseMembersPage() {
       return
     }
 
-    const baseUrl = import.meta.env.VITE_INSFORGE_URL as string
-    const res = await fetch(`${baseUrl}/rest/v1/rpc/get_course_member_profiles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cid: courseId }),
-    })
+    const userIds = rows.map((r: CourseMemberRow) => r.user_id)
+    const uniqueIds = [...new Set(userIds)]
 
-    if (!res.ok) {
-      setMembers(rows.map((r: { id: string; course_id: string; user_id: string }) => ({
-        id: r.id, course_id: r.course_id, user_id: r.user_id,
-        name: '', email: '', role: 'student' as const,
-      })))
-      return
-    }
+    const { data: profiles } = await insforge.database
+      .from('profiles')
+      .select('user_id, name, email, role')
+      .in('user_id', uniqueIds)
 
-    const profiles = await res.json()
     const profileMap = new Map(
-      (profiles as UserProfile[]).map((p: UserProfile) => [p.user_id, p])
+      (profiles as MemberProfile[] || []).map((p) => [p.user_id, p])
     )
 
-    const merged = rows.map((r: { id: string; course_id: string; user_id: string }) => ({
-      id: r.id,
-      course_id: r.course_id,
-      user_id: r.user_id,
+    const merged = rows.map((r: CourseMemberRow) => ({
+      ...r,
       name: profileMap.get(r.user_id)?.name || '',
       email: profileMap.get(r.user_id)?.email || '',
-      role: profileMap.get(r.user_id)?.role || 'student',
+      role: (profileMap.get(r.user_id)?.role || 'student') as 'admin' | 'teacher' | 'student',
     }))
 
     setMembers(merged)
   }
 
-  const fetchAllUsers = async () => {
+  const fetchAllProfiles = async () => {
     const { data, error } = await insforge.database
       .from('profiles')
-      .select('user_id, name, email')
+      .select('user_id, name, email, role')
       .order('name')
 
-    if (!error && data) {
-      setAllUsers(data as UserProfile[])
-    }
+    if (!error && data) setAllProfiles(data as MemberProfile[])
   }
 
   const addMember = async (userId: string) => {
@@ -136,9 +122,7 @@ export function CourseMembersPage() {
       .delete()
       .eq('id', memberId)
 
-    if (!error) {
-      await loadAll()
-    }
+    if (!error) await loadAll()
   }
 
   const filteredMembers = members.filter((m) =>
@@ -146,7 +130,7 @@ export function CourseMembersPage() {
     m.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const availableUsers = allUsers
+  const availableUsers = allProfiles
     .filter(u => !members.some(m => m.user_id === u.user_id))
     .filter(u =>
       u.name?.toLowerCase().includes(addSearchQuery.toLowerCase()) ||

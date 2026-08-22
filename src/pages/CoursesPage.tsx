@@ -9,6 +9,7 @@ interface Course {
   description: string
   created_by: string
   created_at: string
+  is_active: boolean
 }
 
 export function CoursesPage() {
@@ -18,6 +19,9 @@ export function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newCourse, setNewCourse] = useState({ name: '', description: '' })
   const [searchQuery, setSearchQuery] = useState('')
+
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', description: '', is_active: true })
 
   useEffect(() => {
     fetchCourses()
@@ -63,6 +67,7 @@ export function CoursesPage() {
           .from('courses')
           .select('*')
           .in('id', memberIds)
+          .eq('is_active', true)
           .order('created_at', { ascending: false })
         if (data) setCourses(data as Course[])
       } else {
@@ -88,8 +93,26 @@ export function CoursesPage() {
     }
   }
 
+  const openEdit = (course: Course) => {
+    setEditingCourse(course)
+    setEditForm({ name: course.name, description: course.description || '', is_active: course.is_active })
+  }
+
+  const saveEdit = async () => {
+    if (!editingCourse) return
+    const { error } = await insforge.database
+      .from('courses')
+      .update({ name: editForm.name, description: editForm.description, is_active: editForm.is_active })
+      .eq('id', editingCourse.id)
+
+    if (!error) {
+      setEditingCourse(null)
+      fetchCourses()
+    }
+  }
+
   const deleteCourse = async (courseId: string, courseName: string) => {
-    if (!confirm(`¿Eliminar "${courseName}" y todas sus sesiones?`)) return
+    if (!confirm(`¿Eliminar "${courseName}" y todas sus sesiones? Esta acción no se puede deshacer.`)) return
 
     const { error } = await insforge.database
       .from('courses')
@@ -97,6 +120,7 @@ export function CoursesPage() {
       .eq('id', courseId)
 
     if (!error) {
+      setEditingCourse(null)
       fetchCourses()
     }
   }
@@ -140,13 +164,23 @@ export function CoursesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {filteredCourses.map((course) => (
-          <article key={course.id} className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
+          <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${course.is_active ? 'border-outline-variant border-t-[3px] border-t-primary' : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'}`}>
             <div className="flex justify-between items-start mb-md">
-              <div>
-                <h2 className="font-headline-sm text-headline-sm text-on-surface">{course.name}</h2>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{course.description}</p>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-sm mb-1">
+                  <h2 className="font-headline-sm text-headline-sm text-on-surface truncate">{course.name}</h2>
+                  <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs shrink-0 ${
+                    course.is_active ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-container-high text-on-surface-variant'
+                  }`}>
+                    <span className="material-symbols-outlined text-[12px] mr-[2px]">
+                      {course.is_active ? 'check_circle' : 'pause_circle'}
+                    </span>
+                    {course.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">{course.description}</p>
               </div>
-              <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+              <div className="bg-surface-container rounded-full p-sm flex items-center justify-center shrink-0 ml-sm">
                 <span className="material-symbols-outlined text-primary">menu_book</span>
               </div>
             </div>
@@ -167,10 +201,11 @@ export function CoursesPage() {
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
-                  onClick={() => deleteCourse(course.id, course.name)}
-                  className="text-center bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-sm text-label-sm hover:bg-error-container hover:text-on-error-container transition-colors"
+                  onClick={() => openEdit(course)}
+                  className="text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 px-3 rounded-full font-label-sm text-label-sm hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                  title="Editar curso"
                 >
-                  <span className="material-symbols-outlined text-base">delete</span>
+                  <span className="material-symbols-outlined text-base">edit</span>
                 </button>
               )}
             </div>
@@ -218,6 +253,76 @@ export function CoursesPage() {
               >
                 Crear
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingCourse && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar Curso</h3>
+
+            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Nombre</label>
+            <input
+              type="text"
+              placeholder="Nombre del curso"
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+
+            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Descripción</label>
+            <textarea
+              placeholder="Descripción"
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+              rows={3}
+            />
+
+            <div className="flex items-center justify-between bg-surface-container rounded-xl px-md py-3 mb-lg">
+              <div>
+                <div className="font-body-md text-body-md text-on-surface">Estado del curso</div>
+                <div className="font-body-sm text-body-sm text-on-surface-variant">
+                  {editForm.is_active ? 'Visible para los estudiantes' : 'Oculto para los estudiantes'}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditForm({ ...editForm, is_active: !editForm.is_active })}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                  editForm.is_active ? 'bg-primary' : 'bg-surface-container-highest'
+                }`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-on-primary transition-transform shadow-sm ${
+                  editForm.is_active ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => deleteCourse(editingCourse.id, editingCourse.name)}
+                className="text-error font-label-md text-label-md hover:bg-error-container px-md py-2 rounded-full transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">delete</span>
+                Eliminar
+              </button>
+              <div className="flex gap-sm">
+                <button
+                  onClick={() => setEditingCourse(null)}
+                  className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                >
+                  Guardar
+                </button>
+              </div>
             </div>
           </div>
         </div>
