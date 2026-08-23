@@ -169,10 +169,10 @@ export function CoursesPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-sm mb-1">
                   <h2 className="font-title-sm text-title-sm text-on-surface truncate">{course.name}</h2>
-                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full shrink-0 ${
-                    course.is_active ? 'bg-green-100 text-green-600' : 'bg-surface-container-high text-on-surface-variant'
+                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${
+                    course.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'
                   }`}>
-                    <span className="material-symbols-outlined text-[14px]">
+                    <span className="material-symbols-outlined text-[16px]">
                       {course.is_active ? 'check' : 'pause'}
                     </span>
                   </span>
