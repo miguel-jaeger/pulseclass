@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 
@@ -21,6 +21,7 @@ interface Session {
 export function SessionsPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
@@ -124,12 +125,20 @@ export function SessionsPage() {
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{course?.description}</p>
         </div>
         {(profile?.role === 'admin' || profile?.role === 'teacher') && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
-          >
-            Crear Sesión
-          </button>
+          <div className="flex gap-sm">
+            <button
+              onClick={() => navigate('/statistics')}
+              className="bg-surface-container border border-outline-variant text-on-surface font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors"
+            >
+              Estadísticas
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+            >
+              Crear Sesión
+            </button>
+          </div>
         )}
       </header>
 

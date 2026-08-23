@@ -151,14 +151,6 @@ export function SessionDetailPage() {
         >
           {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
         </Link>
-        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
-          <Link
-            to={`/sessions/${sessionId}/stats`}
-            className="bg-surface-container border border-primary text-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors"
-          >
-            Ver estadísticas
-          </Link>
-        )}
       </div>
 
       <h2 className="font-headline-md text-headline-md text-on-surface mb-lg">Comentarios de estudiantes</h2>

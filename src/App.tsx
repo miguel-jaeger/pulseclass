@@ -79,7 +79,7 @@ function AppRoutes() {
           <SessionDetailPage />
         </ProtectedRoute>
       } />
-      <Route path="/sessions/:sessionId/stats" element={
+      <Route path="/statistics" element={
         <ProtectedRoute>
           <StatisticsPage />
         </ProtectedRoute>
