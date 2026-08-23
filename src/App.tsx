@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { Layout } from './components/Layout'
@@ -8,10 +9,19 @@ import { CoursesPage } from './pages/CoursesPage'
 import { SessionsPage } from './pages/SessionsPage'
 import { RateSessionPage } from './pages/RateSessionPage'
 import { SessionDetailPage } from './pages/SessionDetailPage'
-import { StatisticsPage } from './pages/StatisticsPage'
 import { CourseMembersPage } from './pages/CourseMembersPage'
 import { ProfilePage } from './pages/ProfilePage'
 import type { ReactNode } from 'react'
+
+const StatisticsPage = lazy(() => import('./pages/StatisticsPage'))
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-xl">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
@@ -82,7 +92,9 @@ function AppRoutes() {
       } />
       <Route path="/statistics" element={
         <ProtectedRoute>
-          <StatisticsPage />
+          <Suspense fallback={<LoadingSpinner />}>
+            <StatisticsPage />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/profile" element={
