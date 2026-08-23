@@ -186,20 +186,20 @@ export function CoursesPage() {
             <div className="mt-auto flex justify-end gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="bg-surface-container border border-primary text-primary p-2 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
+                className="w-8 h-8 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-lg">event</span>
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
-                className="bg-surface-container border border-outline-variant text-on-surface-variant p-2 rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
               >
                 <span className="material-symbols-outlined text-lg">group</span>
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
-                  className="bg-surface-container border border-outline-variant text-on-surface-variant p-2 rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                  className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
                   title="Editar curso"
                 >
                   <span className="material-symbols-outlined text-lg">edit</span>
