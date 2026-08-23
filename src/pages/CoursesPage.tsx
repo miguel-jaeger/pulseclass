@@ -183,28 +183,26 @@ export function CoursesPage() {
                 <span className="material-symbols-outlined text-primary">menu_book</span>
               </div>
             </div>
-            <div className="mt-auto flex gap-sm">
+            <div className="mt-auto flex justify-end gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="flex-1 text-center bg-surface-container border border-primary text-primary font-bold py-2 rounded-full font-label-sm text-label-sm hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center gap-xs"
+                className="bg-surface-container border border-primary text-primary p-2 rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
               >
-                <span className="material-symbols-outlined text-base">event</span>
-                Sesiones
+                <span className="material-symbols-outlined text-lg">event</span>
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
-                className="flex-1 text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 rounded-full font-label-sm text-label-sm hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center gap-xs"
+                className="bg-surface-container border border-outline-variant text-on-surface-variant p-2 rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
               >
-                <span className="material-symbols-outlined text-base">group</span>
-                Miembros
+                <span className="material-symbols-outlined text-lg">group</span>
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
-                  className="text-center bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 px-3 rounded-full font-label-sm text-label-sm hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                  className="bg-surface-container border border-outline-variant text-on-surface-variant p-2 rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
                   title="Editar curso"
                 >
-                  <span className="material-symbols-outlined text-base">edit</span>
+                  <span className="material-symbols-outlined text-lg">edit</span>
                 </button>
               )}
             </div>
