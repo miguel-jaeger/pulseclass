@@ -168,7 +168,7 @@ export function CoursesPage() {
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-sm mb-1">
-                  <h2 className="font-title-sm text-title-sm text-on-surface truncate">{course.name}</h2>
+                  <h2 className="font-title-sm text-title-sm text-on-surface truncate" title={course.name}>{course.name}</h2>
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${
                     course.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'
                   }`}>
