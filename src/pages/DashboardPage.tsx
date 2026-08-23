@@ -8,7 +8,7 @@ export function DashboardPage() {
     <div>
       <header className="mb-xl flex justify-between items-end">
         <div>
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Dashboard</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Resumen</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Resumen de tus cursos actuales.</p>
         </div>
       </header>
@@ -45,9 +45,9 @@ export function DashboardPage() {
         <Link to="/statistics" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
           <div className="flex justify-between items-start mb-md">
             <div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-xs">ESTADISTICAS</span>
-              <h2 className="font-headline-sm text-headline-sm text-on-surface">Estadisticas</h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Analisis de satisfaccion por rango de fechas</p>
+              <span className="font-label-sm text-label-sm text-on-surface-variant block mb-xs">ESTADÍSTICAS</span>
+              <h2 className="font-headline-sm text-headline-sm text-on-surface">Estadísticas</h2>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Análisis de satisfacción por rango de fechas</p>
             </div>
             <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
               <span className="material-symbols-outlined text-primary">assessment</span>

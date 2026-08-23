@@ -3,15 +3,15 @@ import { useAuth } from '../hooks/useAuth'
 import type { ReactNode } from 'react'
 
 const navItems = [
-  { to: '/', icon: 'dashboard', label: 'Dashboard' },
+  { to: '/', icon: 'dashboard', label: 'Resumen' },
   { to: '/courses', icon: 'star_rate', label: 'Cursos' },
-  { to: '/admin', icon: 'person', label: 'Admin', adminOnly: true },
+  { to: '/admin', icon: 'person', label: 'Administrar', adminOnly: true },
 ]
 
 const bottomNavItems = [
-  { to: '/', icon: 'home', label: 'Home', fill: true },
+  { to: '/', icon: 'home', label: 'Inicio', fill: true },
   { to: '/courses', icon: 'grade', label: 'Cursos' },
-  { to: '/admin', icon: 'person', label: 'Admin', adminOnly: true },
+  { to: '/admin', icon: 'person', label: 'Administrar', adminOnly: true },
 ]
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -37,7 +37,7 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
             <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
           </div>
-          <div className="text-on-surface-variant font-label-sm text-label-sm">Academic Portal</div>
+          <div className="text-on-surface-variant font-label-sm text-label-sm">Portal Académico</div>
         </div>
 
         <div className="flex-1 space-y-sm">

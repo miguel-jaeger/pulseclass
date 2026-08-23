@@ -255,8 +255,8 @@ export function StatisticsPage() {
       </div>
 
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadisticas</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Analisis de satisfaccion por rango de fechas</p>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Análisis de satisfacción por rango de fechas</p>
       </header>
 
       {/* Filters */}
@@ -302,7 +302,7 @@ export function StatisticsPage() {
       </div>
 
       {loading ? (
-        <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando estadisticas...</div>
+        <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando estadísticas...</div>
       ) : (
         <>
           {/* Summary Cards */}
@@ -333,7 +333,7 @@ export function StatisticsPage() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg mb-xl">
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribucion de Puntuaciones</h3>
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución de Puntuaciones</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={scoreDistribution}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5bdbb" />
@@ -345,7 +345,7 @@ export function StatisticsPage() {
               </ResponsiveContainer>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribucion por Categorias</h3>
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución por Categorías</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -448,7 +448,7 @@ export function StatisticsPage() {
                   </div>
                   <div className="bg-surface-container-low rounded-xl p-md text-center">
                     <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfaccion</p>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
                   </div>
                 </div>
                 {sessionStats.length > 0 && (
