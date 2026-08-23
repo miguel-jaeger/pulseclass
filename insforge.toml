@@ -1,5 +1,5 @@
 [auth]
-allowed_redirect_urls = ["http://localhost:3000"]
+allowed_redirect_urls = ["http://localhost:3000", "https://pulseclass-seven.vercel.app"]
 require_email_verification = false
 verify_email_method = "code"
 reset_password_method = "code"
