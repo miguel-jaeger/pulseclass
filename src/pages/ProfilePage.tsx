@@ -8,6 +8,7 @@ export function ProfilePage() {
   const [editing, setEditing] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [name, setName] = useState(profile?.name || '')
+  const [email, setEmail] = useState(user?.email || '')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -22,7 +23,7 @@ export function ProfilePage() {
     try {
       const { error } = await insforge.database
         .from('profiles')
-        .update({ name })
+        .update({ name, email })
         .eq('user_id', profile?.user_id)
 
       if (error) throw error
@@ -101,7 +102,7 @@ export function ProfilePage() {
           <h2 className="font-headline-sm text-headline-sm text-on-surface">Datos personales</h2>
           {!editing && (
             <button
-              onClick={() => { setEditing(true); setName(profile?.name || ''); setError(''); setSuccess('') }}
+              onClick={() => { setEditing(true); setName(profile?.name || ''); setEmail(user?.email || ''); setError(''); setSuccess('') }}
               className="text-primary font-label-md text-label-md hover:underline flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-sm">edit</span>
@@ -121,6 +122,15 @@ export function ProfilePage() {
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
+            <div>
+              <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
             <div className="flex justify-end gap-sm">
               <button
                 onClick={() => setEditing(false)}
@@ -130,7 +140,7 @@ export function ProfilePage() {
               </button>
               <button
                 onClick={handleSaveProfile}
-                disabled={loading || !name}
+                disabled={loading || !name || !email}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {loading ? 'Guardando...' : 'Guardar'}
