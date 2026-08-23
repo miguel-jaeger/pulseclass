@@ -187,12 +187,14 @@ export function CoursesPage() {
               <Link
                 to={`/courses/${course.id}/sessions`}
                 className="w-8 h-8 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
+                title="Adicionar sesión"
               >
                 <span className="material-symbols-outlined text-lg">event</span>
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
                 className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                title="Adicionar miembros"
               >
                 <span className="material-symbols-outlined text-lg">group</span>
               </Link>
