@@ -4,7 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 
 export function ProfilePage() {
-  const { profile, user } = useAuth()
+  const { profile, user, signOut } = useAuth()
   const [editing, setEditing] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [name, setName] = useState(profile?.name || '')
@@ -237,6 +237,16 @@ export function ProfilePage() {
         ) : (
           <p className="font-body-sm text-body-sm text-on-surface-variant">Para cambiar tu contraseña, haz clic en el enlace de arriba.</p>
         )}
+      </div>
+
+      <div className="md:hidden mt-xl">
+        <button
+          onClick={signOut}
+          className="w-full flex items-center justify-center gap-sm bg-error-container text-on-error-container font-bold py-3 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+        >
+          <span className="material-symbols-outlined text-sm">logout</span>
+          Cerrar sesión
+        </button>
       </div>
     </div>
   )
