@@ -21,7 +21,7 @@ export function AdminPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
-  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string })
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
@@ -73,7 +73,7 @@ export function AdminPage() {
 
   const openEditModal = (user: UserProfile) => {
     setEditingUser(user)
-    setEditForm({ name: user.name, email: user.email, role: user.role })
+    setEditForm({ name: user.name, email: user.email, role: user.role, password: '' })
     setFormError('')
     setShowEditModal(true)
   }
@@ -89,6 +89,14 @@ export function AdminPage() {
         .eq('user_id', editingUser.user_id)
 
       if (error) throw error
+
+      if (editForm.password) {
+        const { error: passwordError } = await insforge.functions.invoke('admin-change-password', {
+          method: 'POST',
+          body: { userId: editingUser.user_id, newPassword: editForm.password }
+        })
+        if (passwordError) throw passwordError
+      }
 
       setUsers(prev => prev.map(u =>
         u.user_id === editingUser.user_id
@@ -345,6 +353,16 @@ export function AdminPage() {
                   <option value="teacher">Profesor</option>
                   <option value="admin">Administrador</option>
                 </select>
+              </div>
+              <div className="border-t border-outline-variant pt-md mt-md">
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña (opcional)</label>
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                  placeholder="Dejar en blanco para no cambiar"
+                />
               </div>
             </div>
             {formError && (
