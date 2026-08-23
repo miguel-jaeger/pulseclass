@@ -26,7 +26,7 @@ export function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [newSession, setNewSession] = useState({ title: '', date: '' })
+  const [newSession, setNewSession] = useState({ date: '' })
 
   useEffect(() => {
     if (courseId) {
@@ -61,18 +61,20 @@ export function SessionsPage() {
   }
 
   const createSession = async () => {
+    const d = new Date(newSession.date + 'T00:00:00')
+    const title = `Sesión ${d.toLocaleDateString('es-ES')}`
     const { error } = await insforge.database
       .from('sessions')
       .insert([{
         course_id: courseId,
-        title: newSession.title,
+        title,
         date: newSession.date,
         created_by: profile?.user_id
       }])
 
     if (!error) {
       setShowCreateModal(false)
-      setNewSession({ title: '', date: '' })
+      setNewSession({ date: '' })
       fetchSessions()
     }
   }
@@ -197,13 +199,6 @@ export function SessionsPage() {
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Sesión</h3>
-            <input
-              type="text"
-              placeholder="Título de la sesión"
-              value={newSession.title}
-              onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
-              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-            />
             <input
               type="date"
               value={newSession.date}

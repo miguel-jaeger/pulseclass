@@ -213,7 +213,7 @@ export function StatisticsPage() {
         const s = sessions.find(sess => sess.id === r.session_id)
         return {
           id: r.id,
-          sessionTitle: s?.title ?? 'Sin sesion',
+          sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
           text: r.comment,
@@ -230,7 +230,7 @@ export function StatisticsPage() {
         const s = sessions.find(sess => sess.id === r.session_id)
         return {
           id: r.id,
-          sessionTitle: s?.title ?? 'Sin sesion',
+          sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
           text: r.suggestion,
@@ -371,12 +371,11 @@ export function StatisticsPage() {
           {/* Session Breakdown */}
           {sessionStats.length > 0 && (
             <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Sesion</h3>
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Sesión</h3>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-outline-variant">
-                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Sesion</th>
                       <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Fecha</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Evaluaciones</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm">Promedio</th>
@@ -385,7 +384,6 @@ export function StatisticsPage() {
                   <tbody>
                     {sessionStats.map(s => (
                       <tr key={s.id} className="border-b border-outline-variant last:border-0">
-                        <td className="py-sm pr-md font-body-md text-body-md text-on-surface">{s.title}</td>
                         <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">
                           {new Date(s.date).toLocaleDateString('es-ES')}
                         </td>
@@ -455,7 +453,7 @@ export function StatisticsPage() {
                 </div>
                 {sessionStats.length > 0 && (
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    {sessionStats.length} sesion{sessionStats.length !== 1 ? 'es' : ''} con evaluaciones en el rango seleccionado.
+                    {sessionStats.length} sesión{sessionStats.length !== 1 ? 'es' : ''} con evaluaciones en el rango seleccionado.
                   </p>
                 )}
               </div>
