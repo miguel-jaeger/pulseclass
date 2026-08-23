@@ -168,17 +168,16 @@ export function CoursesPage() {
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-sm mb-1">
-                  <h2 className="font-headline-sm text-headline-sm text-on-surface truncate">{course.name}</h2>
-                  <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs shrink-0 ${
-                    course.is_active ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-container-high text-on-surface-variant'
+                  <h2 className="font-title-sm text-title-sm text-on-surface truncate">{course.name}</h2>
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full shrink-0 ${
+                    course.is_active ? 'bg-green-100 text-green-600' : 'bg-surface-container-high text-on-surface-variant'
                   }`}>
-                    <span className="material-symbols-outlined text-[12px] mr-[2px]">
-                      {course.is_active ? 'check_circle' : 'pause_circle'}
+                    <span className="material-symbols-outlined text-[14px]">
+                      {course.is_active ? 'check' : 'pause'}
                     </span>
-                    {course.is_active ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
-                <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">{course.description}</p>
+                <p className="font-body-xs text-body-xs text-on-surface-variant mt-1 line-clamp-2">{course.description}</p>
               </div>
               <div className="bg-surface-container rounded-full p-sm flex items-center justify-center shrink-0 ml-sm">
                 <span className="material-symbols-outlined text-primary">menu_book</span>
