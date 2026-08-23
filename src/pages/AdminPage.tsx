@@ -17,6 +17,13 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string })
+  const [formError, setFormError] = useState('')
+  const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -32,6 +39,70 @@ export function AdminPage() {
       setUsers(data as UserProfile[])
     }
     setLoading(false)
+  }
+
+  const createUser = async () => {
+    setFormError('')
+    setFormLoading(true)
+    try {
+      const { data, error } = await insforge.auth.signUp({
+        email: createForm.email,
+        password: createForm.password,
+        name: createForm.name
+      })
+
+      if (error) throw error
+
+      if (data?.user) {
+        await insforge.database
+          .from('profiles')
+          .update({ role: createForm.role, name: createForm.name })
+          .eq('user_id', data.user.id)
+      }
+
+      setShowCreateModal(false)
+      setCreateForm({ name: '', email: '', password: '', role: 'student' })
+      fetchUsers()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al crear usuario'
+      setFormError(message)
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  const openEditModal = (user: UserProfile) => {
+    setEditingUser(user)
+    setEditForm({ name: user.name, email: user.email, role: user.role })
+    setFormError('')
+    setShowEditModal(true)
+  }
+
+  const saveUser = async () => {
+    if (!editingUser) return
+    setFormError('')
+    setFormLoading(true)
+    try {
+      const { error } = await insforge.database
+        .from('profiles')
+        .update({ name: editForm.name, role: editForm.role })
+        .eq('user_id', editingUser.user_id)
+
+      if (error) throw error
+
+      setUsers(prev => prev.map(u =>
+        u.user_id === editingUser.user_id
+          ? { ...u, name: editForm.name, role: editForm.role as UserProfile['role'] }
+          : u
+      ))
+      setShowEditModal(false)
+      setEditingUser(null)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al guardar cambios'
+      setFormError(message)
+    } finally {
+      setFormLoading(false)
+    }
   }
 
   const updateRole = async (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
@@ -78,9 +149,17 @@ export function AdminPage() {
 
   return (
     <div>
-      <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
+      <header className="mb-xl flex justify-between items-end">
+        <div>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
+        </div>
+        <button
+          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+          className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+        >
+          Crear usuario
+        </button>
       </header>
 
       <div className="flex flex-col md:flex-row gap-md mb-lg">
@@ -152,8 +231,16 @@ export function AdminPage() {
                           <option value="admin">Administrador</option>
                         </select>
                         <button
+                          onClick={() => openEditModal(user)}
+                          className="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                          title="Editar usuario"
+                        >
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button
                           onClick={() => deleteUser(user.user_id, user.name)}
                           className="text-error font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                          title="Eliminar usuario"
                         >
                           <span className="material-symbols-outlined text-sm">delete</span>
                         </button>
@@ -171,6 +258,136 @@ export function AdminPage() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Usuario</h3>
+            <div className="space-y-md">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                  placeholder="Nombre completo"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña</label>
+                <input
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
+                <select
+                  value={createForm.role}
+                  onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                >
+                  <option value="student">Estudiante</option>
+                  <option value="teacher">Profesor</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+            </div>
+            {formError && (
+              <p className="font-body-sm text-body-sm text-on-error bg-error-container p-sm rounded-xl mt-md">{formError}</p>
+            )}
+            <div className="flex justify-end gap-sm mt-lg">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={createUser}
+                disabled={formLoading || !createForm.name || !createForm.email || !createForm.password}
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {formLoading ? 'Creando...' : 'Crear'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar Usuario</h3>
+            <div className="space-y-md">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  disabled
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface-container font-body-sm text-body-sm text-on-surface-variant cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                >
+                  <option value="student">Estudiante</option>
+                  <option value="teacher">Profesor</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+            </div>
+            {formError && (
+              <p className="font-body-sm text-body-sm text-on-error bg-error-container p-sm rounded-xl mt-md">{formError}</p>
+            )}
+            <div className="flex justify-end gap-sm mt-lg">
+              <button
+                onClick={() => { setShowEditModal(false); setEditingUser(null) }}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveUser}
+                disabled={formLoading || !editForm.name}
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                {formLoading ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
