@@ -105,19 +105,6 @@ export function AdminPage() {
     }
   }
 
-  const updateRole = async (userId: string, newRole: 'admin' | 'teacher' | 'student') => {
-    const { error } = await insforge.database
-      .from('profiles')
-      .update({ role: newRole })
-      .eq('user_id', userId)
-
-    if (!error) {
-      setUsers(prev => prev.map(u =>
-        u.user_id === userId ? { ...u, role: newRole } : u
-      ))
-    }
-  }
-
   const deleteUser = async (userId: string, userName: string) => {
     if (!confirm(`¿Eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) return
 
@@ -221,15 +208,6 @@ export function AdminPage() {
                     </td>
                     <td className="px-md py-3">
                       <div className="flex items-center gap-sm">
-                        <select
-                          value={user.role}
-                          onChange={(e) => updateRole(user.user_id, e.target.value as 'admin' | 'teacher' | 'student')}
-                          className="border border-outline-variant rounded-xl px-sm py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-                        >
-                          <option value="student">Estudiante</option>
-                          <option value="teacher">Profesor</option>
-                          <option value="admin">Administrador</option>
-                        </select>
                         <button
                           onClick={() => openEditModal(user)}
                           className="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1"
