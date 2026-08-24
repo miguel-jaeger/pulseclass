@@ -25,6 +25,18 @@ export function AdminPage() {
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const normalizeRole = (role: string) => {
+    if (role === 'Administrador' || role === 'admin') return 'admin'
+    if (role === 'Profesor' || role === 'teacher') return 'teacher'
+    return 'student'
+  }
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   useEffect(() => {
     fetchUsers()
@@ -64,6 +76,7 @@ export function AdminPage() {
       setShowCreateModal(false)
       setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' })
       fetchUsers()
+      showToast('Usuario creado exitosamente')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al crear usuario'
       setFormError(message)
@@ -106,6 +119,7 @@ export function AdminPage() {
       ))
       setShowEditModal(false)
       setEditingUser(null)
+      showToast(editForm.password ? 'Usuario y contraseña actualizados' : 'Usuario actualizado')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al guardar cambios'
       setFormError(message)
@@ -161,7 +175,7 @@ export function AdminPage() {
     const matchesSearch =
       u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter
+    const matchesRole = roleFilter === 'all' || normalizeRole(u.role) === roleFilter
     return matchesSearch && matchesRole
   })
 
@@ -223,19 +237,19 @@ export function AdminPage() {
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">admin_panel_settings</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Admin:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'admin').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'admin').length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">school</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Profesores:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'teacher').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'teacher').length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">person</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Estudiantes:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'student').length}</span>
         </div>
       </div>
 
@@ -297,14 +311,14 @@ export function AdminPage() {
                     <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant hidden md:table-cell">{user.email}</td>
                     <td className="px-md py-3">
                       <span className={`inline-flex items-center px-sm py-xs rounded-full font-label-sm text-label-sm ${
-                        user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
-                        user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
+                        normalizeRole(user.role) === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                        normalizeRole(user.role) === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
                       }`}>
                         <span className="material-symbols-outlined text-sm mr-xs">
-                          {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
+                          {normalizeRole(user.role) === 'admin' ? 'admin_panel_settings' : normalizeRole(user.role) === 'teacher' ? 'school' : 'person'}
                         </span>
-                        {user.role === 'admin' ? 'Admin' : user.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                        {normalizeRole(user.role) === 'admin' ? 'Admin' : normalizeRole(user.role) === 'teacher' ? 'Profesor' : 'Estudiante'}
                       </span>
                     </td>
                     <td className="px-md py-3">
@@ -481,6 +495,14 @@ export function AdminPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-lg left-1/2 -translate-x-1/2 z-50 px-lg py-sm rounded-xl shadow-lg font-body-sm text-body-sm font-medium transition-opacity ${
+          toast.type === 'success' ? 'bg-success-container text-on-success-container' : 'bg-error-container text-on-error-container'
+        }`}>
+          {toast.message}
         </div>
       )}
     </div>
