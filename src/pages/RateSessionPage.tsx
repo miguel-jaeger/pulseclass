@@ -209,17 +209,17 @@ export function RateSessionPage() {
               )
             })}
           </div>
-          <div className="flex justify-between font-body-xs text-body-xs text-on-surface-variant mt-xs px-xs">
-            <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-red-500">sentiment_dissatisfied</span>
+          <div className="flex justify-between font-body-xs text-body-xs text-on-surface-variant mt-sm px-xs">
+            <span className="flex items-center gap-xs">
+              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-red-500">sentiment_dissatisfied</span>
               Insatisfecho
             </span>
-            <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-yellow-500">sentiment_neutral</span>
+            <span className="flex items-center gap-xs">
+              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-yellow-500">sentiment_neutral</span>
               Neutral
             </span>
-            <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-green-500">sentiment_satisfied</span>
+            <span className="flex items-center gap-xs">
+              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-green-500">sentiment_satisfied</span>
               Satisfecho
             </span>
           </div>
