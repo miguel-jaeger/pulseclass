@@ -42,7 +42,7 @@ export function CourseMembersPage() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
 
-  const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
+  const canManage = profile?.role === 'Administrador' || profile?.role === 'Profesor'
 
   useEffect(() => {
     if (courseId) loadAll()

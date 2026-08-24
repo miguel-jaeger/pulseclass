@@ -114,7 +114,7 @@ export function AdminPage() {
     }
   }
 
-  const deleteUser = async (userId: string, userName: string) => {
+  const deleteUser = async (userId: string) => {
     const { error } = await insforge.database
       .from('profiles')
       .delete()
@@ -163,7 +163,7 @@ export function AdminPage() {
     return matchesSearch && matchesRole
   })
 
-  if (profile?.role !== 'admin') {
+  if (profile?.role !== 'Administrador') {
     return (
       <div className="p-lg">
         <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores pueden ver esta página.</p>
@@ -315,7 +315,7 @@ export function AdminPage() {
                           <span className="material-symbols-outlined text-sm">edit</span>
                         </button>
                         <button
-                          onClick={() => deleteUser(user.user_id, user.name)}
+                          onClick={() => deleteUser(user.user_id)}
                           className="text-error font-label-sm text-label-sm hover:underline flex items-center gap-1"
                           title="Eliminar usuario"
                         >

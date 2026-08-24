@@ -45,14 +45,14 @@ export function DashboardPage() {
       try {
         let courses: Course[] = []
 
-        if (profile!.role === 'admin') {
+        if (profile!.role === 'Administrador') {
           const { data, error } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
             .eq('is_active', true)
             .order('created_at', { ascending: false })
           if (!error && data) courses = data as Course[]
-        } else if (profile!.role === 'teacher') {
+        } else if (profile!.role === 'Profesor') {
           const { data: owned, error: ownedError } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')

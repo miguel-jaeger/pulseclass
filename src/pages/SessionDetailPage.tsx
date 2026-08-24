@@ -149,7 +149,7 @@ export function SessionDetailPage() {
           to={`/sessions/${sessionId}/rate`}
           className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
         >
-          {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
+          {profile?.role === 'Estudiante' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
         </Link>
       </div>
 
