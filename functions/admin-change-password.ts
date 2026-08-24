@@ -66,19 +66,21 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const adminClient = createClient({
-      baseUrl,
-      apiKey
+    const updateRes = await fetch(`${baseUrl}/auth/v1/admin/users/${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': apiKey,
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ password: newPassword })
     })
 
-    const { data, error: updateError } = await adminClient.auth.admin.updateUserById(userId, {
-      password: newPassword
-    })
+    const resBody = await updateRes.text()
+    console.log('Admin update response:', updateRes.status, resBody)
 
-    console.log('Admin update result:', JSON.stringify({ data, error: updateError }))
-
-    if (updateError) {
-      return new Response(JSON.stringify({ error: updateError.message || 'Error al cambiar la contraseña' }), {
+    if (!updateRes.ok) {
+      return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
