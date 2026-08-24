@@ -37,6 +37,7 @@ export function CourseMembersPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [addSearchQuery, setAddSearchQuery] = useState('')
+  const [addRoleFilter, setAddRoleFilter] = useState('all')
   const [showAdd, setShowAdd] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
 
@@ -167,6 +168,7 @@ export function CourseMembersPage() {
       u.name?.toLowerCase().includes(addSearchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(addSearchQuery.toLowerCase())
     )
+    .filter(u => addRoleFilter === 'all' || u.role === addRoleFilter)
 
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
@@ -211,15 +213,27 @@ export function CourseMembersPage() {
       {showAdd && (
         <div className="mb-lg bg-surface-container-low border border-outline-variant rounded-xl p-lg">
           <h3 className="font-headline-sm text-headline-sm text-on-surface mb-md">Agregar miembro</h3>
-          <div className="relative mb-md">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-            <input
-              type="text"
-              placeholder="Buscar por nombre o correo..."
-              value={addSearchQuery}
-              onChange={(e) => setAddSearchQuery(e.target.value)}
-              className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-            />
+          <div className="flex flex-col md:flex-row gap-md mb-md">
+            <div className="flex-1 relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+              <input
+                type="text"
+                placeholder="Buscar por nombre o correo..."
+                value={addSearchQuery}
+                onChange={(e) => setAddSearchQuery(e.target.value)}
+                className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+              />
+            </div>
+            <select
+              value={addRoleFilter}
+              onChange={(e) => setAddRoleFilter(e.target.value)}
+              className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
+            >
+              <option value="all">Todos los roles</option>
+              <option value="student">Estudiantes</option>
+              <option value="teacher">Profesores</option>
+              <option value="admin">Administradores</option>
+            </select>
           </div>
 
           {availableUsers.length > 0 && (
@@ -255,7 +269,19 @@ export function CourseMembersPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                     <div>
-                      <div className="font-body-sm text-body-sm text-on-surface">{user.name}</div>
+                      <div className="flex items-center gap-sm">
+                        <span className="font-body-sm text-body-sm text-on-surface">{user.name}</span>
+                        <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
+                          user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                          user.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
+                          'bg-secondary-container text-on-secondary-container'
+                        }`}>
+                          <span className="material-symbols-outlined text-xs mr-[2px]">
+                            {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
+                          </span>
+                          {user.role === 'admin' ? 'Admin' : user.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                        </span>
+                      </div>
                       <div className="font-body-xs text-xs text-on-surface-variant">{user.email}</div>
                     </div>
                   </div>
@@ -282,7 +308,7 @@ export function CourseMembersPage() {
               </button>
             )}
             <button
-              onClick={() => { setShowAdd(false); setAddSearchQuery(''); setSelectedUsers(new Set()) }}
+              onClick={() => { setShowAdd(false); setAddSearchQuery(''); setAddRoleFilter('all'); setSelectedUsers(new Set()) }}
               className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
             >
               <span className="material-symbols-outlined text-lg">close</span>
