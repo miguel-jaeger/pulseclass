@@ -129,6 +129,8 @@ export function AdminPage() {
   }
 
   const deleteUser = async (userId: string) => {
+    if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return
+
     const { error } = await insforge.functions.invoke('delete-user', {
       method: 'POST',
       body: { userId }
