@@ -33,9 +33,9 @@ export default async function(req: Request): Promise<Response> {
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
     const apiKey = Deno.env.get('API_KEY')
 
-    const client = createClient({ baseUrl, accessToken: userToken })
+    const userClient = createClient({ baseUrl, accessToken: userToken })
 
-    const { data: userData } = await client.auth.getCurrentUser()
+    const { data: userData } = await userClient.auth.getCurrentUser()
     if (!userData?.user?.id) {
       return new Response(JSON.stringify({ error: 'No autorizado' }), {
         status: 401,
@@ -43,22 +43,21 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const { data: profileData } = await client.database
+    const adminClient = createClient({ baseUrl, accessToken: apiKey })
+
+    const { data: profileData, error: profileError } = await adminClient.database
       .from('profiles')
       .select('role')
       .eq('user_id', userData.user.id)
       .single()
 
-    if (!profileData || profileData.role !== 'admin') {
+    if (profileError || !profileData || profileData.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Solo administradores pueden eliminar usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    const adminClient = createClient({ baseUrl, accessToken: apiKey })
-
-    // Try RPC first
     const { error: rpcError } = await adminClient.database.rpc('admin_delete_user', {
       p_user_id: userId
     })
@@ -66,7 +65,6 @@ export default async function(req: Request): Promise<Response> {
     if (rpcError) {
       console.error('RPC error:', rpcError)
 
-      // Fallback: direct SQL via REST
       const sqlRes = await fetch(`${baseUrl}/rest/v1/rpc/admin_delete_user`, {
         method: 'POST',
         headers: {
@@ -76,7 +74,6 @@ export default async function(req: Request): Promise<Response> {
         },
         body: JSON.stringify({ p_user_id: userId })
       })
-      console.log('REST fallback:', sqlRes.status)
 
       if (!sqlRes.ok) {
         return new Response(JSON.stringify({ error: 'Error al eliminar usuario' }), {
