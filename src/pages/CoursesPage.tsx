@@ -162,6 +162,31 @@ export function CoursesPage() {
         />
       </div>
 
+      {/* Summary Bar */}
+      <div className="flex flex-wrap items-center justify-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-primary text-lg">menu_book</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Total:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.length}</span>
+        </div>
+        <div className="w-px h-4 bg-outline-variant"></div>
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Activos:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.filter(c => c.is_active).length}</span>
+        </div>
+        <div className="w-px h-4 bg-outline-variant"></div>
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-on-surface-variant text-lg">pause_circle</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Inactivos:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.filter(c => !c.is_active).length}</span>
+        </div>
+      </div>
+
+      <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+        Mostrando <span className="font-bold text-on-surface">{filteredCourses.length}</span> de <span className="font-bold text-on-surface">{courses.length}</span> cursos
+      </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {filteredCourses.map((course) => (
           <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${course.is_active ? 'border-outline-variant border-t-[3px] border-t-primary' : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'}`}>
