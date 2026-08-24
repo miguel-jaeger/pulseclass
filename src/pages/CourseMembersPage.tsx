@@ -38,6 +38,7 @@ export function CourseMembersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [addSearchQuery, setAddSearchQuery] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
 
   const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
 
@@ -110,7 +111,37 @@ export function CourseMembersPage() {
     if (!error) {
       await loadAll()
       setAddSearchQuery('')
-      setShowAdd(false)
+    }
+  }
+
+  const addSelectedMembers = async () => {
+    if (selectedUsers.size === 0) return
+    const rows = Array.from(selectedUsers).map(uid => ({ course_id: courseId, user_id: uid }))
+    const { error } = await insforge.database
+      .from('course_members')
+      .insert(rows)
+
+    if (!error) {
+      await loadAll()
+      setSelectedUsers(new Set())
+      setAddSearchQuery('')
+    }
+  }
+
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === availableUsers.length) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(availableUsers.map(u => u.user_id)))
     }
   }
 
@@ -190,15 +221,43 @@ export function CourseMembersPage() {
               className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
+
+          {availableUsers.length > 0 && (
+            <label className="flex items-center gap-sm mb-sm pb-sm border-b border-outline-variant cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedUsers.size === availableUsers.length && availableUsers.length > 0}
+                onChange={toggleSelectAll}
+                className="w-4 h-4 accent-primary rounded"
+              />
+              <span className="font-body-sm text-body-sm text-on-surface-variant">
+                Seleccionar todos ({availableUsers.length})
+              </span>
+              {selectedUsers.size > 0 && (
+                <span className="ml-auto font-label-sm text-label-sm text-primary">
+                  {selectedUsers.size} seleccionados
+                </span>
+              )}
+            </label>
+          )}
+
           <div className="space-y-sm max-h-60 overflow-y-auto">
             {availableUsers.length === 0 ? (
               <p className="font-body-sm text-body-sm text-on-surface-variant">No se encontraron usuarios disponibles.</p>
             ) : (
               availableUsers.map((user) => (
                 <div key={user.user_id} className="flex justify-between items-center p-sm rounded-xl hover:bg-surface-container transition-colors">
-                  <div>
-                    <div className="font-body-sm text-body-sm text-on-surface">{user.name}</div>
-                    <div className="font-body-xs text-xs text-on-surface-variant">{user.email}</div>
+                  <div className="flex items-center gap-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.user_id)}
+                      onChange={() => toggleSelectUser(user.user_id)}
+                      className="w-4 h-4 accent-primary rounded"
+                    />
+                    <div>
+                      <div className="font-body-sm text-body-sm text-on-surface">{user.name}</div>
+                      <div className="font-body-xs text-xs text-on-surface-variant">{user.email}</div>
+                    </div>
                   </div>
                   <button
                     onClick={() => addMember(user.user_id)}
@@ -211,9 +270,19 @@ export function CourseMembersPage() {
               ))
             )}
           </div>
-          <div className="mt-md flex justify-end">
+
+          <div className="mt-md flex justify-end gap-sm">
+            {selectedUsers.size > 0 && (
+              <button
+                onClick={addSelectedMembers}
+                className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-sm"
+              >
+                <span className="material-symbols-outlined text-lg">group_add</span>
+                Agregar {selectedUsers.size} seleccionados
+              </button>
+            )}
             <button
-              onClick={() => { setShowAdd(false); setAddSearchQuery('') }}
+              onClick={() => { setShowAdd(false); setAddSearchQuery(''); setSelectedUsers(new Set()) }}
               className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
             >
               Cerrar
