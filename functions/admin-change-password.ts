@@ -56,7 +56,7 @@ export default async function(req: Request): Promise<Response> {
       .eq('user_id', userData.user.id)
       .single()
 
-    if (!profileData || profileData.role !== 'admin') {
+    if (!profileData || !['admin', 'Administrador'].includes(profileData.role)) {
       return new Response(JSON.stringify({ error: 'Solo administradores pueden cambiar contraseñas de otros usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
