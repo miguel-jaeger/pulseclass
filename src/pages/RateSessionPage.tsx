@@ -174,7 +174,6 @@ export function RateSessionPage() {
             {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
               const isInsatisfied = score <= 6
               const isNeutral = score >= 7 && score <= 8
-              const isSatisfied = score >= 9
               const isSelected = rating.score === score
 
               const icon = isInsatisfied ? 'sentiment_dissatisfied' : isNeutral ? 'sentiment_neutral' : 'sentiment_satisfied'
