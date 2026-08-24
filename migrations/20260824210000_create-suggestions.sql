@@ -3,7 +3,7 @@ CREATE TABLE suggestions (
   user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
   type TEXT NOT NULL DEFAULT 'mejora' CHECK (type IN ('mejora', 'nuevo', 'problema', 'contenido')),
   description TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'recibida' CHECK (status IN ('recibida', 'en_revision', 'aprobada', 'rechazada', 'implementada')),
+  status TEXT NOT NULL DEFAULT 'recibida' CHECK (status IN ('recibida', 'revision', 'aprobada', 'rechazada', 'implementada')),
   images TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

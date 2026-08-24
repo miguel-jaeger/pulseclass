@@ -26,7 +26,7 @@ const typeLabels: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   recibida: 'Recibida',
-  en_revision: 'En revisión',
+  revision: 'Revisión',
   aprobada: 'Aprobada',
   rechazada: 'Rechazada',
   implementada: 'Implementada',
@@ -34,7 +34,7 @@ const statusLabels: Record<string, string> = {
 
 const statusStyles: Record<string, string> = {
   recibida: 'bg-gray-100 text-gray-800 border border-gray-300',
-  en_revision: 'bg-amber-100 text-amber-800 border border-amber-300',
+  revision: 'bg-amber-100 text-amber-800 border border-amber-300',
   aprobada: 'bg-green-100 text-green-800 border border-green-300',
   rechazada: 'bg-error-container text-on-error-container border border-error/30',
   implementada: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
@@ -262,7 +262,7 @@ export function SuggestionsPage() {
 
       {/* Status Filter */}
       <div className="flex gap-sm mb-lg flex-wrap">
-        {['all', 'recibida', 'en_revision', 'aprobada', 'rechazada', 'implementada'].map(s => (
+        {['all', 'recibida', 'revision', 'aprobada', 'rechazada', 'implementada'].map(s => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -322,7 +322,7 @@ export function SuggestionsPage() {
                         className="border border-outline-variant rounded-lg px-sm py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                       >
                         <option value="recibida">Recibida</option>
-                        <option value="en_revision">En revisión</option>
+                        <option value="revision">Revisión</option>
                         <option value="aprobada">Aprobada</option>
                         <option value="rechazada">Rechazada</option>
                         <option value="implementada">Implementada</option>
