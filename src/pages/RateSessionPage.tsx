@@ -30,7 +30,7 @@ export function RateSessionPage() {
   const [error, setError] = useState<string | null>(null)
   const [isMember, setIsMember] = useState(false)
   const [rating, setRating] = useState({
-    score: 5,
+    score: 7,
     comment: '',
     suggestion: ''
   })
@@ -166,26 +166,50 @@ export function RateSessionPage() {
       )}
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-        <div className="mb-md">
+        <div className="mb-lg">
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
-            Nivel de Satisfacción (1-10)
+            Nivel de Satisfacción
           </label>
-          <div className="flex items-center gap-md">
-            <input
-              type="range"
-              min="1"
-              max="10"
-              value={rating.score}
-              onChange={(e) => setRating({ ...rating, score: parseInt(e.target.value) })}
-              className="flex-1 accent-primary"
-            />
-            <span className="font-headline-lg text-headline-lg text-primary w-16 text-center">
-              {rating.score}
-            </span>
-          </div>
-          <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant mt-xs">
-            <span>1 - Muy insatisfecho</span>
-            <span>10 - Muy satisfecho</span>
+          <div className="grid grid-cols-3 gap-md">
+            {[
+              { value: 4, label: 'Insatisfecho', range: '1-6', icon: 'sentiment_dissatisfied', color: 'error', bgClass: 'bg-error-container', textClass: 'text-on-error-container', borderClass: 'border-error', ringClass: 'ring-error' },
+              { value: 7, label: 'Neutral', range: '7-8', icon: 'sentiment_neutral', color: 'tertiary', bgClass: 'bg-tertiary-container', textClass: 'text-on-tertiary-container', borderClass: 'border-tertiary', ringClass: 'ring-tertiary' },
+              { value: 9, label: 'Satisfecho', range: '9-10', icon: 'sentiment_satisfied', color: 'primary', bgClass: 'bg-primary-container', textClass: 'text-on-primary-container', borderClass: 'border-primary', ringClass: 'ring-primary' }
+            ].map((option) => {
+              const isSelected = (
+                (option.value === 4 && rating.score >= 1 && rating.score <= 6) ||
+                (option.value === 7 && rating.score >= 7 && rating.score <= 8) ||
+                (option.value === 9 && rating.score >= 9 && rating.score <= 10)
+              )
+              return (
+                <label
+                  key={option.label}
+                  className={`relative flex flex-col items-center p-md rounded-xl border-2 cursor-pointer transition-all ${
+                    isSelected
+                      ? `${option.borderClass} ${option.bgClass} ring-2 ${option.ringClass}`
+                      : 'border-outline-variant hover:border-outline'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="satisfaction"
+                    value={option.value}
+                    checked={isSelected}
+                    onChange={() => setRating({ ...rating, score: option.value })}
+                    className="sr-only"
+                  />
+                  <span className={`material-symbols-outlined text-[40px] ${isSelected ? option.textClass : 'text-on-surface-variant'}`}>
+                    {option.icon}
+                  </span>
+                  <span className={`font-label-lg text-label-lg mt-xs ${isSelected ? option.textClass : 'text-on-surface'}`}>
+                    {option.label}
+                  </span>
+                  <span className={`font-body-xs text-body-xs ${isSelected ? option.textClass : 'text-on-surface-variant'}`}>
+                    {option.range}
+                  </span>
+                </label>
+              )
+            })}
           </div>
         </div>
 
