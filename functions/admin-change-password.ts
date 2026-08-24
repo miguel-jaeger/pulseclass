@@ -73,28 +73,18 @@ export default async function(req: Request): Promise<Response> {
     if (updateError) {
       console.error('RPC error:', updateError)
 
-      const connStr = Deno.env.get('DATABASE_URL') || Deno.env.get('POSTGRES_URL')
-      if (connStr) {
-        const sqlModule = await import('npm:pg')
-        const Pool = sqlModule.default?.Pool || sqlModule.Pool
-        const pool = new Pool({ connectionString: connStr, ssl: { rejectUnauthorized: false } })
-        try {
-          await pool.query(
-            'SELECT public.admin_update_user_password($1, $2)',
-            [userId, newPassword]
-          )
-          console.log('Direct SQL password update succeeded')
-        } catch (sqlErr) {
-          console.error('Direct SQL error:', sqlErr)
-          return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: String(sqlErr) }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          })
-        } finally {
-          await pool.end()
-        }
-      } else {
-        return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: updateError.message }), {
+      const sqlRes = await fetch(`${baseUrl}/rest/v1/rpc/admin_update_user_password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': apiKey!,
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ p_user_id: userId, p_new_password: newPassword })
+      })
+
+      if (!sqlRes.ok) {
+        return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })

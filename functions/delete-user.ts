@@ -58,7 +58,6 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    // Try RPC first
     const { error: rpcError } = await adminClient.database.rpc('admin_delete_user', {
       p_user_id: userId
     })
@@ -66,7 +65,6 @@ export default async function(req: Request): Promise<Response> {
     if (rpcError) {
       console.error('RPC error:', rpcError)
 
-      // Fallback: direct SQL via REST
       const sqlRes = await fetch(`${baseUrl}/rest/v1/rpc/admin_delete_user`, {
         method: 'POST',
         headers: {
@@ -76,7 +74,6 @@ export default async function(req: Request): Promise<Response> {
         },
         body: JSON.stringify({ p_user_id: userId })
       })
-      console.log('REST fallback:', sqlRes.status)
 
       if (!sqlRes.ok) {
         return new Response(JSON.stringify({ error: 'Error al eliminar usuario' }), {
