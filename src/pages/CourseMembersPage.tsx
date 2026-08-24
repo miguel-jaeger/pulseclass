@@ -278,9 +278,14 @@ export function CourseMembersPage() {
 
         if (userId) {
           if (!memberUserIds.has(userId)) {
-            await insforge.database
+            const { error: insertErr } = await insforge.database
               .from('course_members')
               .insert([{ course_id: courseId, user_id: userId }])
+            if (insertErr) {
+              console.error('Error adding existing user to course:', insertErr)
+              skipped.push({ name, email })
+              continue
+            }
             memberUserIds.add(userId)
           }
           imported++
@@ -295,6 +300,7 @@ export function CourseMembersPage() {
           })
 
           if (error) {
+            console.error('Error creating user:', error)
             skipped.push({ name, email })
             continue
           }
@@ -305,13 +311,19 @@ export function CourseMembersPage() {
               .update({ role: 'Estudiante', name })
               .eq('user_id', data.user.id)
 
-            await insforge.database
+            const { error: memberErr } = await insforge.database
               .from('course_members')
               .insert([{ course_id: courseId, user_id: data.user.id }])
+            if (memberErr) {
+              console.error('Error adding new user to course:', memberErr)
+              skipped.push({ name, email })
+              continue
+            }
           }
 
           imported++
-        } catch {
+        } catch (e) {
+          console.error('Import error:', e)
           skipped.push({ name, email })
         }
       }

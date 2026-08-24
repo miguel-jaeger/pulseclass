@@ -9,7 +9,15 @@ RETURNS TEXT
 LANGUAGE SQL
 SECURITY DEFINER
 STABLE
-AS 'SELECT role FROM profiles WHERE user_id = uid LIMIT 1';
+AS $$
+  SELECT CASE
+    WHEN role = 'Administrador' THEN 'admin'
+    WHEN role = 'Profesor' THEN 'teacher'
+    WHEN role = 'Estudiante' THEN 'student'
+    ELSE role
+  END
+  FROM profiles WHERE user_id = uid LIMIT 1
+$$;
 
 -- ============================================================
 -- PROFILES
