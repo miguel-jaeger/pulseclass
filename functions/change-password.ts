@@ -21,10 +21,10 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const userToken = authHeader.replace('Bearer ', '')
-    const { currentPassword, newPassword } = await req.json()
+    const { newPassword } = await req.json()
 
-    if (!currentPassword || !newPassword) {
-      return new Response(JSON.stringify({ error: 'Contraseña actual y nueva contraseña son requeridas' }), {
+    if (!newPassword) {
+      return new Response(JSON.stringify({ error: 'La nueva contraseña es requerida' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -37,8 +37,11 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
+    const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
+    const apiKey = Deno.env.get('API_KEY')
+
     const client = createClient({
-      baseUrl: Deno.env.get('INSFORGE_BASE_URL'),
+      baseUrl,
       accessToken: userToken
     })
 
@@ -50,16 +53,18 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const adminClient = createClient({
-      baseUrl: Deno.env.get('INSFORGE_BASE_URL'),
-      apiKey: Deno.env.get('API_KEY')
+    const updateRes = await fetch(`${baseUrl}/auth/v1/admin/users/${userData.user.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ password: newPassword })
     })
 
-    const { error: updateError } = await adminClient.auth.admin.updateUser(userData.user.id, {
-      password: newPassword
-    })
-
-    if (updateError) {
+    if (!updateRes.ok) {
+      const errBody = await updateRes.text()
+      console.error('Update password error:', updateRes.status, errBody)
       return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -73,6 +78,7 @@ export default async function(req: Request): Promise<Response> {
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error interno del servidor'
+    console.error('Function error:', error)
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

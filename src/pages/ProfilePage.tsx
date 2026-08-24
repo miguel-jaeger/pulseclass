@@ -9,7 +9,6 @@ export function ProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false)
   const [name, setName] = useState(profile?.name || '')
   const [email, setEmail] = useState(user?.email || '')
-  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
@@ -53,12 +52,11 @@ export function ProfilePage() {
     try {
       const { error } = await insforge.functions.invoke('change-password', {
         method: 'POST',
-        body: { currentPassword, newPassword }
+        body: { newPassword }
       })
       if (error) throw error
       setSuccess('Contraseña cambiada correctamente.')
       setChangingPassword(false)
-      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: unknown) {
@@ -193,15 +191,6 @@ export function ProfilePage() {
         {changingPassword ? (
           <div className="space-y-md">
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña actual</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
               <label className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña</label>
               <input
                 type="password"
@@ -230,7 +219,7 @@ export function ProfilePage() {
               </button>
               <button
                 onClick={handleChangePassword}
-                disabled={loading || !currentPassword || !newPassword || !confirmPassword}
+                disabled={loading || !newPassword || !confirmPassword}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
               >
                 <span className="material-symbols-outlined text-lg">lock_reset</span>
