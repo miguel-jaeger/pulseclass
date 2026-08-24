@@ -40,6 +40,7 @@ export function CourseMembersPage() {
   const [addRoleFilter, setAddRoleFilter] = useState('all')
   const [showAdd, setShowAdd] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
 
   const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
 
@@ -147,14 +148,42 @@ export function CourseMembersPage() {
   }
 
   const removeMember = async (memberId: string) => {
-    if (!confirm('¿Quitar este miembro del curso?')) return
-
     const { error } = await insforge.database
       .from('course_members')
       .delete()
       .eq('id', memberId)
 
     if (!error) await loadAll()
+  }
+
+  const removeSelectedMembers = async () => {
+    if (selectedMembers.size === 0) return
+    const { error } = await insforge.database
+      .from('course_members')
+      .delete()
+      .in('id', Array.from(selectedMembers))
+
+    if (!error) {
+      await loadAll()
+      setSelectedMembers(new Set())
+    }
+  }
+
+  const toggleSelectMember = (memberId: string) => {
+    setSelectedMembers(prev => {
+      const next = new Set(prev)
+      if (next.has(memberId)) next.delete(memberId)
+      else next.add(memberId)
+      return next
+    })
+  }
+
+  const toggleSelectAllMembers = () => {
+    if (selectedMembers.size === filteredMembers.length) {
+      setSelectedMembers(new Set())
+    } else {
+      setSelectedMembers(new Set(filteredMembers.map(m => m.id)))
+    }
   }
 
   const filteredMembers = members.filter((m) =>
@@ -327,40 +356,81 @@ export function CourseMembersPage() {
             </p>
           </div>
         ) : (
-          filteredMembers.map((member) => (
-            <div key={member.id} className="flex justify-between items-center bg-surface border border-outline-variant rounded-xl p-md hover:shadow-sm transition-all">
-              <div className="flex items-center gap-md">
-                <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
-                  <span className="material-symbols-outlined text-on-surface-variant">person</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-sm">
-                    <span className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</span>
-                    <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
-                      member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
-                      member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
-                      'bg-secondary-container text-on-secondary-container'
-                    }`}>
-                      <span className="material-symbols-outlined text-xs mr-[2px]">
-                        {member.role === 'admin' ? 'admin_panel_settings' : member.role === 'teacher' ? 'school' : 'person'}
-                      </span>
-                      {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Profesor' : 'Estudiante'}
-                    </span>
-                  </div>
-                  <div className="font-body-sm text-body-sm text-on-surface-variant">{member.email}</div>
-                </div>
-              </div>
-              {canManage && (
+          <>
+            {canManage && (
+              <label className="flex items-center gap-sm mb-sm pb-sm border-b border-outline-variant cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedMembers.size === filteredMembers.length && filteredMembers.length > 0}
+                  onChange={toggleSelectAllMembers}
+                  className="w-4 h-4 accent-primary rounded"
+                />
+                <span className="font-body-sm text-body-sm text-on-surface-variant">
+                  Seleccionar todos ({filteredMembers.length})
+                </span>
+                {selectedMembers.size > 0 && (
+                  <span className="ml-auto font-label-sm text-label-sm text-primary">
+                    {selectedMembers.size} seleccionados
+                  </span>
+                )}
+              </label>
+            )}
+
+            {selectedMembers.size > 0 && canManage && (
+              <div className="flex justify-end mb-sm">
                 <button
-                  onClick={() => removeMember(member.id)}
-                  className="text-error font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                  onClick={removeSelectedMembers}
+                  className="bg-error text-on-error font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
                 >
-                  <span className="material-symbols-outlined text-sm">person_remove</span>
-                  Quitar
+                  <span className="material-symbols-outlined text-lg">group_remove</span>
+                  Quitar {selectedMembers.size} seleccionados
                 </button>
-              )}
-            </div>
-          ))
+              </div>
+            )}
+
+            {filteredMembers.map((member) => (
+              <div key={member.id} className="flex justify-between items-center bg-surface border border-outline-variant rounded-xl p-md hover:shadow-sm transition-all">
+                <div className="flex items-center gap-md">
+                  {canManage && (
+                    <input
+                      type="checkbox"
+                      checked={selectedMembers.has(member.id)}
+                      onChange={() => toggleSelectMember(member.id)}
+                      className="w-4 h-4 accent-primary rounded"
+                    />
+                  )}
+                  <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
+                    <span className="material-symbols-outlined text-on-surface-variant">person</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-sm">
+                      <span className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</span>
+                      <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
+                        member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                        member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
+                        'bg-secondary-container text-on-secondary-container'
+                      }`}>
+                        <span className="material-symbols-outlined text-xs mr-[2px]">
+                          {member.role === 'admin' ? 'admin_panel_settings' : member.role === 'teacher' ? 'school' : 'person'}
+                        </span>
+                        {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                      </span>
+                    </div>
+                    <div className="font-body-sm text-body-sm text-on-surface-variant">{member.email}</div>
+                  </div>
+                </div>
+                {canManage && (
+                  <button
+                    onClick={() => removeMember(member.id)}
+                    className="text-error font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-sm">person_remove</span>
+                    Quitar
+                  </button>
+                )}
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>
