@@ -383,7 +383,7 @@ export function CourseMembersPage() {
                   className="bg-error text-on-error font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
                 >
                   <span className="material-symbols-outlined text-lg">group_remove</span>
-                  Quitar {selectedMembers.size} seleccionados
+                  Quitar
                 </button>
               </div>
             )}
