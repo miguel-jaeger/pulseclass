@@ -67,18 +67,28 @@ export function StatisticsPage() {
   const [dateStart, setDateStart] = useState(getDefaultDateStart)
   const [dateEnd, setDateEnd] = useState(getDefaultDateEnd)
   const [selectedCourse, setSelectedCourse] = useState('all')
+  const [courseSearch, setCourseSearch] = useState('')
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
 
   useEffect(() => {
+    if (selectedCourse === 'all') setCourseSearch('')
+    else {
+      const c = courses.find(c => c.id === selectedCourse)
+      if (c) setCourseSearch(c.name)
+    }
+  }, [selectedCourse, courses])
+
+  useEffect(() => {
     async function fetchCourses() {
-      if (profile?.role === 'admin') {
+      if (!profile) return
+      if (profile.role === 'admin') {
         const { data } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
           .order('name')
         if (data) setCourses(data as Course[])
-      } else if (profile?.role === 'teacher') {
+      } else if (profile.role === 'teacher') {
         const { data: owned } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
@@ -287,10 +297,15 @@ export function StatisticsPage() {
                 type="text"
                 list="courses-list"
                 placeholder="Buscar curso..."
-                value={selectedCourse === 'all' ? '' : courses.find(c => c.id === selectedCourse)?.name ?? ''}
+                value={courseSearch}
                 onChange={e => {
-                  const match = courses.find(c => c.name.toLowerCase() === e.target.value.toLowerCase())
+                  const val = e.target.value
+                  setCourseSearch(val)
+                  const match = courses.find(c => c.name.toLowerCase() === val.toLowerCase())
                   setSelectedCourse(match ? match.id : 'all')
+                }}
+                onBlur={() => {
+                  if (selectedCourse === 'all') setCourseSearch('')
                 }}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               />
