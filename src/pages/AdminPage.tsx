@@ -20,17 +20,17 @@ export function AdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'Estudiante' as string })
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
   const [editForm, setEditForm] = useState({ name: '', email: '', role: 'Estudiante' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  const normalizeRole = (role: string) => {
-    if (role === 'Administrador' || role === 'admin') return 'admin'
-    if (role === 'Profesor' || role === 'teacher') return 'teacher'
-    return 'student'
+  const roleLabel = (role: string) => {
+    if (role === 'admin') return 'Administrador'
+    if (role === 'teacher') return 'Profesor'
+    return 'Estudiante'
   }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -74,7 +74,7 @@ export function AdminPage() {
       }
 
       setShowCreateModal(false)
-      setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' })
+      setCreateForm({ name: '', email: '', password: '', role: 'student' })
       fetchUsers()
       showToast('Usuario creado exitosamente')
     } catch (err: unknown) {
@@ -129,13 +129,14 @@ export function AdminPage() {
   }
 
   const deleteUser = async (userId: string) => {
-    const { error } = await insforge.database
-      .from('profiles')
-      .delete()
-      .eq('user_id', userId)
+    const { error } = await insforge.functions.invoke('delete-user', {
+      method: 'POST',
+      body: { userId }
+    })
 
     if (!error) {
       setUsers(prev => prev.filter(u => u.user_id !== userId))
+      showToast('Usuario eliminado')
     }
   }
 
@@ -143,15 +144,15 @@ export function AdminPage() {
     if (selectedUsers.size === 0) return
     if (!confirm(`¿Eliminar ${selectedUsers.size} usuario(s)? Esta acción no se puede deshacer.`)) return
 
-    const { error } = await insforge.database
-      .from('profiles')
-      .delete()
-      .in('user_id', Array.from(selectedUsers))
-
-    if (!error) {
-      setUsers(prev => prev.filter(u => !selectedUsers.has(u.user_id)))
-      setSelectedUsers(new Set())
+    for (const userId of selectedUsers) {
+      await insforge.functions.invoke('delete-user', {
+        method: 'POST',
+        body: { userId }
+      })
     }
+    setUsers(prev => prev.filter(u => !selectedUsers.has(u.user_id)))
+    setSelectedUsers(new Set())
+    showToast(`${selectedUsers.size} usuario(s) eliminado(s)`)
   }
 
   const toggleSelectUser = (userId: string) => {
@@ -175,11 +176,11 @@ export function AdminPage() {
     const matchesSearch =
       u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRole = roleFilter === 'all' || normalizeRole(u.role) === roleFilter
+    const matchesRole = roleFilter === 'all' || u.role === roleFilter
     return matchesSearch && matchesRole
   })
 
-  if (profile?.role !== 'Administrador') {
+  if (profile?.role !== 'admin') {
     return (
       <div className="p-lg">
         <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores pueden ver esta página.</p>
@@ -195,7 +196,7 @@ export function AdminPage() {
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
         <button
-          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' }); setFormError(''); setShowCreateModal(true) }}
+          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
           className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
         >
           <span className="material-symbols-outlined text-lg">person_add</span>
@@ -237,19 +238,19 @@ export function AdminPage() {
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">admin_panel_settings</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Admin:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'admin').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'admin').length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">school</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Profesores:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'teacher').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'teacher').length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">person</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Estudiantes:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => normalizeRole(u.role) === 'student').length}</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</span>
         </div>
       </div>
 
@@ -311,14 +312,14 @@ export function AdminPage() {
                     <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant hidden md:table-cell">{user.email}</td>
                     <td className="px-md py-3">
                       <span className={`inline-flex items-center px-sm py-xs rounded-full font-label-sm text-label-sm ${
-                        normalizeRole(user.role) === 'admin' ? 'bg-primary-container text-on-primary-container' :
-                        normalizeRole(user.role) === 'teacher' ? 'bg-surface-container text-on-surface' :
+                        user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                        user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
                       }`}>
                         <span className="material-symbols-outlined text-sm mr-xs">
-                          {normalizeRole(user.role) === 'admin' ? 'admin_panel_settings' : normalizeRole(user.role) === 'teacher' ? 'school' : 'person'}
+                          {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
                         </span>
-                        {normalizeRole(user.role) === 'admin' ? 'Admin' : normalizeRole(user.role) === 'teacher' ? 'Profesor' : 'Estudiante'}
+                        {roleLabel(user.role)}
                       </span>
                     </td>
                     <td className="px-md py-3">
@@ -397,9 +398,9 @@ export function AdminPage() {
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="Estudiante">Estudiante</option>
-                  <option value="Profesor">Profesor</option>
-                  <option value="Administrador">Administrador</option>
+                  <option value="student">Estudiante</option>
+                  <option value="teacher">Profesor</option>
+                  <option value="admin">Administrador</option>
                 </select>
               </div>
             </div>
@@ -458,9 +459,9 @@ export function AdminPage() {
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="Estudiante">Estudiante</option>
-                  <option value="Profesor">Profesor</option>
-                  <option value="Administrador">Administrador</option>
+                  <option value="student">Estudiante</option>
+                  <option value="teacher">Profesor</option>
+                  <option value="admin">Administrador</option>
                 </select>
               </div>
               <div className="border-t border-outline-variant pt-md mt-md">

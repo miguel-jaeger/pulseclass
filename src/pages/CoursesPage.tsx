@@ -29,13 +29,13 @@ export function CoursesPage() {
   }, [])
 
   const fetchCourses = async () => {
-    if (profile?.role === 'Administrador') {
+    if (profile?.role === 'admin') {
       const { data, error } = await insforge.database
         .from('courses')
         .select('*')
         .order('created_at', { ascending: false })
       if (!error && data) setCourses(data as Course[])
-    } else if (profile?.role === 'Profesor') {
+    } else if (profile?.role === 'teacher') {
       const { data: owned } = await insforge.database
         .from('courses')
         .select('*')
@@ -153,7 +153,7 @@ export function CoursesPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Cursos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tus cursos y estudiantes.</p>
         </div>
-        {(profile?.role === 'Administrador' || profile?.role === 'Profesor') && (
+        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
@@ -247,7 +247,7 @@ export function CoursesPage() {
               >
                 <span className="material-symbols-outlined text-lg">group</span>
               </Link>
-              {(profile?.role === 'Administrador' || course.created_by === profile?.user_id) && (
+              {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
                   className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"

@@ -126,7 +126,7 @@ export function SessionsPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">{course?.name}</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{course?.description}</p>
         </div>
-        {(profile?.role === 'Administrador' || profile?.role === 'Profesor') && (
+        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
           <div className="flex gap-sm">
             <button
               onClick={() => navigate('/statistics')}
@@ -183,7 +183,7 @@ export function SessionsPage() {
                     <span className="material-symbols-outlined text-lg">rate_review</span>
                     Evaluar
                   </Link>
-                  {(profile?.role === 'Administrador' || session.created_by === profile?.user_id) && (
+                  {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                     <button
                       onClick={() => deleteSession(session.id)}
                       className="bg-surface-container border border-error text-error font-bold py-1 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"

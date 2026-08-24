@@ -67,8 +67,8 @@ export function ProfilePage() {
     }
   }
 
-  const roleLabel = profile?.role === 'Administrador' ? 'Administrador' : profile?.role === 'Profesor' ? 'Profesor' : 'Estudiante'
-  const roleIcon = profile?.role === 'Administrador' ? 'admin_panel_settings' : profile?.role === 'Profesor' ? 'school' : 'person'
+  const roleLabel = profile?.role === 'admin' ? 'Administrador' : profile?.role === 'teacher' ? 'Profesor' : 'Estudiante'
+  const roleIcon = profile?.role === 'admin' ? 'admin_panel_settings' : profile?.role === 'teacher' ? 'school' : 'person'
 
   return (
     <div>

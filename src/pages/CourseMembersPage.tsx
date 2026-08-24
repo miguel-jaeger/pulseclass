@@ -36,6 +36,9 @@ interface ImportResult {
 export function CourseMembersPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
+
+  const roleLabel = (r: string) => r === 'admin' ? 'Administrador' : r === 'teacher' ? 'Profesor' : 'Estudiante'
+
   const [course, setCourse] = useState<Course | null>(null)
   const [members, setMembers] = useState<CourseMember[]>([])
   const [allProfiles, setAllProfiles] = useState<MemberProfile[]>([])
@@ -51,7 +54,7 @@ export function CourseMembersPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const canManage = profile?.role === 'Administrador' || profile?.role === 'Profesor'
+  const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
 
   useEffect(() => {
     if (courseId) loadAll()
@@ -411,7 +414,7 @@ export function CourseMembersPage() {
                           <span className="material-symbols-outlined text-xs mr-[2px]">
                             {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
                           </span>
-                          {user.role === 'admin' ? 'Admin' : user.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                          {roleLabel(user.role)}
                         </span>
                       </div>
                       <div className="font-body-xs text-xs text-on-surface-variant">{user.email}</div>
@@ -508,16 +511,16 @@ export function CourseMembersPage() {
                   <div>
                     <div className="flex items-center gap-sm">
                       <span className="font-body-md text-body-md text-on-surface">{member.name || 'Sin nombre'}</span>
-                      <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
-                        member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
-                        member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
-                        'bg-secondary-container text-on-secondary-container'
-                      }`}>
-                        <span className="material-symbols-outlined text-xs mr-[2px]">
-                          {member.role === 'admin' ? 'admin_panel_settings' : member.role === 'teacher' ? 'school' : 'person'}
+                        <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
+                          member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                          member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
+                          'bg-secondary-container text-on-secondary-container'
+                        }`}>
+                          <span className="material-symbols-outlined text-xs mr-[2px]">
+                            {member.role === 'admin' ? 'admin_panel_settings' : member.role === 'teacher' ? 'school' : 'person'}
+                          </span>
+                          {roleLabel(member.role)}
                         </span>
-                        {member.role === 'admin' ? 'Admin' : member.role === 'teacher' ? 'Profesor' : 'Estudiante'}
-                      </span>
                     </div>
                     <div className="font-body-sm text-body-sm text-on-surface-variant">{member.email}</div>
                   </div>

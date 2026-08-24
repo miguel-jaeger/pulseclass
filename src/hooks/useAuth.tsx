@@ -12,7 +12,7 @@ interface User {
 interface Profile {
   id: string
   user_id: string
-  role: 'Administrador' | 'Profesor' | 'Estudiante'
+  role: 'admin' | 'teacher' | 'student'
   name: string
 }
 
@@ -44,15 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!profileData) return null
 
-    const roleMap: Record<string, Profile['role']> = {
-      admin: 'Administrador',
-      teacher: 'Profesor',
-      student: 'Estudiante'
-    }
-
     return {
       ...profileData,
-      role: roleMap[profileData.role] || 'Estudiante'
+      role: profileData.role || 'student'
     } as Profile
   }
 

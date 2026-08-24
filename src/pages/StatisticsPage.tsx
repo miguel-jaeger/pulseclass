@@ -82,13 +82,13 @@ export function StatisticsPage() {
   useEffect(() => {
     async function fetchCourses() {
       if (!profile) return
-      if (profile.role === 'Administrador') {
+      if (profile.role === 'admin') {
         const { data } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
           .order('name')
         if (data) setCourses(data as Course[])
-      } else if (profile.role === 'Profesor') {
+      } else if (profile.role === 'teacher') {
         const { data: owned } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
@@ -140,7 +140,7 @@ export function StatisticsPage() {
 
       if (selectedCourse !== 'all') {
         sessionQuery = sessionQuery.eq('course_id', selectedCourse)
-      } else if (profile?.role !== 'Administrador' && courses.length > 0) {
+      } else if (profile?.role !== 'admin' && courses.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courses.map(c => c.id))
       }
 

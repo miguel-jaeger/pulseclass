@@ -23,8 +23,8 @@ export function Layout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(path)
   }
 
-  const filteredNavItems = navItems.filter(item => !item.adminOnly || profile?.role === 'Administrador')
-  const filteredBottomNav = bottomNavItems.filter(item => !item.adminOnly || profile?.role === 'Administrador')
+  const filteredNavItems = navItems.filter(item => !item.adminOnly || profile?.role === 'admin')
+  const filteredBottomNav = bottomNavItems.filter(item => !item.adminOnly || profile?.role === 'admin')
 
   return (
     <div className="flex h-full">
