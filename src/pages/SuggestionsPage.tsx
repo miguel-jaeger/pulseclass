@@ -18,36 +18,40 @@ interface Suggestion {
 }
 
 const typeLabels: Record<string, string> = {
-  correccion: 'Corrección',
-  adicion: 'Adición',
-  eliminacion: 'Eliminación',
+  mejora: 'Mejora',
+  nuevo: 'Nuevo',
+  problema: 'Problema',
+  contenido: 'Contenido',
 }
 
 const statusLabels: Record<string, string> = {
-  pendiente: 'Pendiente',
-  procede: 'Procede',
-  no_procede: 'No procede',
+  recibida: 'Recibida',
+  en_revision: 'En revisión',
+  aprobada: 'Aprobada',
+  rechazada: 'Rechazada',
   implementada: 'Implementada',
 }
 
 const statusStyles: Record<string, string> = {
-  pendiente: 'bg-amber-100 text-amber-800 border border-amber-300',
-  procede: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-  no_procede: 'bg-error-container text-on-error-container border border-error/30',
-  implementada: 'bg-green-100 text-green-800 border border-green-300',
+  recibida: 'bg-gray-100 text-gray-800 border border-gray-300',
+  en_revision: 'bg-amber-100 text-amber-800 border border-amber-300',
+  aprobada: 'bg-green-100 text-green-800 border border-green-300',
+  rechazada: 'bg-error-container text-on-error-container border border-error/30',
+  implementada: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
 }
 
 const typeStyles: Record<string, string> = {
-  correccion: 'bg-blue-100 text-blue-800 border border-blue-300',
-  adicion: 'bg-purple-100 text-purple-800 border border-purple-300',
-  eliminacion: 'bg-orange-100 text-orange-800 border border-orange-300',
+  mejora: 'bg-blue-100 text-blue-800 border border-blue-300',
+  nuevo: 'bg-purple-100 text-purple-800 border border-purple-300',
+  problema: 'bg-orange-100 text-orange-800 border border-orange-300',
+  contenido: 'bg-cyan-100 text-cyan-800 border border-cyan-300',
 }
 
 async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
-  formData.append('folder', 'Assets/pulseclasss')
+  formData.append('folder', 'pulseclass')
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
     method: 'POST',
@@ -64,7 +68,7 @@ export function SuggestionsPage() {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [formType, setFormType] = useState('correccion')
+  const [formType, setFormType] = useState('mejora')
   const [formDescription, setFormDescription] = useState('')
   const [formImages, setFormImages] = useState<File[]>([])
   const [formPreviews, setFormPreviews] = useState<string[]>([])
@@ -258,7 +262,7 @@ export function SuggestionsPage() {
 
       {/* Status Filter */}
       <div className="flex gap-sm mb-lg flex-wrap">
-        {['all', 'pendiente', 'procede', 'no_procede', 'implementada'].map(s => (
+        {['all', 'recibida', 'en_revision', 'aprobada', 'rechazada', 'implementada'].map(s => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -317,9 +321,10 @@ export function SuggestionsPage() {
                         onChange={(e) => handleStatusChange(s.id, e.target.value)}
                         className="border border-outline-variant rounded-lg px-sm py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                       >
-                        <option value="pendiente">Pendiente</option>
-                        <option value="procede">Procede</option>
-                        <option value="no_procede">No procede</option>
+                        <option value="recibida">Recibida</option>
+                        <option value="en_revision">En revisión</option>
+                        <option value="aprobada">Aprobada</option>
+                        <option value="rechazada">Rechazada</option>
                         <option value="implementada">Implementada</option>
                       </select>
                     )}
@@ -368,9 +373,10 @@ export function SuggestionsPage() {
               onChange={(e) => setFormType(e.target.value)}
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             >
-              <option value="correccion">Corrección</option>
-              <option value="adicion">Adición</option>
-              <option value="eliminacion">Eliminación</option>
+              <option value="mejora">Mejora</option>
+              <option value="nuevo">Nuevo</option>
+              <option value="problema">Problema</option>
+              <option value="contenido">Contenido</option>
             </select>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
@@ -416,7 +422,7 @@ export function SuggestionsPage() {
 
             <div className="flex justify-end gap-sm">
               <button
-                onClick={() => { setShowForm(false); setFormDescription(''); setFormType('correccion'); setFormImages([]); setFormPreviews([]) }}
+                onClick={() => { setShowForm(false); setFormDescription(''); setFormType('mejora'); setFormImages([]); setFormPreviews([]) }}
                 className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -447,9 +453,10 @@ export function SuggestionsPage() {
               onChange={(e) => setEditType(e.target.value)}
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             >
-              <option value="correccion">Corrección</option>
-              <option value="adicion">Adición</option>
-              <option value="eliminacion">Eliminación</option>
+              <option value="mejora">Mejora</option>
+              <option value="nuevo">Nuevo</option>
+              <option value="problema">Problema</option>
+              <option value="contenido">Contenido</option>
             </select>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
