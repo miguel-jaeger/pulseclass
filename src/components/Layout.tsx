@@ -31,13 +31,15 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* SideNavBar (Desktop) */}
       <nav className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 p-md bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40">
         <div className="mb-lg">
-          <div className="flex items-center gap-sm mb-xs">
-            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary-container text-lg">school</span>
+          <Link to="/" className="flex items-center gap-sm mb-xs group">
+            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-on-primary-container text-xl">school</span>
             </div>
-            <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
-          </div>
-          <div className="text-on-surface-variant font-label-sm text-label-sm">Portal Académico</div>
+            <div>
+              <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
+              <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfacción Estudiantil</div>
+            </div>
+          </Link>
         </div>
 
         <div className="flex-1 space-y-sm">
@@ -79,7 +81,12 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* TopAppBar (Mobile) */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface border-b border-outline-variant md:hidden">
-        <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
+        <div className="flex items-center gap-sm">
+          <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+            <span className="material-symbols-outlined text-on-primary-container text-lg">school</span>
+          </div>
+          <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
+        </div>
         <Link to="/profile" className="flex items-center gap-4 text-primary">
           <span className="material-symbols-outlined">account_circle</span>
         </Link>
