@@ -65,7 +65,7 @@ export default async function(req: Request): Promise<Response> {
 
     const adminClient = createClient({
       baseUrl: Deno.env.get('INSFORGE_BASE_URL'),
-      apiKey: Deno.env.get('INSFORGE_API_KEY')
+      apiKey: Deno.env.get('API_KEY')
     })
 
     const { error: updateError } = await adminClient.auth.admin.updateUser(userId, {

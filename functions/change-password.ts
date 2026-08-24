@@ -50,24 +50,10 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const email = userData.user.email
-
     const adminClient = createClient({
       baseUrl: Deno.env.get('INSFORGE_BASE_URL'),
-      apiKey: Deno.env.get('INSFORGE_API_KEY')
+      apiKey: Deno.env.get('API_KEY')
     })
-
-    const { error: signInError } = await client.auth.signInWithPassword({
-      email,
-      password: currentPassword
-    })
-
-    if (signInError) {
-      return new Response(JSON.stringify({ error: 'La contraseña actual es incorrecta' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
 
     const { error: updateError } = await adminClient.auth.admin.updateUser(userData.user.id, {
       password: newPassword
