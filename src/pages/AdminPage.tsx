@@ -181,7 +181,7 @@ export function AdminPage() {
       </div>
 
       {/* Summary Bar */}
-      <div className="flex flex-wrap items-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
+      <div className="flex flex-wrap items-center justify-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">group</span>
           <span className="font-body-sm text-body-sm text-on-surface-variant">Total:</span>
