@@ -4,6 +4,7 @@ CREATE TABLE suggestions (
   type TEXT NOT NULL CHECK (type IN ('correccion', 'adicion', 'eliminacion')),
   description TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pendiente' CHECK (status IN ('pendiente', 'procede', 'no_procede', 'implementada')),
+  images TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

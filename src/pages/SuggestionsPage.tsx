@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+
+const CLOUDINARY_CLOUD = 'dhecags26'
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
 
 interface Suggestion {
   id: string
@@ -8,6 +11,7 @@ interface Suggestion {
   type: string
   description: string
   status: string
+  images: string[]
   created_at: string
   updated_at: string
   profiles?: { name: string }
@@ -39,6 +43,22 @@ const typeStyles: Record<string, string> = {
   eliminacion: 'bg-orange-100 text-orange-800 border border-orange-300',
 }
 
+async function uploadToCloudinary(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  formData.append('folder', 'Assets/pulseclasss')
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!res.ok) throw new Error('Error al subir imagen')
+  const data = await res.json()
+  return data.secure_url
+}
+
 export function SuggestionsPage() {
   const { profile, user } = useAuth()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -46,12 +66,21 @@ export function SuggestionsPage() {
   const [showForm, setShowForm] = useState(false)
   const [formType, setFormType] = useState('correccion')
   const [formDescription, setFormDescription] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [formImages, setFormImages] = useState<File[]>([])
+  const [formPreviews, setFormPreviews] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editType, setEditType] = useState('')
   const [editDescription, setEditDescription] = useState('')
+  const [editImages, setEditImages] = useState<string[]>([])
+  const [editNewFiles, setEditNewFiles] = useState<File[]>([])
+  const [editPreviews, setEditPreviews] = useState<string[]>([])
+  const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
+  const [detailImageIndex, setDetailImageIndex] = useState(0)
+  const createFileRef = useRef<HTMLInputElement>(null)
+  const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = profile?.role === 'admin'
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -74,53 +103,105 @@ export function SuggestionsPage() {
     setLoading(false)
   }
 
+  const handleFileChange = (files: FileList | null, isEdit: boolean) => {
+    if (!files) return
+    const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
+    if (isEdit) {
+      setEditNewFiles(prev => [...prev, ...newFiles])
+      const newPreviews = newFiles.map(f => URL.createObjectURL(f))
+      setEditPreviews(prev => [...prev, ...newPreviews])
+    } else {
+      setFormImages(prev => [...prev, ...newFiles])
+      const newPreviews = newFiles.map(f => URL.createObjectURL(f))
+      setFormPreviews(prev => [...prev, ...newPreviews])
+    }
+  }
+
+  const removeFormImage = (index: number) => {
+    URL.revokeObjectURL(formPreviews[index])
+    setFormImages(prev => prev.filter((_, i) => i !== index))
+    setFormPreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const removeEditNewImage = (index: number) => {
+    URL.revokeObjectURL(editPreviews[index])
+    setEditNewFiles(prev => prev.filter((_, i) => i !== index))
+    setEditPreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const removeEditExistingImage = (index: number) => {
+    setEditImages(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async () => {
     if (!formDescription.trim() || !user?.id) return
-    setSubmitting(true)
+    setUploading(true)
 
-    const { error } = await insforge.database
-      .from('suggestions')
-      .insert([{
-        user_id: user.id,
-        type: formType,
-        description: formDescription.trim(),
-      }])
+    try {
+      const uploadedUrls: string[] = []
+      for (const file of formImages) {
+        const url = await uploadToCloudinary(file)
+        uploadedUrls.push(url)
+      }
 
-    if (error) {
-      showToast('Error al enviar la sugerencia', 'error')
-    } else {
+      const { error } = await insforge.database
+        .from('suggestions')
+        .insert([{
+          user_id: user.id,
+          type: formType,
+          description: formDescription.trim(),
+          images: uploadedUrls,
+        }])
+
+      if (error) throw error
       showToast('Sugerencia enviada correctamente')
       setFormDescription('')
       setFormType('correccion')
+      setFormImages([])
+      setFormPreviews([])
       setShowForm(false)
       fetchSuggestions()
+    } catch {
+      showToast('Error al enviar la sugerencia', 'error')
     }
-    setSubmitting(false)
+    setUploading(false)
   }
 
   const handleEdit = (s: Suggestion) => {
     setEditingId(s.id)
     setEditType(s.type)
     setEditDescription(s.description)
+    setEditImages(s.images || [])
+    setEditNewFiles([])
+    setEditPreviews([])
   }
 
   const handleSaveEdit = async () => {
     if (!editingId || !editDescription.trim()) return
-    setSubmitting(true)
+    setUploading(true)
 
-    const { error } = await insforge.database
-      .from('suggestions')
-      .update({ type: editType, description: editDescription.trim(), updated_at: new Date().toISOString() })
-      .eq('id', editingId)
+    try {
+      const newUrls: string[] = []
+      for (const file of editNewFiles) {
+        const url = await uploadToCloudinary(file)
+        newUrls.push(url)
+      }
 
-    if (error) {
-      showToast('Error al guardar los cambios', 'error')
-    } else {
+      const allImages = [...editImages, ...newUrls]
+
+      const { error } = await insforge.database
+        .from('suggestions')
+        .update({ type: editType, description: editDescription.trim(), images: allImages, updated_at: new Date().toISOString() })
+        .eq('id', editingId)
+
+      if (error) throw error
       showToast('Sugerencia actualizada')
       setEditingId(null)
       fetchSuggestions()
+    } catch {
+      showToast('Error al guardar los cambios', 'error')
     }
-    setSubmitting(false)
+    setUploading(false)
   }
 
   const handleStatusChange = async (id: string, newStatus: string) => {
@@ -204,6 +285,7 @@ export function SuggestionsPage() {
         <div className="space-y-md">
           {filtered.map(s => {
             const isOwn = s.user_id === user?.id
+            const hasImages = s.images && s.images.length > 0
             return (
               <div key={s.id} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
                 <div className="flex flex-wrap items-start justify-between gap-sm mb-md">
@@ -214,8 +296,21 @@ export function SuggestionsPage() {
                     <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${statusStyles[s.status]}`}>
                       {statusLabels[s.status]}
                     </span>
+                    {hasImages && (
+                      <span className="flex items-center gap-1 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-lg">image</span>
+                        <span className="font-label-sm text-label-sm">{s.images.length}</span>
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-sm">
+                    <button
+                      onClick={() => setDetailSuggestion(s)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                      title="Ver detalles"
+                    >
+                      <span className="material-symbols-outlined text-lg">visibility</span>
+                    </button>
                     {isAdmin && (
                       <select
                         value={s.status}
@@ -248,7 +343,7 @@ export function SuggestionsPage() {
                     )}
                   </div>
                 </div>
-                <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap">{s.description}</p>
+                <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
                 <div className="flex items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
                   <span className="font-body-sm text-body-sm">{s.profiles?.name || 'Anónimo'}</span>
@@ -263,8 +358,8 @@ export function SuggestionsPage() {
 
       {/* Create Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Nueva sugerencia</h3>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
@@ -284,12 +379,44 @@ export function SuggestionsPage() {
               onChange={(e) => setFormDescription(e.target.value)}
               rows={4}
               placeholder="Describe tu sugerencia..."
-              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-lg bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
             />
+
+            <label className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes (opcional)</label>
+            <input
+              ref={createFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => handleFileChange(e.target.files, false)}
+              className="hidden"
+            />
+            <button
+              onClick={() => createFileRef.current?.click()}
+              className="w-full border border-dashed border-outline-variant rounded-xl px-md py-3 mb-md bg-surface font-body-sm text-body-sm text-on-surface-variant hover:bg-secondary-container transition-colors flex items-center justify-center gap-sm"
+            >
+              <span className="material-symbols-outlined text-lg">cloud_upload</span>
+              Adjuntar imágenes
+            </button>
+            {formPreviews.length > 0 && (
+              <div className="flex flex-wrap gap-sm mb-md">
+                {formPreviews.map((preview, i) => (
+                  <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-outline-variant">
+                    <img src={preview} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeFormImage(i)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-error text-on-error rounded-full flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex justify-end gap-sm">
               <button
-                onClick={() => { setShowForm(false); setFormDescription(''); setFormType('correccion') }}
+                onClick={() => { setShowForm(false); setFormDescription(''); setFormType('correccion'); setFormImages([]); setFormPreviews([]) }}
                 className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
@@ -297,11 +424,11 @@ export function SuggestionsPage() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting || !formDescription.trim()}
+                disabled={uploading || !formDescription.trim()}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-lg">send</span>
-                {submitting ? 'Enviando...' : 'Enviar'}
+                {uploading ? 'Enviando...' : 'Enviar'}
               </button>
             </div>
           </div>
@@ -310,8 +437,8 @@ export function SuggestionsPage() {
 
       {/* Edit Modal */}
       {editingId && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar sugerencia</h3>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
@@ -331,8 +458,51 @@ export function SuggestionsPage() {
               onChange={(e) => setEditDescription(e.target.value)}
               rows={4}
               placeholder="Describe tu sugerencia..."
-              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-lg bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
             />
+
+            <label className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes</label>
+            <input
+              ref={editFileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => handleFileChange(e.target.files, true)}
+              className="hidden"
+            />
+            <button
+              onClick={() => editFileRef.current?.click()}
+              className="w-full border border-dashed border-outline-variant rounded-xl px-md py-3 mb-md bg-surface font-body-sm text-body-sm text-on-surface-variant hover:bg-secondary-container transition-colors flex items-center justify-center gap-sm"
+            >
+              <span className="material-symbols-outlined text-lg">cloud_upload</span>
+              Adjuntar imágenes
+            </button>
+            {(editImages.length > 0 || editPreviews.length > 0) && (
+              <div className="flex flex-wrap gap-sm mb-md">
+                {editImages.map((url, i) => (
+                  <div key={`existing-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-outline-variant">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeEditExistingImage(i)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-error text-on-error rounded-full flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                ))}
+                {editPreviews.map((preview, i) => (
+                  <div key={`new-${i}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-outline-variant">
+                    <img src={preview} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removeEditNewImage(i)}
+                      className="absolute top-1 right-1 w-5 h-5 bg-error text-on-error rounded-full flex items-center justify-center"
+                    >
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="flex justify-end gap-sm">
               <button
@@ -344,12 +514,88 @@ export function SuggestionsPage() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                disabled={submitting || !editDescription.trim()}
+                disabled={uploading || !editDescription.trim()}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-lg">save</span>
-                {submitting ? 'Guardando...' : 'Guardar'}
+                {uploading ? 'Guardando...' : 'Guardar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailSuggestion && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant my-lg">
+            <div className="flex items-start justify-between mb-lg">
+              <div className="flex flex-wrap items-center gap-sm">
+                <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${typeStyles[detailSuggestion.type]}`}>
+                  {typeLabels[detailSuggestion.type]}
+                </span>
+                <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${statusStyles[detailSuggestion.status]}`}>
+                  {statusLabels[detailSuggestion.status]}
+                </span>
+              </div>
+              <button
+                onClick={() => setDetailSuggestion(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            <p className="font-body-md text-body-md text-on-surface mb-lg whitespace-pre-wrap">{detailSuggestion.description}</p>
+
+            {detailSuggestion.images && detailSuggestion.images.length > 0 && (
+              <div className="mb-lg">
+                <p className="font-label-md text-label-md text-on-surface-variant mb-sm">Imágenes adjuntas</p>
+                <div className="relative rounded-xl overflow-hidden border border-outline-variant bg-surface">
+                  <img
+                    src={detailSuggestion.images[detailImageIndex]}
+                    alt={`Imagen ${detailImageIndex + 1}`}
+                    className="w-full max-h-80 object-contain"
+                  />
+                  {detailSuggestion.images.length > 1 && (
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-sm">
+                      {detailSuggestion.images.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setDetailImageIndex(i)}
+                          className={`w-2 h-2 rounded-full transition-colors ${i === detailImageIndex ? 'bg-primary' : 'bg-on-surface-variant/40'}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {detailSuggestion.images.length > 1 && (
+                  <div className="flex justify-center gap-sm mt-sm">
+                    <button
+                      onClick={() => setDetailImageIndex(prev => prev > 0 ? prev - 1 : detailSuggestion.images.length - 1)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">chevron_left</span>
+                    </button>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant self-center">
+                      {detailImageIndex + 1} / {detailSuggestion.images.length}
+                    </span>
+                    <button
+                      onClick={() => setDetailImageIndex(prev => prev < detailSuggestion.images.length - 1 ? prev + 1 : 0)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">chevron_right</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
+              <span className="material-symbols-outlined text-lg">person</span>
+              <span className="font-body-sm text-body-sm">{detailSuggestion.profiles?.name || 'Anónimo'}</span>
+              <span className="font-body-sm text-body-sm">·</span>
+              <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>
           </div>
         </div>
