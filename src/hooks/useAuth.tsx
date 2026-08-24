@@ -42,7 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('user_id', userId)
       .single()
 
-    return profileData as Profile | null
+    if (!profileData) return null
+
+    const roleMap: Record<string, Profile['role']> = {
+      admin: 'Administrador',
+      teacher: 'Profesor',
+      student: 'Estudiante'
+    }
+
+    return {
+      ...profileData,
+      role: roleMap[profileData.role] || 'Estudiante'
+    } as Profile
   }
 
   const refreshProfile = async () => {
