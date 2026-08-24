@@ -49,6 +49,7 @@ export function DashboardPage() {
           const { data, error } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
+            .eq('is_active', true)
             .order('created_at', { ascending: false })
           if (!error && data) courses = data as Course[]
         } else if (profile!.role === 'teacher') {
@@ -56,6 +57,7 @@ export function DashboardPage() {
             .from('courses')
             .select('id, name, description, created_by, is_active')
             .eq('created_by', profile!.user_id)
+            .eq('is_active', true)
 
           const { data: memberRows, error: memberError } = await insforge.database
             .from('course_members')
@@ -73,6 +75,7 @@ export function DashboardPage() {
                 .from('courses')
                 .select('id, name, description, created_by, is_active')
                 .in('id', memberIds)
+                .eq('is_active', true)
               if (memberCourses) {
                 const existing = new Set(courses.map(c => c.id))
                 for (const mc of memberCourses as Course[]) {
@@ -230,11 +233,7 @@ export function DashboardPage() {
             <Link
               key={course.id}
               to={`/courses/${course.id}/sessions`}
-              className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
-                course.is_active
-                  ? 'border-outline-variant border-t-[3px] border-t-primary'
-                  : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
-              }`}
+              className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-md">
                 <div className="flex-1 min-w-0">
