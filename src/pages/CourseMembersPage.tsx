@@ -261,7 +261,7 @@ export function CourseMembersPage() {
         .eq('course_id', courseId)
       const memberUserIds = new Set((existingMembers as { user_id: string }[] || []).map(m => m.user_id))
 
-      const imported: number = 0
+      let imported = 0
       const skipped: { name: string; email: string }[] = []
 
       for (let i = 1; i < lines.length; i++) {
