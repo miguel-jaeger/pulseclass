@@ -24,6 +24,7 @@ export function AdminPage() {
   const [editForm, setEditForm] = useState({ name: '', email: '', role: 'Estudiante' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchUsers()
@@ -114,8 +115,6 @@ export function AdminPage() {
   }
 
   const deleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`¿Eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) return
-
     const { error } = await insforge.database
       .from('profiles')
       .delete()
@@ -123,6 +122,36 @@ export function AdminPage() {
 
     if (!error) {
       setUsers(prev => prev.filter(u => u.user_id !== userId))
+    }
+  }
+
+  const deleteSelectedUsers = async () => {
+    if (selectedUsers.size === 0) return
+    const { error } = await insforge.database
+      .from('profiles')
+      .delete()
+      .in('user_id', Array.from(selectedUsers))
+
+    if (!error) {
+      setUsers(prev => prev.filter(u => !selectedUsers.has(u.user_id)))
+      setSelectedUsers(new Set())
+    }
+  }
+
+  const toggleSelectUser = (userId: string) => {
+    setSelectedUsers(prev => {
+      const next = new Set(prev)
+      if (next.has(userId)) next.delete(userId)
+      else next.add(userId)
+      return next
+    })
+  }
+
+  const toggleSelectAllUsers = () => {
+    if (selectedUsers.size === filteredUsers.length) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map(u => u.user_id)))
     }
   }
 
@@ -216,10 +245,32 @@ export function AdminPage() {
         <p className="font-body-md text-body-md text-on-surface-variant">Cargando usuarios...</p>
       ) : (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+          {selectedUsers.size > 0 && (
+            <div className="flex items-center justify-between px-md py-2 bg-error-container border-b border-outline-variant">
+              <span className="font-body-sm text-body-sm text-on-error-container">
+                {selectedUsers.size} usuarios seleccionados
+              </span>
+              <button
+                onClick={deleteSelectedUsers}
+                className="bg-error text-on-error font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">group_remove</span>
+                Eliminar seleccionados
+              </button>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
+                  <th className="px-md py-3 text-left w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                      onChange={toggleSelectAllUsers}
+                      className="w-4 h-4 accent-primary rounded"
+                    />
+                  </th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Nombre</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant hidden md:table-cell">Correo</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Rol</th>
@@ -229,6 +280,14 @@ export function AdminPage() {
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+                    <td className="px-md py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.has(user.user_id)}
+                        onChange={() => toggleSelectUser(user.user_id)}
+                        className="w-4 h-4 accent-primary rounded"
+                      />
+                    </td>
                     <td className="px-md py-3">
                       <div className="font-body-sm text-body-sm text-on-surface font-medium">{user.name}</div>
                       <div className="font-body-sm text-body-sm text-on-surface-variant md:hidden">{user.email}</div>
