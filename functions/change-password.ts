@@ -53,7 +53,7 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const updateRes = await fetch(`${baseUrl}/auth/v1/admin/users/${userData.user.id}`, {
+    const updateRes = await fetch(`${baseUrl}/auth/v1/users/${userData.user.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
