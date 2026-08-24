@@ -248,88 +248,29 @@ export function CourseMembersPage() {
         return
       }
 
-      const { data: existingProfiles } = await insforge.database
-        .from('profiles')
-        .select('user_id, email')
-      const emailToUserId = new Map(
-        (existingProfiles as { user_id: string; email: string }[] || []).map(p => [p.email?.toLowerCase(), p.user_id])
-      )
-
-      const { data: existingMembers } = await insforge.database
-        .from('course_members')
-        .select('user_id')
-        .eq('course_id', courseId)
-      const memberUserIds = new Set((existingMembers as { user_id: string }[] || []).map(m => m.user_id))
-
-      let imported = 0
-      const skipped: { name: string; email: string }[] = []
-
+      const parsedUsers: { name: string; email: string }[] = []
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCsvLine(lines[i])
         const name = (cols[nameIdx] || '').replace(/"/g, '').trim()
         const email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
-
-        if (!name || !email) {
-          skipped.push({ name: name || '(vacío)', email: email || '(vacío)' })
-          continue
-        }
-
-        let userId = emailToUserId.get(email)
-
-        if (userId) {
-          if (!memberUserIds.has(userId)) {
-            const { error: insertErr } = await insforge.database
-              .from('course_members')
-              .insert([{ course_id: courseId, user_id: userId }])
-            if (insertErr) {
-              console.error('Error adding existing user to course:', insertErr)
-              skipped.push({ name, email })
-              continue
-            }
-            memberUserIds.add(userId)
-          }
-          imported++
-          continue
-        }
-
-        try {
-          const { data, error } = await insforge.auth.signUp({
-            email,
-            password: '12345678',
-            name
-          })
-
-          if (error) {
-            console.error('Error creating user:', error)
-            skipped.push({ name, email })
-            continue
-          }
-
-          if (data?.user) {
-            await insforge.database
-              .from('profiles')
-              .update({ role: 'Estudiante', name })
-              .eq('user_id', data.user.id)
-
-            const { error: memberErr } = await insforge.database
-              .from('course_members')
-              .insert([{ course_id: courseId, user_id: data.user.id }])
-            if (memberErr) {
-              console.error('Error adding new user to course:', memberErr)
-              skipped.push({ name, email })
-              continue
-            }
-          }
-
-          imported++
-        } catch (e) {
-          console.error('Import error:', e)
-          skipped.push({ name, email })
+        if (name || email) {
+          parsedUsers.push({ name, email })
         }
       }
 
-      setImportResult({ imported, skipped })
-      if (imported > 0) {
+      const { data, error } = await insforge.functions.invoke('csv-import-users', {
+        method: 'POST',
+        body: { courseId, users: parsedUsers }
+      })
+
+      if (error) {
+        console.error('Import function error:', error)
+        setImportResult({ imported: 0, skipped: parsedUsers })
+        return
+      }
+
+      setImportResult({ imported: data.imported, skipped: data.skipped })
+      if (data.imported > 0) {
         await loadAll()
       }
     } catch {

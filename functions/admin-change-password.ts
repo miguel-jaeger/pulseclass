@@ -38,11 +38,9 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
+    const apiKey = Deno.env.get('API_KEY')
 
-    const client = createClient({
-      baseUrl,
-      accessToken: userToken
-    })
+    const client = createClient({ baseUrl, accessToken: userToken })
 
     const { data: userData } = await client.auth.getCurrentUser()
     if (!userData?.user?.id) {
@@ -65,17 +63,42 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const { error: updateError } = await client.database.rpc('admin_update_user_password', {
+    const adminClient = createClient({ baseUrl, accessToken: apiKey })
+
+    const { error: updateError } = await adminClient.database.rpc('admin_update_user_password', {
       p_user_id: userId,
       p_new_password: newPassword
     })
 
     if (updateError) {
       console.error('RPC error:', updateError)
-      return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+
+      const connStr = Deno.env.get('DATABASE_URL') || Deno.env.get('POSTGRES_URL')
+      if (connStr) {
+        const sqlModule = await import('npm:pg')
+        const Pool = sqlModule.default?.Pool || sqlModule.Pool
+        const pool = new Pool({ connectionString: connStr, ssl: { rejectUnauthorized: false } })
+        try {
+          await pool.query(
+            'SELECT public.admin_update_user_password($1, $2)',
+            [userId, newPassword]
+          )
+          console.log('Direct SQL password update succeeded')
+        } catch (sqlErr) {
+          console.error('Direct SQL error:', sqlErr)
+          return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: String(sqlErr) }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        } finally {
+          await pool.end()
+        }
+      } else {
+        return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: updateError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
