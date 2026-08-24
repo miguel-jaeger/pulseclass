@@ -178,9 +178,9 @@ export function RateSessionPage() {
               const isSelected = rating.score === score
 
               const icon = isInsatisfied ? 'sentiment_dissatisfied' : isNeutral ? 'sentiment_neutral' : 'sentiment_satisfied'
-              const selectedBg = isInsatisfied ? 'bg-error-container ring-2 ring-error' : isNeutral ? 'bg-tertiary-container ring-2 ring-tertiary' : 'bg-primary-container ring-2 ring-primary'
-              const selectedText = isInsatisfied ? 'text-on-error-container' : isNeutral ? 'text-on-tertiary-container' : 'text-on-primary-container'
-              const hoverBg = isInsatisfied ? 'hover:bg-error-container/50' : isNeutral ? 'hover:bg-tertiary-container/50' : 'hover:bg-primary-container/50'
+              const iconColor = isInsatisfied ? 'text-red-500' : isNeutral ? 'text-yellow-500' : 'text-green-500'
+              const selectedBg = isInsatisfied ? 'bg-red-50 ring-2 ring-red-500' : isNeutral ? 'bg-yellow-50 ring-2 ring-yellow-500' : 'bg-green-50 ring-2 ring-green-500'
+              const selectedText = isInsatisfied ? 'text-red-700' : isNeutral ? 'text-yellow-700' : 'text-green-700'
 
               return (
                 <label
@@ -188,7 +188,7 @@ export function RateSessionPage() {
                   className={`relative flex flex-col items-center flex-1 py-sm px-xs rounded-xl cursor-pointer transition-all ${
                     isSelected
                       ? selectedBg
-                      : `hover:bg-surface-container ${hoverBg}`
+                      : 'hover:bg-surface-container'
                   }`}
                 >
                   <input
@@ -199,7 +199,7 @@ export function RateSessionPage() {
                     onChange={() => setRating({ ...rating, score })}
                     className="sr-only"
                   />
-                  <span className={`material-symbols-outlined text-[24px] md:text-[28px] ${isSelected ? selectedText : 'text-on-surface-variant'}`}>
+                  <span className={`material-symbols-outlined text-[24px] md:text-[28px] ${iconColor}`}>
                     {icon}
                   </span>
                   <span className={`font-label-md text-label-md mt-2xs ${isSelected ? selectedText : 'text-on-surface'}`}>
@@ -211,15 +211,15 @@ export function RateSessionPage() {
           </div>
           <div className="flex justify-between font-body-xs text-body-xs text-on-surface-variant mt-xs px-xs">
             <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-error">sentiment_dissatisfied</span>
+              <span className="material-symbols-outlined text-[14px] text-red-500">sentiment_dissatisfied</span>
               Insatisfecho
             </span>
             <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-tertiary">sentiment_neutral</span>
+              <span className="material-symbols-outlined text-[14px] text-yellow-500">sentiment_neutral</span>
               Neutral
             </span>
             <span className="flex items-center gap-2xs">
-              <span className="material-symbols-outlined text-[14px] text-primary">sentiment_satisfied</span>
+              <span className="material-symbols-outlined text-[14px] text-green-500">sentiment_satisfied</span>
               Satisfecho
             </span>
           </div>
