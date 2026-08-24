@@ -283,16 +283,22 @@ export function StatisticsPage() {
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
-              <select
-                value={selectedCourse}
-                onChange={e => setSelectedCourse(e.target.value)}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
-              >
-                <option value="all">Todos los cursos</option>
+              <input
+                type="text"
+                list="courses-list"
+                placeholder="Buscar curso..."
+                value={selectedCourse === 'all' ? '' : courses.find(c => c.id === selectedCourse)?.name ?? ''}
+                onChange={e => {
+                  const match = courses.find(c => c.name.toLowerCase() === e.target.value.toLowerCase())
+                  setSelectedCourse(match ? match.id : 'all')
+                }}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+              />
+              <datalist id="courses-list">
                 {courses.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.name} />
                 ))}
-              </select>
+              </datalist>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
                 filter_list
               </span>
