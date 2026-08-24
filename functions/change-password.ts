@@ -38,7 +38,6 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
-    const apiKey = Deno.env.get('API_KEY')
 
     const client = createClient({
       baseUrl,
@@ -53,21 +52,14 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const updateRes = await fetch(`${baseUrl}/auth/v1/users/${userData.user.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': apiKey,
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({ password: newPassword })
+    const { error: updateError } = await client.database.rpc('admin_update_user_password', {
+      p_user_id: userData.user.id,
+      p_new_password: newPassword
     })
 
-    const resBody = await updateRes.text()
-    console.log('Update password response:', updateRes.status, resBody)
-
-    if (!updateRes.ok) {
-      return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
+    if (updateError) {
+      console.error('RPC error:', updateError)
+      return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña', details: updateError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
