@@ -1,26 +1,57 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import type { ReactNode } from 'react'
 
-const navItems = [
+interface NavItem {
+  to: string
+  icon: string
+  label: string
+  adminOnly?: boolean
+  children?: { to: string; icon: string; label: string }[]
+}
+
+const navItems: NavItem[] = [
   { to: '/', icon: 'dashboard', label: 'Resumen' },
   { to: '/courses', icon: 'star_rate', label: 'Cursos' },
-  { to: '/admin', icon: 'person', label: 'Administrar', adminOnly: true },
+  {
+    to: '/admin',
+    icon: 'manage_accounts',
+    label: 'Gestion de Usuarios',
+    adminOnly: true,
+    children: [
+      { to: '/admin', icon: 'people', label: 'Usuarios' },
+      { to: '/admin/roles', icon: 'shield', label: 'Roles' },
+    ],
+  },
 ]
 
 const bottomNavItems = [
   { to: '/', icon: 'home', label: 'Inicio', fill: true },
   { to: '/courses', icon: 'grade', label: 'Cursos' },
-  { to: '/admin', icon: 'person', label: 'Administrar', adminOnly: true },
+  { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
   const location = useLocation()
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
+  }
+
+  const toggleMenu = (path: string) => {
+    setExpandedMenus(prev => {
+      const next = new Set(prev)
+      if (next.has(path)) {
+        next.delete(path)
+      } else {
+        next.add(path)
+      }
+      return next
+    })
   }
 
   const filteredNavItems = navItems.filter(item => !item.adminOnly || profile?.role === 'admin')
@@ -37,26 +68,73 @@ export function Layout({ children }: { children: ReactNode }) {
             </div>
             <div>
               <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
-              <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfacción Estudiantil</div>
+              <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfaccion Estudiantil</div>
             </div>
           </Link>
         </div>
 
-        <div className="flex-1 space-y-sm">
-          {filteredNavItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-                isActive(item.to)
-                  ? 'bg-primary-container text-on-primary-container font-bold'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
-              }`}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+        <div className="flex-1 space-y-xs">
+          {filteredNavItems.map((item) => {
+            const hasChildren = item.children && item.children.length > 0
+            const isExpanded = expandedMenus.has(item.to)
+            const active = hasChildren
+              ? item.children!.some(child => isActive(child.to))
+              : isActive(item.to)
+
+            if (hasChildren) {
+              return (
+                <div key={item.to}>
+                  <button
+                    onClick={() => toggleMenu(item.to)}
+                    className={`w-full flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+                      active
+                        ? 'bg-primary-container text-on-primary-container font-bold'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">{item.icon}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className={`material-symbols-outlined text-lg transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                      expand_more
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <div className="ml-6 mt-xs space-y-xs">
+                      {item.children!.map(child => (
+                        <Link
+                          key={child.to}
+                          to={child.to}
+                          className={`flex items-center gap-md px-4 py-2 rounded-full font-label-sm text-label-sm transition-all ${
+                            isActive(child.to)
+                              ? 'bg-secondary-container text-on-secondary-container font-bold'
+                              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{child.icon}</span>
+                          <span>{child.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+                  active
+                    ? 'bg-primary-container text-on-primary-container font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                }`}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
         </div>
 
         <div className="mt-auto space-y-sm">
@@ -73,7 +151,7 @@ export function Layout({ children }: { children: ReactNode }) {
               className="w-full flex items-center gap-md px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full font-label-md text-label-md transition-all"
             >
               <span className="material-symbols-outlined">logout</span>
-              <span>Cerrar sesión</span>
+              <span>Cerrar sesion</span>
             </button>
           </div>
         </div>
