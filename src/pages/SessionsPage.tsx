@@ -169,20 +169,20 @@ export function SessionsPage() {
                 <div className="flex gap-sm">
                   <Link
                     to={`/sessions/${session.id}`}
-                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-2 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
                   >
                     Detalles
                   </Link>
                   <Link
                     to={`/sessions/${session.id}/rate`}
-                    className="bg-primary text-on-primary font-bold py-2 px-md rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                    className="bg-primary text-on-primary font-bold py-1 px-md rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
                   >
                     Evaluar
                   </Link>
                   {(profile?.role === 'admin' || profile?.role === 'Administrador' || session.created_by === profile?.user_id) && (
                     <button
                       onClick={() => deleteSession(session.id)}
-                      className="bg-surface-container border border-error text-error font-bold py-2 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
+                      className="bg-surface-container border border-error text-error font-bold py-1 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
                     >
                       <span className="material-symbols-outlined text-lg">delete</span>
                     </button>
