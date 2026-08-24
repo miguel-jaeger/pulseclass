@@ -333,7 +333,7 @@ export function CourseMembersPage() {
                 className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-sm"
               >
                 <span className="material-symbols-outlined text-lg">group_add</span>
-                Agregar {selectedUsers.size} seleccionados
+                Agregar
               </button>
             )}
             <button
