@@ -79,15 +79,21 @@ export function CoursesPage() {
   }
 
   const createCourse = async () => {
-    const { error } = await insforge.database
+    const { data, error } = await insforge.database
       .from('courses')
       .insert([{
         name: newCourse.name,
         description: newCourse.description,
         created_by: profile?.user_id
       }])
+      .select('id')
+      .single()
 
-    if (!error) {
+    if (!error && data) {
+      await insforge.database
+        .from('course_members')
+        .insert([{ course_id: data.id, user_id: profile?.user_id }])
+
       setShowCreateModal(false)
       setNewCourse({ name: '', description: '' })
       fetchCourses()
