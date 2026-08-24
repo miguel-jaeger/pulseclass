@@ -170,46 +170,58 @@ export function RateSessionPage() {
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción
           </label>
-          <div className="grid grid-cols-3 gap-md">
-            {[
-              { value: 4, label: 'Insatisfecho', range: '1-6', icon: 'sentiment_dissatisfied', color: 'error', bgClass: 'bg-error-container', textClass: 'text-on-error-container', borderClass: 'border-error', ringClass: 'ring-error' },
-              { value: 7, label: 'Neutral', range: '7-8', icon: 'sentiment_neutral', color: 'tertiary', bgClass: 'bg-tertiary-container', textClass: 'text-on-tertiary-container', borderClass: 'border-tertiary', ringClass: 'ring-tertiary' },
-              { value: 9, label: 'Satisfecho', range: '9-10', icon: 'sentiment_satisfied', color: 'primary', bgClass: 'bg-primary-container', textClass: 'text-on-primary-container', borderClass: 'border-primary', ringClass: 'ring-primary' }
-            ].map((option) => {
-              const isSelected = (
-                (option.value === 4 && rating.score >= 1 && rating.score <= 6) ||
-                (option.value === 7 && rating.score >= 7 && rating.score <= 8) ||
-                (option.value === 9 && rating.score >= 9 && rating.score <= 10)
-              )
+          <div className="flex justify-between gap-xs">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
+              const isInsatisfied = score <= 6
+              const isNeutral = score >= 7 && score <= 8
+              const isSatisfied = score >= 9
+              const isSelected = rating.score === score
+
+              const icon = isInsatisfied ? 'sentiment_dissatisfied' : isNeutral ? 'sentiment_neutral' : 'sentiment_satisfied'
+              const selectedBg = isInsatisfied ? 'bg-error-container ring-2 ring-error' : isNeutral ? 'bg-tertiary-container ring-2 ring-tertiary' : 'bg-primary-container ring-2 ring-primary'
+              const selectedText = isInsatisfied ? 'text-on-error-container' : isNeutral ? 'text-on-tertiary-container' : 'text-on-primary-container'
+              const hoverBg = isInsatisfied ? 'hover:bg-error-container/50' : isNeutral ? 'hover:bg-tertiary-container/50' : 'hover:bg-primary-container/50'
+
               return (
                 <label
-                  key={option.label}
-                  className={`relative flex flex-col items-center p-md rounded-xl border-2 cursor-pointer transition-all ${
+                  key={score}
+                  className={`relative flex flex-col items-center flex-1 py-sm px-xs rounded-xl cursor-pointer transition-all ${
                     isSelected
-                      ? `${option.borderClass} ${option.bgClass} ring-2 ${option.ringClass}`
-                      : 'border-outline-variant hover:border-outline'
+                      ? selectedBg
+                      : `hover:bg-surface-container ${hoverBg}`
                   }`}
                 >
                   <input
                     type="radio"
                     name="satisfaction"
-                    value={option.value}
+                    value={score}
                     checked={isSelected}
-                    onChange={() => setRating({ ...rating, score: option.value })}
+                    onChange={() => setRating({ ...rating, score })}
                     className="sr-only"
                   />
-                  <span className={`material-symbols-outlined text-[40px] ${isSelected ? option.textClass : 'text-on-surface-variant'}`}>
-                    {option.icon}
+                  <span className={`material-symbols-outlined text-[24px] md:text-[28px] ${isSelected ? selectedText : 'text-on-surface-variant'}`}>
+                    {icon}
                   </span>
-                  <span className={`font-label-lg text-label-lg mt-xs ${isSelected ? option.textClass : 'text-on-surface'}`}>
-                    {option.label}
-                  </span>
-                  <span className={`font-body-xs text-body-xs ${isSelected ? option.textClass : 'text-on-surface-variant'}`}>
-                    {option.range}
+                  <span className={`font-label-md text-label-md mt-2xs ${isSelected ? selectedText : 'text-on-surface'}`}>
+                    {score}
                   </span>
                 </label>
               )
             })}
+          </div>
+          <div className="flex justify-between font-body-xs text-body-xs text-on-surface-variant mt-xs px-xs">
+            <span className="flex items-center gap-2xs">
+              <span className="material-symbols-outlined text-[14px] text-error">sentiment_dissatisfied</span>
+              Insatisfecho
+            </span>
+            <span className="flex items-center gap-2xs">
+              <span className="material-symbols-outlined text-[14px] text-tertiary">sentiment_neutral</span>
+              Neutral
+            </span>
+            <span className="flex items-center gap-2xs">
+              <span className="material-symbols-outlined text-[14px] text-primary">sentiment_satisfied</span>
+              Satisfecho
+            </span>
           </div>
         </div>
 
