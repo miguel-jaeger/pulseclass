@@ -171,7 +171,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 ml-0 md:ml-64 pt-16 md:pt-0 pb-16 md:pb-0 p-margin-mobile md:p-margin-desktop max-w-[max-width] mx-auto w-full min-h-screen">
+      <main className="flex-1 ml-0 md:ml-64 pt-16 md:pt-xl pb-16 md:pb-xl px-margin-mobile md:px-margin-desktop max-w-[max-width] mx-auto w-full min-h-screen">
         {children}
       </main>
 
