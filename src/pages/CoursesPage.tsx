@@ -19,6 +19,7 @@ export function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newCourse, setNewCourse] = useState({ name: '', description: '' })
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [editForm, setEditForm] = useState({ name: '', description: '', is_active: true })
@@ -125,10 +126,15 @@ export function CoursesPage() {
     }
   }
 
-  const filteredCourses = courses.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredCourses = courses.filter((c) => {
+    const matchesSearch =
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' && c.is_active) ||
+      (statusFilter === 'inactive' && !c.is_active)
+    return matchesSearch && matchesStatus
+  })
 
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando cursos...</div>
@@ -151,15 +157,26 @@ export function CoursesPage() {
         )}
       </header>
 
-      <div className="relative mb-lg">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-        <input
-          type="text"
-          placeholder="Buscar cursos por nombre o descripción..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-        />
+      <div className="flex flex-col md:flex-row gap-md mb-lg">
+        <div className="flex-1 relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+          <input
+            type="text"
+            placeholder="Buscar cursos por nombre o descripción..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+          className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="active">Activos</option>
+          <option value="inactive">Inactivos</option>
+        </select>
       </div>
 
       {/* Summary Bar */}
