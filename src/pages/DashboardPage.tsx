@@ -1,60 +1,232 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+
+interface Course {
+  id: string
+  name: string
+  description: string
+  created_by: string
+  is_active: boolean
+}
+
+interface Session {
+  id: string
+  course_id: string
+  title: string
+  date: string
+}
+
+interface Rating {
+  id: string
+  session_id: string
+  score: number
+}
+
+interface CourseSummary {
+  course: Course
+  sessionCount: number
+  ratingCount: number
+  avgScore: number
+}
 
 export function DashboardPage() {
   const { profile } = useAuth()
+  const [summaries, setSummaries] = useState<CourseSummary[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!profile) return
+
+    let cancelled = false
+
+    async function fetchDashboard() {
+      let courses: Course[] = []
+
+      if (profile!.role === 'admin') {
+        const { data } = await insforge.database
+          .from('courses')
+          .select('id, name, description, created_by, is_active')
+          .order('created_at', { ascending: false })
+        if (data) courses = data as Course[]
+      } else if (profile!.role === 'teacher') {
+        const { data: owned } = await insforge.database
+          .from('courses')
+          .select('id, name, description, created_by, is_active')
+          .eq('created_by', profile!.user_id)
+        const { data: memberRows } = await insforge.database
+          .from('course_members')
+          .select('course_id')
+          .eq('user_id', profile!.user_id)
+        const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
+        let memberCourses: Course[] = []
+        if (memberIds.length > 0) {
+          const { data } = await insforge.database
+            .from('courses')
+            .select('id, name, description, created_by, is_active')
+            .in('id', memberIds)
+          memberCourses = (data as Course[]) || []
+        }
+        const all = [...(owned as Course[] || []), ...memberCourses]
+        courses = all.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
+      } else {
+        const { data: memberRows } = await insforge.database
+          .from('course_members')
+          .select('course_id')
+          .eq('user_id', profile!.user_id)
+        const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
+        if (memberIds.length > 0) {
+          const { data } = await insforge.database
+            .from('courses')
+            .select('id, name, description, created_by, is_active')
+            .in('id', memberIds)
+            .eq('is_active', true)
+          if (data) courses = data as Course[]
+        }
+      }
+
+      if (cancelled) return
+
+      const courseIds = courses.map(c => c.id)
+      if (courseIds.length === 0) {
+        setSummaries([])
+        setLoading(false)
+        return
+      }
+
+      const { data: sessionsData } = await insforge.database
+        .from('sessions')
+        .select('id, course_id, title, date')
+        .in('course_id', courseIds)
+
+      if (cancelled) return
+
+      const sessions = (sessionsData as Session[]) || []
+      const sessionIds = sessions.map(s => s.id)
+
+      let ratings: Rating[] = []
+      if (sessionIds.length > 0) {
+        const { data: ratingsData } = await insforge.database
+          .from('ratings')
+          .select('id, session_id, score')
+          .in('session_id', sessionIds)
+        ratings = (ratingsData as Rating[]) || []
+      }
+
+      if (cancelled) return
+
+      const result: CourseSummary[] = courses.map(course => {
+        const courseSessions = sessions.filter(s => s.course_id === course.id)
+        const courseSessionIds = new Set(courseSessions.map(s => s.id))
+        const courseRatings = ratings.filter(r => courseSessionIds.has(r.session_id))
+        const avgScore = courseRatings.length > 0
+          ? courseRatings.reduce((sum, r) => sum + r.score, 0) / courseRatings.length
+          : 0
+        return {
+          course,
+          sessionCount: courseSessions.length,
+          ratingCount: courseRatings.length,
+          avgScore
+        }
+      })
+
+      result.sort((a, b) => b.course.is_active.localeCompare(a.course.is_active) || a.course.name.localeCompare(b.course.name))
+      setSummaries(result)
+      setLoading(false)
+    }
+
+    fetchDashboard()
+    return () => { cancelled = true }
+  }, [profile])
+
+  const totalSessions = summaries.reduce((sum, s) => sum + s.sessionCount, 0)
+  const totalRatings = summaries.reduce((sum, s) => sum + s.ratingCount, 0)
+  const allAvg = totalRatings > 0
+    ? summaries.reduce((sum, s) => sum + s.avgScore * s.ratingCount, 0) / totalRatings
+    : 0
 
   return (
     <div>
-      <header className="mb-xl flex justify-between items-end">
-        <div>
-          <h1 className="font-headline-md md:font-headline-md text-headline-md md:text-headline-md text-on-surface">Resumen</h1>
-          <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs">Resumen de tus cursos actuales.</p>
-        </div>
+      <header className="mb-xl">
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Inicio</h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Resumen de tus cursos actuales</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
-          <Link to="/admin" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
-            <div className="flex justify-between items-start mb-md">
-              <div>
-                <span className="font-label-xs text-label-xs text-on-surface-variant font-bold block mb-xs">ADMIN</span>
-                <h2 className="font-title-sm text-title-sm text-on-surface">Gestión de Usuarios</h2>
-                <p className="font-body-[10px] text-[10px] text-on-surface-variant mt-1">Administrar usuarios y roles</p>
-              </div>
-              <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-xl">admin_panel_settings</span>
-              </div>
-            </div>
-          </Link>
-        )}
-
-        <Link to="/courses" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
-          <div className="flex justify-between items-start mb-md">
-            <div>
-              <span className="font-label-xs text-label-xs text-on-surface-variant font-bold block mb-xs">CURSOS</span>
-              <h2 className="font-title-sm text-title-sm text-on-surface">Mis Cursos</h2>
-              <p className="font-body-[10px] text-[10px] text-on-surface-variant mt-1">Ver y gestionar cursos asignados</p>
-            </div>
-            <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-xl">menu_book</span>
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">menu_book</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Cursos</h3>
           </div>
-        </Link>
-
-        <Link to="/statistics" className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200">
-          <div className="flex justify-between items-start mb-md">
-            <div>
-              <span className="font-label-xs text-label-xs text-on-surface-variant font-bold block mb-xs">ESTADÍSTICAS</span>
-              <h2 className="font-title-sm text-title-sm text-on-surface">Estadísticas</h2>
-              <p className="font-body-[10px] text-[10px] text-on-surface-variant mt-1">Análisis de satisfacción por rango de fechas</p>
-            </div>
-            <div className="bg-surface-container rounded-full p-sm flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-xl">assessment</span>
-            </div>
+          <p className="font-headline-lg text-headline-lg text-primary font-bold">{summaries.length}</p>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">event</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Sesiones</h3>
           </div>
-        </Link>
+          <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalSessions}</p>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">trending_up</span>
+            <h3 className="font-label-md text-label-md text-on-surface-variant">Promedio General</h3>
+          </div>
+          <p className="font-headline-lg text-headline-lg text-primary font-bold">{allAvg > 0 ? allAvg.toFixed(1) : '-'}</p>
+        </div>
       </div>
+
+      {loading ? (
+        <p className="font-body-md text-body-md text-on-surface-variant">Cargando cursos...</p>
+      ) : summaries.length === 0 ? (
+        <div className="text-center py-xl">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No tienes cursos asignados aun.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+          {summaries.map(({ course, sessionCount, ratingCount, avgScore }) => (
+            <Link
+              key={course.id}
+              to={`/courses/${course.id}/sessions`}
+              className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
+                course.is_active
+                  ? 'border-outline-variant border-t-[3px] border-t-primary'
+                  : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
+              }`}
+            >
+              <div className="flex justify-between items-start mb-md">
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-title-sm text-title-sm text-on-surface truncate" title={course.name}>{course.name}</h2>
+                  {course.description && (
+                    <p className="font-body-xs text-body-xs text-on-surface-variant mt-1 line-clamp-2">{course.description}</p>
+                  )}
+                </div>
+                <div className="bg-surface-container rounded-full p-sm flex items-center justify-center shrink-0 ml-sm">
+                  <span className="material-symbols-outlined text-primary text-xl">menu_book</span>
+                </div>
+              </div>
+              <div className="mt-auto grid grid-cols-3 gap-sm pt-md border-t border-outline-variant">
+                <div className="text-center">
+                  <p className="font-headline-sm text-headline-sm text-on-surface">{sessionCount}</p>
+                  <p className="font-body-xs text-body-xs text-on-surface-variant">Sesiones</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-headline-sm text-headline-sm text-on-surface">{ratingCount}</p>
+                  <p className="font-body-xs text-body-xs text-on-surface-variant">Evaluaciones</p>
+                </div>
+                <div className="text-center">
+                  <p className={`font-headline-sm text-headline-sm ${avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>
+                    {avgScore > 0 ? avgScore.toFixed(1) : '-'}
+                  </p>
+                  <p className="font-body-xs text-body-xs text-on-surface-variant">Promedio</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
