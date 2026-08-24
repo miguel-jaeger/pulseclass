@@ -127,6 +127,8 @@ export function AdminPage() {
 
   const deleteSelectedUsers = async () => {
     if (selectedUsers.size === 0) return
+    if (!confirm(`¿Eliminar ${selectedUsers.size} usuario(s)? Esta acción no se puede deshacer.`)) return
+
     const { error } = await insforge.database
       .from('profiles')
       .delete()
