@@ -38,7 +38,7 @@ export function LoginPage() {
             </div>
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">PulseClass</h1>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant">Sistema de Satisfacción Estudiantil</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">Evalua la satisfaccion de tus estudiantes al finalizar cada clase</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-md">
