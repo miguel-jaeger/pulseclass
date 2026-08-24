@@ -131,7 +131,7 @@ export function SessionDetailPage() {
         </Link>
       </div>
 
-      <header className="mb-xl">
+      <header className="mb-lg">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">{session?.title}</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
           <span className="material-symbols-outlined text-sm align-middle mr-xs">calendar_today</span>
@@ -144,7 +144,7 @@ export function SessionDetailPage() {
         </p>
       </header>
 
-      <div className="flex gap-md mb-xl">
+      <div className="flex gap-md mb-lg">
         <Link
           to={`/sessions/${sessionId}/rate`}
           className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
@@ -153,10 +153,10 @@ export function SessionDetailPage() {
         </Link>
       </div>
 
-      <h2 className="font-headline-md text-headline-md text-on-surface mb-lg">Comentarios de estudiantes</h2>
+      <h2 className="font-headline-md text-headline-md text-on-surface mb-md">Comentarios de estudiantes</h2>
 
       {ratings.length === 0 ? (
-        <div className="text-center py-xl">
+        <div className="text-center py-lg">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">chat_bubble_outline</span>
           <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios aún.</p>
         </div>

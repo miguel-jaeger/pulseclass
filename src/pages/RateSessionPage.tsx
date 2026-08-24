@@ -140,7 +140,7 @@ export function RateSessionPage() {
   if (!isMember) {
     return (
       <div className="max-w-2xl mx-auto">
-        <header className="mb-xl">
+      <header className="mb-lg">
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
         </header>
         <div className="bg-error-container border border-error rounded-xl p-lg">
@@ -160,13 +160,13 @@ export function RateSessionPage() {
       </header>
 
       {error && (
-        <div className="mb-lg bg-error-container border border-error rounded-xl p-md">
+        <div className="mb-md bg-error-container border border-error rounded-xl p-md">
           <p className="font-body-sm text-body-sm text-on-error-container">{error}</p>
         </div>
       )}
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-        <div className="mb-lg">
+        <div className="mb-md">
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción (1-10)
           </label>
@@ -189,7 +189,7 @@ export function RateSessionPage() {
           </div>
         </div>
 
-        <div className="mb-lg">
+        <div className="mb-md">
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Comentario (opcional)
           </label>
@@ -202,7 +202,7 @@ export function RateSessionPage() {
           />
         </div>
 
-        <div className="mb-lg">
+        <div className="mb-md">
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Sugerencias para mejorar (opcional)
           </label>
