@@ -42,98 +42,135 @@ export function DashboardPage() {
     let cancelled = false
 
     async function fetchDashboard() {
-      let courses: Course[] = []
+      try {
+        let courses: Course[] = []
 
-      if (profile!.role === 'admin') {
-        const { data } = await insforge.database
-          .from('courses')
-          .select('id, name, description, created_by, is_active')
-          .order('created_at', { ascending: false })
-        if (data) courses = data as Course[]
-      } else if (profile!.role === 'teacher') {
-        const { data: owned } = await insforge.database
-          .from('courses')
-          .select('id, name, description, created_by, is_active')
-          .eq('created_by', profile!.user_id)
-        const { data: memberRows } = await insforge.database
-          .from('course_members')
-          .select('course_id')
-          .eq('user_id', profile!.user_id)
-        const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
-        let memberCourses: Course[] = []
-        if (memberIds.length > 0) {
-          const { data } = await insforge.database
+        if (profile!.role === 'admin') {
+          const { data, error } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
-            .in('id', memberIds)
-          memberCourses = (data as Course[]) || []
-        }
-        const all = [...(owned as Course[] || []), ...memberCourses]
-        courses = all.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
-      } else {
-        const { data: memberRows } = await insforge.database
-          .from('course_members')
-          .select('course_id')
-          .eq('user_id', profile!.user_id)
-        const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
-        if (memberIds.length > 0) {
-          const { data } = await insforge.database
+            .order('created_at', { ascending: false })
+          if (!error && data) courses = data as Course[]
+        } else if (profile!.role === 'teacher') {
+          const { data: owned, error: ownedError } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
-            .in('id', memberIds)
-            .eq('is_active', true)
-          if (data) courses = data as Course[]
+            .eq('created_by', profile!.user_id)
+
+          const { data: memberRows, error: memberError } = await insforge.database
+            .from('course_members')
+            .select('course_id')
+            .eq('user_id', profile!.user_id)
+
+          if (!ownedError && owned) {
+            courses = owned as Course[]
+          }
+
+          if (!memberError && memberRows) {
+            const memberIds = (memberRows as { course_id: string }[]).map(r => r.course_id)
+            if (memberIds.length > 0) {
+              const { data: memberCourses } = await insforge.database
+                .from('courses')
+                .select('id, name, description, created_by, is_active')
+                .in('id', memberIds)
+              if (memberCourses) {
+                const existing = new Set(courses.map(c => c.id))
+                for (const mc of memberCourses as Course[]) {
+                  if (!existing.has(mc.id)) courses.push(mc)
+                }
+              }
+            }
+          }
+        } else {
+          const { data: memberRows, error: memberError } = await insforge.database
+            .from('course_members')
+            .select('course_id')
+            .eq('user_id', profile!.user_id)
+
+          if (!memberError && memberRows) {
+            const memberIds = (memberRows as { course_id: string }[]).map(r => r.course_id)
+            if (memberIds.length > 0) {
+              const { data } = await insforge.database
+                .from('courses')
+                .select('id, name, description, created_by, is_active')
+                .in('id', memberIds)
+                .eq('is_active', true)
+              if (data) courses = data as Course[]
+            }
+          }
         }
-      }
 
-      if (cancelled) return
+        if (cancelled) return
 
-      const courseIds = courses.map(c => c.id)
-      if (courseIds.length === 0) {
-        setSummaries([])
-        setLoading(false)
-        return
-      }
-
-      const { data: sessionsData } = await insforge.database
-        .from('sessions')
-        .select('id, course_id, title, date')
-        .in('course_id', courseIds)
-
-      if (cancelled) return
-
-      const sessions = (sessionsData as Session[]) || []
-      const sessionIds = sessions.map(s => s.id)
-
-      let ratings: Rating[] = []
-      if (sessionIds.length > 0) {
-        const { data: ratingsData } = await insforge.database
-          .from('ratings')
-          .select('id, session_id, score')
-          .in('session_id', sessionIds)
-        ratings = (ratingsData as Rating[]) || []
-      }
-
-      if (cancelled) return
-
-      const result: CourseSummary[] = courses.map(course => {
-        const courseSessions = sessions.filter(s => s.course_id === course.id)
-        const courseSessionIds = new Set(courseSessions.map(s => s.id))
-        const courseRatings = ratings.filter(r => courseSessionIds.has(r.session_id))
-        const avgScore = courseRatings.length > 0
-          ? courseRatings.reduce((sum, r) => sum + r.score, 0) / courseRatings.length
-          : 0
-        return {
-          course,
-          sessionCount: courseSessions.length,
-          ratingCount: courseRatings.length,
-          avgScore
+        const courseIds = courses.map(c => c.id)
+        if (courseIds.length === 0) {
+          setSummaries([])
+          setLoading(false)
+          return
         }
-      })
 
-      result.sort((a, b) => b.course.is_active.localeCompare(a.course.is_active) || a.course.name.localeCompare(b.course.name))
-      setSummaries(result)
-      setLoading(false)
+        const { data: sessionsData, error: sessionsError } = await insforge.database
+          .from('sessions')
+          .select('id, course_id, title, date')
+          .in('course_id', courseIds)
+
+        if (cancelled) return
+
+        if (sessionsError) {
+          console.error('Error fetching sessions:', sessionsError)
+          setSummaries(courses.map(course => ({
+            course,
+            sessionCount: 0,
+            ratingCount: 0,
+            avgScore: 0
+          })))
+          setLoading(false)
+          return
+        }
+
+        const sessions = (sessionsData as Session[]) || []
+        const sessionIds = sessions.map(s => s.id)
+
+        let ratings: Rating[] = []
+        if (sessionIds.length > 0) {
+          const { data: ratingsData, error: ratingsError } = await insforge.database
+            .from('ratings')
+            .select('id, session_id, score')
+            .in('session_id', sessionIds)
+
+          if (!ratingsError && ratingsData) {
+            ratings = ratingsData as Rating[]
+          }
+        }
+
+        if (cancelled) return
+
+        const result: CourseSummary[] = courses.map(course => {
+          const courseSessions = sessions.filter(s => s.course_id === course.id)
+          const courseSessionIds = new Set(courseSessions.map(s => s.id))
+          const courseRatings = ratings.filter(r => courseSessionIds.has(r.session_id))
+          const avgScore = courseRatings.length > 0
+            ? courseRatings.reduce((sum, r) => sum + r.score, 0) / courseRatings.length
+            : 0
+          return {
+            course,
+            sessionCount: courseSessions.length,
+            ratingCount: courseRatings.length,
+            avgScore
+          }
+        })
+
+        result.sort((a, b) => {
+          if (a.course.is_active !== b.course.is_active) return a.course.is_active ? -1 : 1
+          return a.course.name.localeCompare(b.course.name)
+        })
+
+        setSummaries(result)
+      } catch (err) {
+        console.error('Error in fetchDashboard:', err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
 
     fetchDashboard()
@@ -178,11 +215,14 @@ export function DashboardPage() {
       </div>
 
       {loading ? (
-        <p className="font-body-md text-body-md text-on-surface-variant">Cargando cursos...</p>
+        <div className="flex items-center gap-sm text-on-surface-variant">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+          <p className="font-body-md text-body-md">Cargando cursos...</p>
+        </div>
       ) : summaries.length === 0 ? (
         <div className="text-center py-xl">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No tienes cursos asignados aun.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">No tienes cursos asignados aún.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
@@ -207,20 +247,18 @@ export function DashboardPage() {
                   <span className="material-symbols-outlined text-primary text-xl">menu_book</span>
                 </div>
               </div>
-              <div className="mt-auto grid grid-cols-3 gap-sm pt-md border-t border-outline-variant">
-                <div className="text-center">
-                  <p className="font-headline-sm text-headline-sm text-on-surface">{sessionCount}</p>
-                  <p className="font-body-xs text-body-xs text-on-surface-variant">Sesiones</p>
+              <div className="mt-auto flex items-center justify-between pt-md border-t border-outline-variant">
+                <div className="flex items-center gap-xs" title={`${sessionCount} sesiones`}>
+                  <span className="material-symbols-outlined text-on-surface-variant text-lg">event</span>
+                  <span className="font-body-sm text-body-sm text-on-surface font-medium">{sessionCount}</span>
                 </div>
-                <div className="text-center">
-                  <p className="font-headline-sm text-headline-sm text-on-surface">{ratingCount}</p>
-                  <p className="font-body-xs text-body-xs text-on-surface-variant">Evaluaciones</p>
+                <div className="flex items-center gap-xs" title={`${ratingCount} evaluaciones`}>
+                  <span className="material-symbols-outlined text-on-surface-variant text-lg">rate_review</span>
+                  <span className="font-body-sm text-body-sm text-on-surface font-medium">{ratingCount}</span>
                 </div>
-                <div className="text-center">
-                  <p className={`font-headline-sm text-headline-sm ${avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>
-                    {avgScore > 0 ? avgScore.toFixed(1) : '-'}
-                  </p>
-                  <p className="font-body-xs text-body-xs text-on-surface-variant">Promedio</p>
+                <div className="flex items-center gap-xs" title={`Promedio: ${avgScore > 0 ? avgScore.toFixed(1) : '-'}`}>
+                  <span className={`material-symbols-outlined text-lg ${avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
+                  <span className={`font-body-sm text-body-sm font-medium ${avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{avgScore > 0 ? avgScore.toFixed(1) : '-'}</span>
                 </div>
               </div>
             </Link>

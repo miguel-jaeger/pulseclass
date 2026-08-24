@@ -12,7 +12,7 @@ interface User {
 interface Profile {
   id: string
   user_id: string
-  role: 'admin' | 'teacher' | 'student'
+  role: 'Administrador' | 'Profesor' | 'Estudiante'
   name: string
 }
 

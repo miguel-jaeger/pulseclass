@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { isStudent } from '../lib/roles'
 
 interface Session {
   id: string
@@ -149,7 +150,7 @@ export function SessionDetailPage() {
           to={`/sessions/${sessionId}/rate`}
           className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
         >
-          {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
+          {isStudent(profile?.role) ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
         </Link>
       </div>
 

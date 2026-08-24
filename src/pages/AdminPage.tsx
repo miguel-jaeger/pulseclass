@@ -7,7 +7,7 @@ interface UserProfile {
   user_id: string
   name: string
   email: string
-  role: 'admin' | 'teacher' | 'student'
+  role: string
   created_at: string
 }
 
@@ -20,8 +20,8 @@ export function AdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
-  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string, password: '' })
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'Estudiante' as string })
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'Estudiante' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
@@ -61,7 +61,7 @@ export function AdminPage() {
       }
 
       setShowCreateModal(false)
-      setCreateForm({ name: '', email: '', password: '', role: 'student' })
+      setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' })
       fetchUsers()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al crear usuario'
@@ -150,7 +150,7 @@ export function AdminPage() {
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
         <button
-          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' }); setFormError(''); setShowCreateModal(true) }}
           className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
         >
           Crear usuario
@@ -179,6 +179,42 @@ export function AdminPage() {
           <option value="student">Estudiantes</option>
         </select>
       </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-md mb-lg">
+        <div className="bg-surface border border-outline-variant rounded-xl p-md">
+          <div className="flex items-center gap-sm mb-xs">
+            <span className="material-symbols-outlined text-primary text-lg">group</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">Total</span>
+          </div>
+          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.length}</p>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-md">
+          <div className="flex items-center gap-sm mb-xs">
+            <span className="material-symbols-outlined text-primary text-lg">admin_panel_settings</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">Admin</span>
+          </div>
+          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'admin').length}</p>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-md">
+          <div className="flex items-center gap-sm mb-xs">
+            <span className="material-symbols-outlined text-primary text-lg">school</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">Profesores</span>
+          </div>
+          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'teacher').length}</p>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-md">
+          <div className="flex items-center gap-sm mb-xs">
+            <span className="material-symbols-outlined text-primary text-lg">person</span>
+            <span className="font-label-sm text-label-sm text-on-surface-variant">Estudiantes</span>
+          </div>
+          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</p>
+        </div>
+      </div>
+
+      <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+        Mostrando <span className="font-bold text-on-surface">{filteredUsers.length}</span> de <span className="font-bold text-on-surface">{users.length}</span> usuarios
+      </p>
 
       {loading ? (
         <p className="font-body-md text-body-md text-on-surface-variant">Cargando usuarios...</p>
@@ -290,9 +326,9 @@ export function AdminPage() {
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Profesor</option>
-                  <option value="admin">Administrador</option>
+                  <option value="Estudiante">Estudiante</option>
+                  <option value="Profesor">Profesor</option>
+                  <option value="Administrador">Administrador</option>
                 </select>
               </div>
             </div>
@@ -349,9 +385,9 @@ export function AdminPage() {
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Profesor</option>
-                  <option value="admin">Administrador</option>
+                  <option value="Estudiante">Estudiante</option>
+                  <option value="Profesor">Profesor</option>
+                  <option value="Administrador">Administrador</option>
                 </select>
               </div>
               <div className="border-t border-outline-variant pt-md mt-md">

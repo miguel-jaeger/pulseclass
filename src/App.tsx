@@ -5,7 +5,6 @@ import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { AdminPage } from './pages/AdminPage'
-import { RolesPage } from './pages/RolesPage'
 import { CoursesPage } from './pages/CoursesPage'
 import { SessionsPage } from './pages/SessionsPage'
 import { RateSessionPage } from './pages/RateSessionPage'
@@ -64,11 +63,6 @@ function AppRoutes() {
       <Route path="/admin" element={
         <ProtectedRoute>
           <AdminPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/admin/roles" element={
-        <ProtectedRoute>
-          <RolesPage />
         </ProtectedRoute>
       } />
       <Route path="/courses" element={

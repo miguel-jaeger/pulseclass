@@ -19,13 +19,13 @@ interface MemberProfile {
   user_id: string
   name: string
   email: string
-  role: 'admin' | 'teacher' | 'student'
+  role: string
 }
 
 interface CourseMember extends CourseMemberRow {
   name: string
   email: string
-  role: 'admin' | 'teacher' | 'student'
+  role: string
 }
 
 export function CourseMembersPage() {

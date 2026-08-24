@@ -69,8 +69,8 @@ export function ProfilePage() {
     }
   }
 
-  const roleLabel = profile?.role === 'admin' ? 'Administrador' : profile?.role === 'teacher' ? 'Profesor' : 'Estudiante'
-  const roleIcon = profile?.role === 'admin' ? 'admin_panel_settings' : profile?.role === 'teacher' ? 'school' : 'person'
+  const roleLabel = (profile?.role === 'admin' || profile?.role === 'Administrador') ? 'Administrador' : (profile?.role === 'teacher' || profile?.role === 'Profesor') ? 'Profesor' : 'Estudiante'
+  const roleIcon = (profile?.role === 'admin' || profile?.role === 'Administrador') ? 'admin_panel_settings' : (profile?.role === 'teacher' || profile?.role === 'Profesor') ? 'school' : 'person'
 
   return (
     <div>
