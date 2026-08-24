@@ -180,35 +180,30 @@ export function AdminPage() {
         </select>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-md mb-lg">
-        <div className="bg-surface border border-outline-variant rounded-xl p-md">
-          <div className="flex items-center gap-sm mb-xs">
-            <span className="material-symbols-outlined text-primary text-lg">group</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Total</span>
-          </div>
-          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.length}</p>
+      {/* Summary Bar */}
+      <div className="flex flex-wrap items-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-primary text-lg">group</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Total:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.length}</span>
         </div>
-        <div className="bg-surface border border-outline-variant rounded-xl p-md">
-          <div className="flex items-center gap-sm mb-xs">
-            <span className="material-symbols-outlined text-primary text-lg">admin_panel_settings</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Admin</span>
-          </div>
-          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'admin').length}</p>
+        <div className="w-px h-4 bg-outline-variant"></div>
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-primary text-lg">admin_panel_settings</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Admin:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'admin').length}</span>
         </div>
-        <div className="bg-surface border border-outline-variant rounded-xl p-md">
-          <div className="flex items-center gap-sm mb-xs">
-            <span className="material-symbols-outlined text-primary text-lg">school</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Profesores</span>
-          </div>
-          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'teacher').length}</p>
+        <div className="w-px h-4 bg-outline-variant"></div>
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-primary text-lg">school</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Profesores:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'teacher').length}</span>
         </div>
-        <div className="bg-surface border border-outline-variant rounded-xl p-md">
-          <div className="flex items-center gap-sm mb-xs">
-            <span className="material-symbols-outlined text-primary text-lg">person</span>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">Estudiantes</span>
-          </div>
-          <p className="font-headline-sm text-headline-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</p>
+        <div className="w-px h-4 bg-outline-variant"></div>
+        <div className="flex items-center gap-xs">
+          <span className="material-symbols-outlined text-primary text-lg">person</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant">Estudiantes:</span>
+          <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</span>
         </div>
       </div>
 
