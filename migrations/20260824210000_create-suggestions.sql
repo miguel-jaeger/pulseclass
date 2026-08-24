@@ -1,6 +1,6 @@
 CREATE TABLE suggestions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('correccion', 'adicion', 'eliminacion')),
   description TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pendiente' CHECK (status IN ('pendiente', 'procede', 'no_procede', 'implementada')),
