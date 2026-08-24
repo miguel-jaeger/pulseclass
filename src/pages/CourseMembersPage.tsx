@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
@@ -28,6 +28,11 @@ interface CourseMember extends CourseMemberRow {
   role: string
 }
 
+interface ImportResult {
+  imported: number
+  skipped: { name: string; email: string }[]
+}
+
 export function CourseMembersPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
@@ -41,6 +46,10 @@ export function CourseMembersPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const canManage = profile?.role === 'Administrador' || profile?.role === 'Profesor'
 
@@ -186,6 +195,138 @@ export function CourseMembersPage() {
     }
   }
 
+  const parseCsvLine = (line: string): string[] => {
+    const result: string[] = []
+    let current = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"'
+          i++
+        } else if (ch === '"') {
+          inQuotes = false
+        } else {
+          current += ch
+        }
+      } else {
+        if (ch === '"') {
+          inQuotes = true
+        } else if (ch === ',' || ch === ';') {
+          result.push(current.trim())
+          current = ''
+        } else {
+          current += ch
+        }
+      }
+    }
+    result.push(current.trim())
+    return result
+  }
+
+  const handleCsvImport = async (file: File) => {
+    setImportLoading(true)
+    setImportResult(null)
+    try {
+      const text = await file.text()
+      const lines = text.split(/\r?\n/).filter(l => l.trim())
+      if (lines.length < 2) {
+        setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
+        return
+      }
+
+      const headerLine = lines[0].toLowerCase()
+      const separator = headerLine.includes(';') ? ';' : ','
+      const headers = lines[0].split(separator).map(h => h.trim().toLowerCase().replace(/"/g, ''))
+
+      const nameIdx = headers.findIndex(h => h === 'nombre' || h === 'name' || h === 'nombre completo' || h === 'alumnos')
+      const emailIdx = headers.findIndex(h => h === 'correo' || h === 'email' || h === 'correo electrónico' || h === 'e-mail' || h === 'correo electronico')
+
+      if (nameIdx === -1 || emailIdx === -1) {
+        setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
+        return
+      }
+
+      const { data: existingProfiles } = await insforge.database
+        .from('profiles')
+        .select('user_id, email')
+      const emailToUserId = new Map(
+        (existingProfiles as { user_id: string; email: string }[] || []).map(p => [p.email?.toLowerCase(), p.user_id])
+      )
+
+      const { data: existingMembers } = await insforge.database
+        .from('course_members')
+        .select('user_id')
+        .eq('course_id', courseId)
+      const memberUserIds = new Set((existingMembers as { user_id: string }[] || []).map(m => m.user_id))
+
+      const imported: number = 0
+      const skipped: { name: string; email: string }[] = []
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCsvLine(lines[i])
+        const name = (cols[nameIdx] || '').replace(/"/g, '').trim()
+        const email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
+
+        if (!name || !email) {
+          skipped.push({ name: name || '(vacío)', email: email || '(vacío)' })
+          continue
+        }
+
+        let userId = emailToUserId.get(email)
+
+        if (userId) {
+          if (!memberUserIds.has(userId)) {
+            await insforge.database
+              .from('course_members')
+              .insert([{ course_id: courseId, user_id: userId }])
+            memberUserIds.add(userId)
+          }
+          imported++
+          continue
+        }
+
+        try {
+          const { data, error } = await insforge.auth.signUp({
+            email,
+            password: '12345678',
+            name
+          })
+
+          if (error) {
+            skipped.push({ name, email })
+            continue
+          }
+
+          if (data?.user) {
+            await insforge.database
+              .from('profiles')
+              .update({ role: 'Estudiante', name })
+              .eq('user_id', data.user.id)
+
+            await insforge.database
+              .from('course_members')
+              .insert([{ course_id: courseId, user_id: data.user.id }])
+          }
+
+          imported++
+        } catch {
+          skipped.push({ name, email })
+        }
+      }
+
+      setImportResult({ imported, skipped })
+      if (imported > 0) {
+        await loadAll()
+      }
+    } catch {
+        setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
   const filteredMembers = members.filter((m) =>
     m.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     m.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -229,13 +370,22 @@ export function CourseMembersPage() {
           />
         </div>
         {canManage && (
-          <button
-            onClick={() => setShowAdd(!showAdd)}
-            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-sm"
-          >
-            <span className="material-symbols-outlined text-lg">person_add</span>
-            Agregar
-          </button>
+          <div className="flex items-center gap-sm">
+            <button
+              onClick={() => setShowAdd(!showAdd)}
+              className="bg-primary text-on-primary font-bold py-2 px-3 rounded-full hover:opacity-90 transition-opacity flex items-center justify-center"
+              title="Agregar miembro"
+            >
+              <span className="material-symbols-outlined text-lg">person_add</span>
+            </button>
+            <button
+              onClick={() => { setShowImportModal(true); setImportResult(null) }}
+              className="bg-secondary-container text-on-surface font-bold py-2 px-3 rounded-full hover:opacity-90 transition-opacity flex items-center justify-center"
+              title="Importar miembros desde CSV"
+            >
+              <span className="material-symbols-outlined text-lg">upload_file</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -433,6 +583,89 @@ export function CourseMembersPage() {
           </>
         )}
       </div>
+
+      {/* Import CSV Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Importar miembros desde CSV</h3>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+              El archivo CSV debe tener columnas <strong>nombre</strong> y <strong>correo</strong>. La primera fila se omitirá (encabezados). La contraseña para todos será <strong>12345678</strong>.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleCsvImport(file)
+              }}
+              className="hidden"
+            />
+            {importLoading ? (
+              <div className="flex items-center justify-center gap-sm py-lg">
+                <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Importando usuarios...</span>
+              </div>
+            ) : importResult ? (
+              <div className="space-y-md">
+                <div className={`p-md rounded-xl ${importResult.imported > 0 ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'}`}>
+                  <div className="flex items-center gap-sm mb-xs">
+                    <span className="material-symbols-outlined text-lg">
+                      {importResult.imported > 0 ? 'check_circle' : 'info'}
+                    </span>
+                    <span className="font-label-md text-label-md">
+                      {importResult.imported} usuario(s) importado(s)
+                    </span>
+                  </div>
+                  {importResult.skipped.length > 0 && (
+                    <span className="font-body-sm text-body-sm">
+                      {importResult.skipped.length} omitido(s)
+                    </span>
+                  )}
+                </div>
+                {importResult.skipped.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-outline-variant">
+                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Nombre</th>
+                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Correo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importResult.skipped.map((s, i) => (
+                          <tr key={i} className="border-b border-outline-variant last:border-0">
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface">{s.name}</td>
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{s.email}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-outline-variant rounded-xl py-lg flex flex-col items-center gap-sm hover:border-primary hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-on-surface-variant text-[32px]">upload_file</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Seleccionar archivo CSV</span>
+              </button>
+            )}
+            <div className="flex justify-end gap-sm mt-lg">
+              <button
+                onClick={() => { setShowImportModal(false); setImportResult(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+                {importResult ? 'Cerrar' : 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
