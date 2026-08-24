@@ -40,9 +40,9 @@ export default async function(req: Request): Promise<Response> {
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
     const apiKey = Deno.env.get('API_KEY')
 
-    const client = createClient({ baseUrl, accessToken: userToken })
+    const userClient = createClient({ baseUrl, accessToken: userToken })
 
-    const { data: userData } = await client.auth.getCurrentUser()
+    const { data: userData } = await userClient.auth.getCurrentUser()
     if (!userData?.user?.id) {
       return new Response(JSON.stringify({ error: 'No autorizado' }), {
         status: 401,
@@ -50,20 +50,20 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const { data: profileData } = await client.database
+    const adminClient = createClient({ baseUrl, accessToken: apiKey })
+
+    const { data: profileData, error: profileError } = await adminClient.database
       .from('profiles')
       .select('role')
       .eq('user_id', userData.user.id)
       .single()
 
-    if (!profileData || !['admin', 'Administrador'].includes(profileData.role)) {
+    if (profileError || !profileData || profileData.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Solo administradores pueden cambiar contraseñas de otros usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-
-    const adminClient = createClient({ baseUrl, accessToken: apiKey })
 
     const { error: updateError } = await adminClient.database.rpc('admin_update_user_password', {
       p_user_id: userId,
