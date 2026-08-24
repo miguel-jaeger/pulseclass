@@ -283,8 +283,9 @@ export function CourseMembersPage() {
             )}
             <button
               onClick={() => { setShowAdd(false); setAddSearchQuery(''); setSelectedUsers(new Set()) }}
-              className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+              className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
             >
+              <span className="material-symbols-outlined text-lg">close</span>
               Cerrar
             </button>
           </div>

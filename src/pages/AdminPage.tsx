@@ -151,8 +151,9 @@ export function AdminPage() {
         </div>
         <button
           onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'Estudiante' }); setFormError(''); setShowCreateModal(true) }}
-          className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
         >
+          <span className="material-symbols-outlined text-lg">person_add</span>
           Crear usuario
         </button>
       </header>
@@ -333,15 +334,17 @@ export function AdminPage() {
             <div className="flex justify-end gap-sm mt-lg">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">close</span>
                 Cancelar
               </button>
               <button
                 onClick={createUser}
                 disabled={formLoading || !createForm.name || !createForm.email || !createForm.password}
-                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">person_add</span>
                 {formLoading ? 'Creando...' : 'Crear'}
               </button>
             </div>
@@ -402,15 +405,17 @@ export function AdminPage() {
             <div className="flex justify-end gap-sm mt-lg">
               <button
                 onClick={() => { setShowEditModal(false); setEditingUser(null) }}
-                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">close</span>
                 Cancelar
               </button>
               <button
                 onClick={saveUser}
                 disabled={formLoading || !editForm.name}
-                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">save</span>
                 {formLoading ? 'Guardando...' : 'Guardar'}
               </button>
             </div>

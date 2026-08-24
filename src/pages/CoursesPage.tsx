@@ -150,8 +150,9 @@ export function CoursesPage() {
         {(profile?.role === 'admin' || profile?.role === 'teacher') && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+            className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
           >
+            <span className="material-symbols-outlined text-lg">add</span>
             Crear Curso
           </button>
         )}
@@ -284,14 +285,16 @@ export function CoursesPage() {
             <div className="flex justify-end gap-sm">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">close</span>
                 Cancelar
               </button>
               <button
                 onClick={createCourse}
-                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">add</span>
                 Crear
               </button>
             </div>
@@ -353,14 +356,16 @@ export function CoursesPage() {
               <div className="flex gap-sm">
                 <button
                   onClick={() => setEditingCourse(null)}
-                  className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                  className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
                 >
+                  <span className="material-symbols-outlined text-lg">close</span>
                   Cancelar
                 </button>
                 <button
                   onClick={saveEdit}
-                  className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                  className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
                 >
+                  <span className="material-symbols-outlined text-lg">save</span>
                   Guardar
                 </button>
               </div>

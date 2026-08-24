@@ -130,14 +130,16 @@ export function SessionsPage() {
           <div className="flex gap-sm">
             <button
               onClick={() => navigate('/statistics')}
-              className="bg-surface-container border border-outline-variant text-on-surface font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors"
+              className="bg-surface-container border border-outline-variant text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-xs"
             >
+              <span className="material-symbols-outlined text-lg">bar_chart</span>
               Estadísticas
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+              className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
             >
+              <span className="material-symbols-outlined text-lg">add</span>
               Crear Sesión
             </button>
           </div>
@@ -169,14 +171,16 @@ export function SessionsPage() {
                 <div className="flex gap-sm">
                   <Link
                     to={`/sessions/${session.id}`}
-                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors"
+                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center gap-xs"
                   >
+                    <span className="material-symbols-outlined text-lg">visibility</span>
                     Detalles
                   </Link>
                   <Link
                     to={`/sessions/${session.id}/rate`}
-                    className="bg-primary text-on-primary font-bold py-1 px-md rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                    className="bg-primary text-on-primary font-bold py-1 px-md rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
                   >
+                    <span className="material-symbols-outlined text-lg">rate_review</span>
                     Evaluar
                   </Link>
                   {(profile?.role === 'admin' || profile?.role === 'Administrador' || session.created_by === profile?.user_id) && (
@@ -208,14 +212,16 @@ export function SessionsPage() {
             <div className="flex justify-end gap-sm">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">close</span>
                 Cancelar
               </button>
               <button
                 onClick={createSession}
-                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-lg">add</span>
                 Crear
               </button>
             </div>

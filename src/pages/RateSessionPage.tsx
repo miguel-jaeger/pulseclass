@@ -218,15 +218,17 @@ export function RateSessionPage() {
         <div className="flex justify-end gap-sm">
           <button
             onClick={() => navigate(-1)}
-            className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors"
+            className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
           >
+            <span className="material-symbols-outlined text-lg">close</span>
             Cancelar
           </button>
           <button
             onClick={submitRating}
             disabled={saving}
-            className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
           >
+            <span className="material-symbols-outlined text-lg">{saving ? 'hourglass_empty' : existingRating ? 'save' : 'send'}</span>
             {saving ? 'Guardando...' : existingRating ? 'Actualizar' : 'Enviar'}
           </button>
         </div>
