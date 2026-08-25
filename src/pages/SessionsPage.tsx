@@ -178,11 +178,19 @@ export function SessionsPage() {
 
   const now = new Date()
 
-  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length, 10)
-  const paginatedSessions = paginatedSlice(sessions)
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const order = { current: 0, future: 1, past: 2 }
+    const catA = order[categorizeSession(a, now)]
+    const catB = order[categorizeSession(b, now)]
+    if (catA !== catB) return catA - catB
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
+
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sortedSessions.length, 10)
+  const paginatedSessions = paginatedSlice(sortedSessions)
   const currentSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'current')
-  const pastSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'past')
   const futureSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'future')
+  const pastSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'past')
 
   useEffect(() => {
     if (courseId) {
