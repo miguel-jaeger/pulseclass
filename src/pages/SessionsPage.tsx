@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -29,6 +30,9 @@ export function SessionsPage() {
   const [newSession, setNewSession] = useState({ date: '' })
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editDate, setEditDate] = useState('')
+
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length)
+  const paginatedSessions = paginatedSlice(sessions)
 
   useEffect(() => {
     if (courseId) {
@@ -191,9 +195,11 @@ export function SessionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.map((session, index) => (
+                  {paginatedSessions.map((session, index) => {
+                    const globalIndex = perPage === 0 ? sessions.length - index : sessions.indexOf(session)
+                    return (
                     <tr key={session.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
-                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{sessions.length - index}</td>
+                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{globalIndex + 1}</td>
                       <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
                         {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
                           weekday: 'short',
@@ -239,16 +245,19 @@ export function SessionsPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
             {/* Mobile: Compact cards */}
             <div className="md:hidden space-y-sm">
-              {sessions.map((session, index) => (
+              {paginatedSessions.map((session, index) => {
+                const globalIndex = perPage === 0 ? sessions.length - index : sessions.indexOf(session)
+                return (
                 <div key={session.id} className="bg-surface border border-outline-variant rounded-xl p-md flex items-center gap-md">
                   <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
-                    {sessions.length - index}
+                    {globalIndex + 1}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-body-xs text-body-xs text-on-surface-variant">
@@ -294,11 +303,20 @@ export function SessionsPage() {
                     )}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
       </div>
+
+      <Pagination
+        totalItems={sessions.length}
+        page={page}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       {/* Create Session Modal */}
       {showCreateModal && (
