@@ -376,26 +376,20 @@ export function StatisticsPage() {
         <>
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
-            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm mb-sm">
-                <span className="material-symbols-outlined text-primary">assessment</span>
-                <h3 className="font-label-md text-label-md text-on-surface-variant">Total Evaluaciones</h3>
-              </div>
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-primary text-xl mb-xs">assessment</span>
               <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalEvaluaciones}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Total de evaluaciones</p>
             </div>
-            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm mb-sm">
-                <span className="material-symbols-outlined text-primary">trending_up</span>
-                <h3 className="font-label-md text-label-md text-on-surface-variant">Promedio</h3>
-              </div>
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-primary text-xl mb-xs">trending_up</span>
               <p className="font-headline-lg text-headline-lg text-primary font-bold">{avgScore.toFixed(1)}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
             </div>
-            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm mb-sm">
-                <span className="material-symbols-outlined text-primary">emoji_emotions</span>
-                <h3 className="font-label-md text-label-md text-on-surface-variant">Nivel</h3>
-              </div>
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-primary text-xl mb-xs">emoji_emotions</span>
               <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
             </div>
           </div>
 
