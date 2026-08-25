@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { Pagination, usePagination } from '../components/Pagination'
@@ -22,7 +22,6 @@ interface Session {
 export function SessionsPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
-  const navigate = useNavigate()
   const [course, setCourse] = useState<Course | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
@@ -156,13 +155,6 @@ export function SessionsPage() {
           </div>
           {(profile?.role === 'admin' || profile?.role === 'teacher') && (
             <div className="flex gap-sm flex-shrink-0">
-              <button
-                onClick={() => navigate('/statistics')}
-                className="bg-surface-container border border-outline-variant text-on-surface font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-xs"
-              >
-                <span className="material-symbols-outlined text-base md:text-lg">bar_chart</span>
-                <span className="hidden sm:inline">Estadísticas</span>
-              </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="bg-primary text-on-primary font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
