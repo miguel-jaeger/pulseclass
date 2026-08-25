@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
-const BASE_URL = import.meta.env.VITE_INSFORGE_URL
+const FUNCTIONS_URL = `${import.meta.env.VITE_INSFORGE_URL.replace('.us-west.', '.function2.')}`
 
 interface Suggestion {
   id: string
@@ -64,39 +64,22 @@ async function uploadToCloudinary(file: File): Promise<string> {
   return data.secure_url
 }
 
-function getAuthHeaders(): Record<string, string> {
-  return insforge.getHttpClient().getHeaders()
-}
+async function suggestAction(action: string, id?: string, data?: Record<string, unknown>) {
+  const headers = insforge.getHttpClient().getHeaders()
+  const token = headers['Authorization']?.replace('Bearer ', '')
+  if (!token) throw new Error('No autenticado')
 
-function xhrRequest(method: string, url: string, body?: Record<string, unknown>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open(method, url)
-    const headers = getAuthHeaders()
-    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v))
-    if (body) xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) resolve()
-      else reject(new Error(`${method} failed: ${xhr.status} ${xhr.responseText}`))
-    }
-    xhr.onerror = () => reject(new Error(`${method} network error`))
-    xhr.send(body ? JSON.stringify(body) : undefined)
+  const res = await fetch(`${FUNCTIONS_URL}/suggest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ action, id, data })
   })
-}
-
-async function restInsert(table: string, row: Record<string, unknown>) {
-  const url = `${BASE_URL}/api/database/records/${table}`
-  await xhrRequest('POST', url, row)
-}
-
-async function restUpdate(table: string, id: string, patch: Record<string, unknown>) {
-  const url = `${BASE_URL}/api/database/records/${table}?id=eq.${id}`
-  await xhrRequest('PATCH', url, patch)
-}
-
-async function restDelete(table: string, id: string) {
-  const url = `${BASE_URL}/api/database/records/${table}?id=eq.${id}`
-  await xhrRequest('DELETE', url)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Error ${res.status}`)
+  }
+  if (res.status === 204) return null
+  return res.json()
 }
 
 export function SuggestionsPage() {
@@ -184,8 +167,7 @@ export function SuggestionsPage() {
         uploadedUrls.push(url)
       }
 
-      await restInsert('suggestions', {
-        user_id: user.id,
+      await suggestAction('create', undefined, {
         type: formType,
         description: formDescription.trim(),
         images: uploadedUrls,
@@ -226,7 +208,7 @@ export function SuggestionsPage() {
 
       const allImages = [...editImages, ...newUrls]
 
-      await restUpdate('suggestions', editingId, {
+      await suggestAction('update', editingId, {
         type: editType,
         description: editDescription.trim(),
         images: allImages,
@@ -243,7 +225,7 @@ export function SuggestionsPage() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
-      await restUpdate('suggestions', id, { status: newStatus, updated_at: new Date().toISOString() })
+      await suggestAction('update', id, { status: newStatus, updated_at: new Date().toISOString() })
       showToast('Estado actualizado')
       fetchSuggestions()
     } catch {
@@ -255,7 +237,7 @@ export function SuggestionsPage() {
     if (!confirm('¿Eliminar esta sugerencia?')) return
 
     try {
-      await restDelete('suggestions', id)
+      await suggestAction('delete', id)
       showToast('Sugerencia eliminada')
       fetchSuggestions()
     } catch {
