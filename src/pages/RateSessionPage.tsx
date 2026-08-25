@@ -175,7 +175,7 @@ export function RateSessionPage() {
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción
           </label>
-          <div className="flex justify-between gap-2xs overflow-x-auto pb-2">
+          <div className="flex justify-between gap-2xs overflow-x-auto pb-2 p-1">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
               const isInsatisfied = score <= 6
               const isNeutral = score >= 7 && score <= 8

@@ -66,17 +66,8 @@ export function StatisticsPage() {
   const [dateStart, setDateStart] = useState(getDefaultDateStart)
   const [dateEnd, setDateEnd] = useState(getDefaultDateEnd)
   const [selectedCourse, setSelectedCourse] = useState('all')
-  const [courseSearch, setCourseSearch] = useState('')
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
-
-  useEffect(() => {
-    if (selectedCourse === 'all') setCourseSearch('')
-    else {
-      const c = courses.find(c => c.id === selectedCourse)
-      if (c) setCourseSearch(c.name)
-    }
-  }, [selectedCourse, courses])
 
   useEffect(() => {
     if (profile?.role === 'student' && courses.length === 1) {
@@ -274,7 +265,7 @@ export function StatisticsPage() {
 
       {/* Filters */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-        <div className={`grid grid-cols-1 ${profile?.role !== 'student' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-lg`}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
             <input
@@ -293,31 +284,20 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
-          {profile?.role !== 'student' && (
+          {courses.length > 1 && (
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
-              <input
-                type="text"
-                list="courses-list"
-                placeholder="Buscar curso..."
-                value={courseSearch}
-                onChange={e => {
-                  const val = e.target.value
-                  setCourseSearch(val)
-                  const match = courses.find(c => c.name.toLowerCase() === val.toLowerCase())
-                  setSelectedCourse(match ? match.id : 'all')
-                }}
-                onBlur={() => {
-                  if (selectedCourse === 'all') setCourseSearch('')
-                }}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-              />
-              <datalist id="courses-list">
+              <select
+                value={selectedCourse}
+                onChange={e => setSelectedCourse(e.target.value)}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
+              >
+                <option value="all">Todos los cursos</option>
                 {courses.map(c => (
-                  <option key={c.id} value={c.name} />
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
-              </datalist>
+              </select>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
                 filter_list
               </span>
