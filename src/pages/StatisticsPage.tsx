@@ -222,8 +222,10 @@ export function StatisticsPage() {
         map.set(key, { courseName: course?.name ?? 'Sin curso', count: 1, sum: r.score })
       }
     }
-    const dStart = new Date(dateStart).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-    const dEnd = new Date(dateEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    const [yS, mS, dS] = dateStart.split('-').map(Number)
+    const [yE, mE, dE] = dateEnd.split('-').map(Number)
+    const dStart = new Date(yS, mS - 1, dS).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    const dEnd = new Date(yE, mE - 1, dE).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
     const dateRange = `${dStart} - ${dEnd}`
     return Array.from(map.entries())
       .map(([id, v]) => ({ id, courseName: v.courseName, dateRange, count: v.count, avg: v.sum / v.count }))
