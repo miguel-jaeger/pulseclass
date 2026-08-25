@@ -472,20 +472,20 @@ export function StatisticsPage() {
                 {/* Mobile cards */}
                 <div className="md:hidden space-y-md">
                   {sessionStats.map(s => (
-                    <div key={s.id} className="border border-outline-variant rounded-xl p-md text-center">
-                      <p className="font-body-md text-body-md text-on-surface font-medium mb-sm">{s.courseName}</p>
-                      <div className="flex justify-center gap-lg">
-                        <div>
-                          <p className="font-body-xs text-body-xs text-on-surface-variant">Período</p>
-                          <p className="font-body-sm text-body-sm text-on-surface">{s.dateRange}</p>
+                    <div key={s.id} className="border border-outline-variant rounded-xl p-md">
+                      <p className="font-body-md text-body-md text-on-surface font-medium mb-sm text-center">{s.courseName}</p>
+                      <div className="space-y-sm">
+                        <div className="flex justify-between items-center px-sm">
+                          <span className="font-body-sm text-body-sm text-on-surface-variant">Período</span>
+                          <span className="font-body-sm text-sm text-on-surface">{s.dateRange}</span>
                         </div>
-                        <div>
-                          <p className="font-body-xs text-body-xs text-on-surface-variant">Evaluaciones</p>
-                          <p className="font-body-sm text-body-sm text-on-surface font-bold">{s.count}</p>
+                        <div className="flex justify-between items-center px-sm">
+                          <span className="font-body-sm text-body-sm text-on-surface-variant">Evaluaciones</span>
+                          <span className="font-headline-sm text-headline-sm text-primary font-bold">{s.count}</span>
                         </div>
-                        <div>
-                          <p className="font-body-xs text-body-xs text-on-surface-variant">Promedio</p>
-                          <p className="font-body-sm text-body-sm text-on-surface font-bold">{s.avg.toFixed(1)}</p>
+                        <div className="flex justify-between items-center px-sm">
+                          <span className="font-body-sm text-body-sm text-on-surface-variant">Promedio</span>
+                          <span className="font-headline-sm text-headline-sm text-primary font-bold">{s.avg.toFixed(1)}</span>
                         </div>
                       </div>
                     </div>
