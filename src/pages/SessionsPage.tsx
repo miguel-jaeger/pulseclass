@@ -135,7 +135,7 @@ export function SessionsPage() {
               >
                 <span className="material-symbols-outlined text-base md:text-lg">bar_chart</span>
                 <span className="hidden sm:inline">Estadísticas</span>
-                <span className="sm:hidden">Stats</span>
+                <span className="sm:hidden">Estadísticas</span>
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
