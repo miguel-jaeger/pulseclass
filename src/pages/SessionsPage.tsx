@@ -431,9 +431,9 @@ export function SessionsPage() {
         </div>
       ) : (
         <div className="space-y-md">
+          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFutureSessions, pageFuture, perPageFuture, setPageFuture, setPerPageFuture, false)}
           {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, paginatedCurrentSessions, pageCurrent, perPageCurrent, setPageCurrent, setPerPageCurrent, true)}
           {renderSection('Pasadas', 'history', 'past', pastSessions, paginatedPastSessions, pagePast, perPagePast, setPagePast, setPerPagePast, false)}
-          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFutureSessions, pageFuture, perPageFuture, setPageFuture, setPerPageFuture, false)}
         </div>
       )}
 
