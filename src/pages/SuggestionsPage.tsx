@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
+const BASE_URL = import.meta.env.VITE_INSFORGE_URL
 
 interface Suggestion {
   id: string
@@ -61,6 +62,36 @@ async function uploadToCloudinary(file: File): Promise<string> {
   if (!res.ok) throw new Error('Error al subir imagen')
   const data = await res.json()
   return data.secure_url
+}
+
+function getAuthHeaders(): Record<string, string> {
+  return insforge.getHttpClient().getHeaders()
+}
+
+async function restInsert(table: string, row: Record<string, unknown>) {
+  const res = await fetch(`${BASE_URL}/api/database/records/${table}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(row),
+  })
+  if (!res.ok) throw new Error(`Insert failed: ${res.status}`)
+}
+
+async function restUpdate(table: string, id: string, patch: Record<string, unknown>) {
+  const res = await fetch(`${BASE_URL}/api/database/records/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), 'Prefer': 'return=minimal' },
+    body: JSON.stringify(patch),
+  })
+  if (!res.ok) throw new Error(`Update failed: ${res.status}`)
+}
+
+async function restDelete(table: string, id: string) {
+  const res = await fetch(`${BASE_URL}/api/database/records/${table}?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: { ...getAuthHeaders(), 'Prefer': 'return=minimal' },
+  })
+  if (!res.ok) throw new Error(`Delete failed: ${res.status}`)
 }
 
 export function SuggestionsPage() {
@@ -148,20 +179,16 @@ export function SuggestionsPage() {
         uploadedUrls.push(url)
       }
 
-      const { error } = await insforge.database
-        .from('suggestions')
-        .insert([{
-          user_id: user.id,
-          type: formType,
-          description: formDescription.trim(),
-          images: uploadedUrls,
-        }])
-        .select('id')
+      await restInsert('suggestions', {
+        user_id: user.id,
+        type: formType,
+        description: formDescription.trim(),
+        images: uploadedUrls,
+      })
 
-      if (error) throw error
       showToast('Sugerencia enviada correctamente')
       setFormDescription('')
-      setFormType('correccion')
+      setFormType('mejora')
       setFormImages([])
       setFormPreviews([])
       setShowForm(false)
@@ -194,13 +221,12 @@ export function SuggestionsPage() {
 
       const allImages = [...editImages, ...newUrls]
 
-      const { error } = await insforge.database
-        .from('suggestions')
-        .update({ type: editType, description: editDescription.trim(), images: allImages, updated_at: new Date().toISOString() })
-        .eq('id', editingId)
-        .select('id')
-
-      if (error) throw error
+      await restUpdate('suggestions', editingId, {
+        type: editType,
+        description: editDescription.trim(),
+        images: allImages,
+        updated_at: new Date().toISOString(),
+      })
       showToast('Sugerencia actualizada')
       setEditingId(null)
       fetchSuggestions()
@@ -211,34 +237,24 @@ export function SuggestionsPage() {
   }
 
   const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await insforge.database
-      .from('suggestions')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id')
-
-    if (error) {
-      showToast('Error al actualizar el estado', 'error')
-    } else {
+    try {
+      await restUpdate('suggestions', id, { status: newStatus, updated_at: new Date().toISOString() })
       showToast('Estado actualizado')
       fetchSuggestions()
+    } catch {
+      showToast('Error al actualizar el estado', 'error')
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar esta sugerencia?')) return
 
-    const { error } = await insforge.database
-      .from('suggestions')
-      .delete()
-      .eq('id', id)
-      .select('id')
-
-    if (error) {
-      showToast('Error al eliminar la sugerencia', 'error')
-    } else {
+    try {
+      await restDelete('suggestions', id)
       showToast('Sugerencia eliminada')
       fetchSuggestions()
+    } catch {
+      showToast('Error al eliminar la sugerencia', 'error')
     }
   }
 
