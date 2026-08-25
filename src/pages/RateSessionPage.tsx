@@ -21,7 +21,7 @@ interface Rating {
 
 export function RateSessionPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
   const [existingRating, setExistingRating] = useState<Rating | null>(null)
@@ -56,6 +56,11 @@ export function RateSessionPage() {
   }
 
   const checkMembership = async () => {
+    if (profile?.role === 'admin') {
+      setIsMember(true)
+      return
+    }
+
     const { data: sessionData } = await insforge.database
       .from('sessions')
       .select('course_id')
@@ -170,7 +175,7 @@ export function RateSessionPage() {
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción
           </label>
-          <div className="flex justify-between gap-xs">
+          <div className="flex justify-between gap-2xs overflow-x-auto pb-2">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
               const isInsatisfied = score <= 6
               const isNeutral = score >= 7 && score <= 8
@@ -184,7 +189,7 @@ export function RateSessionPage() {
               return (
                 <label
                   key={score}
-                  className={`relative flex flex-col items-center flex-1 py-sm px-xs rounded-xl cursor-pointer transition-all ${
+                  className={`relative flex flex-col items-center flex-1 min-w-0 py-xs px-2xs rounded-xl cursor-pointer transition-all ${
                     isSelected
                       ? selectedBg
                       : 'hover:bg-surface-container'
@@ -198,10 +203,10 @@ export function RateSessionPage() {
                     onChange={() => setRating({ ...rating, score })}
                     className="sr-only"
                   />
-                  <span className={`material-symbols-outlined text-[24px] md:text-[28px] ${iconColor}`}>
+                  <span className={`material-symbols-outlined text-[20px] md:text-[28px] ${iconColor}`}>
                     {icon}
                   </span>
-                  <span className={`font-label-md text-label-md mt-2xs ${isSelected ? selectedText : 'text-on-surface'}`}>
+                  <span className={`font-label-sm text-label-sm md:font-label-md md:text-label-md mt-2xs ${isSelected ? selectedText : 'text-on-surface'}`}>
                     {score}
                   </span>
                 </label>
