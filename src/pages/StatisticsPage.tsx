@@ -76,6 +76,8 @@ export function StatisticsPage() {
   const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null)
   const [editingSuggestionText, setEditingSuggestionText] = useState('')
 
+  const [courseMembers, setCourseMembers] = useState<{ course_id: string; user_id: string }[]>([])
+
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
   useEffect(() => {
@@ -131,6 +133,17 @@ export function StatisticsPage() {
       }
     }
     fetchCourses()
+  }, [profile])
+
+  useEffect(() => {
+    async function fetchCourseMembers() {
+      if (!profile || profile.role === 'student') return
+      const { data } = await insforge.database
+        .from('course_members')
+        .select('course_id, user_id')
+      if (data) setCourseMembers(data as { course_id: string; user_id: string }[])
+    }
+    fetchCourseMembers()
   }, [profile])
 
   useEffect(() => {
@@ -585,34 +598,34 @@ export function StatisticsPage() {
                               <>
                                 <button
                                   onClick={() => handleSaveComment(item.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
                                   title="Guardar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">check</span>
+                                  <span className="material-symbols-outlined text-base">check</span>
                                 </button>
                                 <button
                                   onClick={() => { setEditingCommentId(null); setEditingCommentText('') }}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
                                   title="Cancelar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">close</span>
+                                  <span className="material-symbols-outlined text-base">close</span>
                                 </button>
                               </>
                             ) : (
                               <>
                                 <button
                                   onClick={() => { setEditingCommentId(item.id); setEditingCommentText(item.text) }}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
                                   title="Editar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">edit</span>
+                                  <span className="material-symbols-outlined text-base">edit</span>
                                 </button>
                                 <button
                                   onClick={() => handleDeleteComment(item.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
                                   title="Eliminar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                  <span className="material-symbols-outlined text-base">delete</span>
                                 </button>
                               </>
                             )}
@@ -638,7 +651,7 @@ export function StatisticsPage() {
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
                           <span>{voteCounts[item.id]?.likes || 0}</span>
                         </button>
                         <button
@@ -649,7 +662,7 @@ export function StatisticsPage() {
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
                           <span>{voteCounts[item.id]?.dislikes || 0}</span>
                         </button>
                       </div>
@@ -677,34 +690,34 @@ export function StatisticsPage() {
                               <>
                                 <button
                                   onClick={() => handleSaveSuggestion(item.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
                                   title="Guardar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">check</span>
+                                  <span className="material-symbols-outlined text-base">check</span>
                                 </button>
                                 <button
                                   onClick={() => { setEditingSuggestionId(null); setEditingSuggestionText('') }}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
                                   title="Cancelar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">close</span>
+                                  <span className="material-symbols-outlined text-base">close</span>
                                 </button>
                               </>
                             ) : (
                               <>
                                 <button
                                   onClick={() => { setEditingSuggestionId(item.id); setEditingSuggestionText(item.text) }}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
                                   title="Editar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">edit</span>
+                                  <span className="material-symbols-outlined text-base">edit</span>
                                 </button>
                                 <button
                                   onClick={() => handleDeleteSuggestion(item.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
                                   title="Eliminar"
                                 >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                  <span className="material-symbols-outlined text-base">delete</span>
                                 </button>
                               </>
                             )}
@@ -730,7 +743,7 @@ export function StatisticsPage() {
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
                           <span>{voteCounts[item.id]?.likes || 0}</span>
                         </button>
                         <button
@@ -741,7 +754,7 @@ export function StatisticsPage() {
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
                           <span>{voteCounts[item.id]?.dislikes || 0}</span>
                         </button>
                       </div>
