@@ -21,7 +21,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
 }
 
 function Avatar({ url, name, size = 'lg' }: { url?: string; name?: string; size?: 'sm' | 'md' | 'lg' }) {
-  const sizes = { sm: 'w-8 h-8 text-sm', md: 'w-12 h-12 text-lg', lg: 'w-24 h-24 text-3xl' }
+  const sizes = { sm: 'w-8 h-8 text-sm', md: 'w-12 h-12 text-lg', lg: 'w-20 h-20 sm:w-24 sm:h-24 text-2xl sm:text-3xl' }
   const initials = (name || '?').charAt(0).toUpperCase()
 
   if (url) {
@@ -129,7 +129,7 @@ export function ProfilePage() {
   const roleIcon = profile?.role === 'admin' ? 'admin_panel_settings' : profile?.role === 'teacher' ? 'school' : 'person'
 
   return (
-    <div>
+    <div className="pb-20 md:pb-0">
       <div className="mb-lg">
         <Link to="/" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -156,18 +156,9 @@ export function ProfilePage() {
       {/* Avatar Section */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <h2 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Foto de perfil</h2>
-        <div className="flex items-center gap-lg">
-          <div className="relative group">
+        <div className="flex flex-col sm:flex-row items-center sm:items-center gap-md sm:gap-lg">
+          <div className="relative">
             <Avatar url={profile?.avatar_url} name={profile?.name} size="lg" />
-            <button
-              onClick={() => fileRef.current?.click()}
-              disabled={uploadingAvatar}
-              className="absolute inset-0 rounded-full bg-scrim/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-on-primary text-2xl">
-                {uploadingAvatar ? 'hourglass_empty' : 'photo_camera'}
-              </span>
-            </button>
           </div>
           <input
             ref={fileRef}
@@ -176,11 +167,21 @@ export function ProfilePage() {
             onChange={handleAvatarUpload}
             className="hidden"
           />
-          <div>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
-              {uploadingAvatar ? 'Subiendo...' : 'Haz clic en la imagen para cambiarla'}
+          <div className="text-center sm:text-left">
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-sm">
+              {uploadingAvatar ? 'Subiendo...' : 'Foto de perfil'}
             </p>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">JPG, PNG. Máx 5MB.</p>
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs mx-auto sm:mx-0"
+            >
+              <span className="material-symbols-outlined text-lg">
+                {uploadingAvatar ? 'hourglass_empty' : 'photo_camera'}
+              </span>
+              {uploadingAvatar ? 'Subiendo...' : 'Cambiar foto'}
+            </button>
+            <p className="font-body-xs text-body-xs text-on-surface-variant mt-sm">JPG, PNG. Máx 5MB.</p>
           </div>
         </div>
       </div>
