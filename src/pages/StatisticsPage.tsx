@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useRatingVotes } from '../hooks/useRatingVotes'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 interface Course {
@@ -74,6 +75,8 @@ export function StatisticsPage() {
   const [editingCommentText, setEditingCommentText] = useState('')
   const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null)
   const [editingSuggestionText, setEditingSuggestionText] = useState('')
+
+  const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
   useEffect(() => {
     if (profile?.role === 'student' && courses.length === 1) {
@@ -170,6 +173,10 @@ export function StatisticsPage() {
 
       setSessions(sessionsData as Session[])
       setRatings((ratingsData as Rating[]) || [])
+
+      const ratingIds = (ratingsData as Rating[] || []).map(r => r.id)
+      fetchVotes(ratingIds)
+
       setLoading(false)
     }
 
@@ -622,6 +629,30 @@ export function StatisticsPage() {
                       ) : (
                         <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                       )}
+                      <div className="flex items-center gap-md mt-sm">
+                        <button
+                          onClick={() => vote(item.id, 'like')}
+                          className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                            userVotes[item.id] === 'like'
+                              ? 'bg-primary-container text-on-primary-container'
+                              : 'text-on-surface-variant hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span>{voteCounts[item.id]?.likes || 0}</span>
+                        </button>
+                        <button
+                          onClick={() => vote(item.id, 'dislike')}
+                          className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                            userVotes[item.id] === 'dislike'
+                              ? 'bg-error-container text-on-error-container'
+                              : 'text-on-surface-variant hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span>{voteCounts[item.id]?.dislikes || 0}</span>
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -690,6 +721,30 @@ export function StatisticsPage() {
                       ) : (
                         <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                       )}
+                      <div className="flex items-center gap-md mt-sm">
+                        <button
+                          onClick={() => vote(item.id, 'like')}
+                          className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                            userVotes[item.id] === 'like'
+                              ? 'bg-primary-container text-on-primary-container'
+                              : 'text-on-surface-variant hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span>{voteCounts[item.id]?.likes || 0}</span>
+                        </button>
+                        <button
+                          onClick={() => vote(item.id, 'dislike')}
+                          className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                            userVotes[item.id] === 'dislike'
+                              ? 'bg-error-container text-on-error-container'
+                              : 'text-on-surface-variant hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span>{voteCounts[item.id]?.dislikes || 0}</span>
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}

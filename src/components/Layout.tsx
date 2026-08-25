@@ -120,7 +120,6 @@ export function Layout({ children }: { children: ReactNode }) {
             >
               {item.icon}
             </span>
-            <span className="font-label-xs text-label-xs mt-0.5">{item.label}</span>
           </Link>
         ))}
       </nav>
