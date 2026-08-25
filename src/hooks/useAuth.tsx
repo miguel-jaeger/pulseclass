@@ -146,13 +146,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
-    console.log('[auth] signIn response:', { hasUser: !!data?.user, hasToken: !!data?.accessToken })
+    console.log('[auth] signIn full data:', JSON.stringify(data, null, 2))
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
       saveSessionToStorage(data.user as User, data.accessToken)
       console.log('[auth] session saved to localStorage')
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
+    } else {
+      console.log('[auth] signIn missing data:', { hasUser: !!data?.user, hasToken: !!data?.accessToken, keys: data ? Object.keys(data) : [] })
     }
   }
 
