@@ -60,25 +60,15 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
+  --spacing-margin-mobile: 1rem;
+  --spacing-margin-desktop: 3rem;
 
   --radius-sm: 0.125rem;
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
   --radius-full: 0.75rem;
-}
 
-@utility margin-mobile {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@utility margin-desktop {
-  padding-left: 3rem;
-  padding-right: 3rem;
-}
-
-@utility max-width-site {
-  max-width: 1200px;
+  --max-width-site: 1200px;
 }
 
 .dark {

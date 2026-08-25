@@ -19,6 +19,147 @@ interface Session {
   created_at: string
 }
 
+function getWeekRange(date: Date): { start: Date; end: Date } {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  const start = new Date(d)
+  start.setDate(diff)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  return { start, end }
+}
+
+function categorizeSession(session: Session, now: Date): 'current' | 'past' | 'future' {
+  const sessionDate = new Date(session.date + 'T12:00:00')
+  const { start, end } = getWeekRange(now)
+  if (sessionDate >= start && sessionDate <= end) return 'current'
+  if (sessionDate < start) return 'past'
+  return 'future'
+}
+
+function SessionRow({ session, index, profile, onEdit, onDelete }: {
+  session: Session
+  index: number
+  profile: { user_id: string; role: string } | null
+  onEdit: (s: Session) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <>
+      {/* Desktop */}
+      <tr className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
+        <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{index + 1}</td>
+        <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
+          {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          })}
+        </td>
+        <td className="px-md py-sm">
+          <div className="flex gap-sm justify-end">
+            <Link
+              to={`/sessions/${session.id}`}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+              title="Detalles"
+            >
+              <span className="material-symbols-outlined text-xl">visibility</span>
+            </Link>
+            <Link
+              to={`/sessions/${session.id}/rate`}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+              title="Evaluar"
+            >
+              <span className="material-symbols-outlined text-xl">rate_review</span>
+            </Link>
+            {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
+              <>
+                <button
+                  onClick={() => onEdit(session)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+                  title="Editar"
+                >
+                  <span className="material-symbols-outlined text-xl">edit</span>
+                </button>
+                <button
+                  onClick={() => onDelete(session.id)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                  title="Eliminar"
+                >
+                  <span className="material-symbols-outlined text-xl">delete</span>
+                </button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    </>
+  )
+}
+
+function SessionCard({ session, index, profile, onEdit, onDelete }: {
+  session: Session
+  index: number
+  profile: { user_id: string; role: string } | null
+  onEdit: (s: Session) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <div className="bg-surface border border-outline-variant rounded-xl p-md flex items-center gap-md">
+      <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
+        {index + 1}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-body-xs text-body-xs text-on-surface-variant">
+          {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+          })}
+        </p>
+      </div>
+      <div className="flex gap-sm shrink-0">
+        <Link
+          to={`/sessions/${session.id}`}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+          title="Detalles"
+        >
+          <span className="material-symbols-outlined text-xl">visibility</span>
+        </Link>
+        <Link
+          to={`/sessions/${session.id}/rate`}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+          title="Evaluar"
+        >
+          <span className="material-symbols-outlined text-xl">rate_review</span>
+        </Link>
+        {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
+          <>
+            <button
+              onClick={() => onEdit(session)}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+              title="Editar"
+            >
+              <span className="material-symbols-outlined text-xl">edit</span>
+            </button>
+            <button
+              onClick={() => onDelete(session.id)}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+              title="Eliminar"
+            >
+              <span className="material-symbols-outlined text-xl">delete</span>
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function SessionsPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
@@ -29,9 +170,24 @@ export function SessionsPage() {
   const [newSession, setNewSession] = useState({ date: '' })
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editDate, setEditDate] = useState('')
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
+    past: true,
+    current: false,
+    future: true
+  })
 
-  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length, 10)
-  const paginatedSessions = paginatedSlice(sessions)
+  const now = new Date()
+  const currentSessions = sessions.filter(s => categorizeSession(s, now) === 'current')
+  const pastSessions = sessions.filter(s => categorizeSession(s, now) === 'past')
+  const futureSessions = sessions.filter(s => categorizeSession(s, now) === 'future')
+
+  const { page: pageCurrent, perPage: perPageCurrent, setPage: setPageCurrent, setPerPage: setPerPageCurrent, paginatedSlice: paginatedCurrent } = usePagination(currentSessions.length, 10)
+  const { page: pagePast, perPage: perPagePast, setPage: setPagePast, setPerPage: setPerPagePast, paginatedSlice: paginatedPast } = usePagination(pastSessions.length, 10)
+  const { page: pageFuture, perPage: perPageFuture, setPage: setPageFuture, setPerPage: setPerPageFuture, paginatedSlice: paginatedFuture } = usePagination(futureSessions.length, 10)
+
+  const paginatedCurrentSessions = paginatedCurrent(currentSessions)
+  const paginatedPastSessions = paginatedPast(pastSessions)
+  const paginatedFutureSessions = paginatedFuture(futureSessions)
 
   useEffect(() => {
     if (courseId) {
@@ -118,6 +274,106 @@ export function SessionsPage() {
     }
   }
 
+  const toggleSection = (section: string) => {
+    setCollapsed(prev => ({ ...prev, [section]: !prev[section] }))
+  }
+
+  const renderSection = (
+    title: string,
+    icon: string,
+    sectionKey: string,
+    sectionSessions: Session[],
+    paginatedSessions: Session[],
+    page: number,
+    perPage: number,
+    setPage: (p: number) => void,
+    setPerPage: (p: number) => void,
+    isHighlighted: boolean
+  ) => {
+    if (sectionSessions.length === 0) return null
+
+    const isCollapsed = collapsed[sectionKey]
+
+    return (
+      <div className={`rounded-xl border overflow-hidden transition-all ${
+        isHighlighted
+          ? 'border-primary bg-primary-container/20'
+          : 'border-outline-variant bg-surface'
+      }`}>
+        <button
+          onClick={() => toggleSection(sectionKey)}
+          className="w-full flex items-center justify-between px-md py-sm hover:bg-secondary-container/30 transition-colors"
+        >
+          <div className="flex items-center gap-sm">
+            <span className="material-symbols-outlined text-lg text-on-surface-variant">
+              {isCollapsed ? 'chevron_right' : 'expand_more'}
+            </span>
+            <span className="font-label-md text-label-md text-on-surface">{title}</span>
+            <span className="font-body-xs text-body-xs text-on-surface-variant bg-surface-container rounded-full px-sm py-0.5">
+              {sectionSessions.length}
+            </span>
+          </div>
+          <span className="material-symbols-outlined text-lg text-on-surface-variant">{icon}</span>
+        </button>
+
+        {!isCollapsed && (
+          <div className="px-md pb-md">
+            {/* Desktop: Table */}
+            <div className="hidden md:block">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-outline-variant">
+                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">#</th>
+                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Fecha</th>
+                    <th className="text-right font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedSessions.map((session, index) => {
+                    const globalIndex = perPage === 0 ? sectionSessions.length - index : sectionSessions.indexOf(session)
+                    return (
+                      <SessionRow
+                        key={session.id}
+                        session={session}
+                        index={globalIndex}
+                        profile={profile}
+                        onEdit={openEditModal}
+                        onDelete={deleteSession}
+                      />
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile: Cards */}
+            <div className="md:hidden space-y-sm">
+              {paginatedSessions.map((session, index) => {
+                const globalIndex = perPage === 0 ? sectionSessions.length - index : sectionSessions.indexOf(session)
+                return (
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    index={globalIndex}
+                    profile={profile}
+                    onEdit={openEditModal}
+                    onDelete={deleteSession}
+                  />
+                )
+              })}
+            </div>
+            <Pagination
+              totalItems={sectionSessions.length}
+              page={page}
+              perPage={perPage}
+              onPageChange={setPage}
+              onPerPageChange={setPerPage}
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando sesiones...</div>
   }
@@ -168,147 +424,18 @@ export function SessionsPage() {
         </div>
       </header>
 
-      <div className="space-y-md">
-        {sessions.length === 0 ? (
-          <div className="text-center py-xl">
-            <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">event</span>
-            <p className="font-body-md text-body-md text-on-surface-variant">No hay sesiones creadas aún.</p>
-          </div>
-        ) : (
-          <>
-            {/* Desktop: Table */}
-            <div className="hidden md:block bg-surface border border-outline-variant rounded-xl overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-outline-variant bg-surface-container-low">
-                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">#</th>
-                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Fecha</th>
-                    <th className="text-right font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedSessions.map((session, index) => {
-                    const globalIndex = perPage === 0 ? sessions.length - index : sessions.indexOf(session)
-                    return (
-                    <tr key={session.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
-                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{globalIndex + 1}</td>
-                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
-                        {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </td>
-                      <td className="px-md py-sm">
-                        <div className="flex gap-sm justify-end">
-                          <Link
-                            to={`/sessions/${session.id}`}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
-                            title="Detalles"
-                          >
-                            <span className="material-symbols-outlined text-xl">visibility</span>
-                          </Link>
-                          <Link
-                            to={`/sessions/${session.id}/rate`}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
-                            title="Evaluar"
-                          >
-                            <span className="material-symbols-outlined text-xl">rate_review</span>
-                          </Link>
-                          {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
-                            <>
-                              <button
-                                onClick={() => openEditModal(session)}
-                                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
-                                title="Editar"
-                              >
-                                <span className="material-symbols-outlined text-xl">edit</span>
-                              </button>
-                              <button
-                                onClick={() => deleteSession(session.id)}
-                                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
-                                title="Eliminar"
-                              >
-                                <span className="material-symbols-outlined text-xl">delete</span>
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {/* Mobile: Compact cards */}
-            <div className="md:hidden space-y-sm">
-              {paginatedSessions.map((session, index) => {
-                const globalIndex = perPage === 0 ? sessions.length - index : sessions.indexOf(session)
-                return (
-                <div key={session.id} className="bg-surface border border-outline-variant rounded-xl p-md flex items-center gap-md">
-                  <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
-                    {globalIndex + 1}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-body-xs text-body-xs text-on-surface-variant">
-                      {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short'
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex gap-sm shrink-0">
-                    <Link
-                      to={`/sessions/${session.id}`}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
-                      title="Detalles"
-                    >
-                      <span className="material-symbols-outlined text-xl">visibility</span>
-                    </Link>
-                    <Link
-                      to={`/sessions/${session.id}/rate`}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
-                      title="Evaluar"
-                    >
-                      <span className="material-symbols-outlined text-xl">rate_review</span>
-                    </Link>
-                    {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
-                      <>
-                        <button
-                          onClick={() => openEditModal(session)}
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
-                          title="Editar"
-                        >
-                          <span className="material-symbols-outlined text-xl">edit</span>
-                        </button>
-                        <button
-                          onClick={() => deleteSession(session.id)}
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
-                          title="Eliminar"
-                        >
-                          <span className="material-symbols-outlined text-xl">delete</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                )
-              })}
-            </div>
-          </>
-        )}
-      </div>
-
-      <Pagination
-        totalItems={sessions.length}
-        page={page}
-        perPage={perPage}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-      />
+      {sessions.length === 0 ? (
+        <div className="text-center py-xl">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">event</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay sesiones creadas aún.</p>
+        </div>
+      ) : (
+        <div className="space-y-md">
+          {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, paginatedCurrentSessions, pageCurrent, perPageCurrent, setPageCurrent, setPerPageCurrent, true)}
+          {renderSection('Pasadas', 'history', 'past', pastSessions, paginatedPastSessions, pagePast, perPagePast, setPagePast, setPerPagePast, false)}
+          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFutureSessions, pageFuture, perPageFuture, setPageFuture, setPerPageFuture, false)}
+        </div>
+      )}
 
       {/* Create Session Modal */}
       {showCreateModal && (
