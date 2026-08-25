@@ -156,6 +156,7 @@ export function SuggestionsPage() {
           description: formDescription.trim(),
           images: uploadedUrls,
         }])
+        .select('id')
 
       if (error) throw error
       showToast('Sugerencia enviada correctamente')
@@ -197,6 +198,7 @@ export function SuggestionsPage() {
         .from('suggestions')
         .update({ type: editType, description: editDescription.trim(), images: allImages, updated_at: new Date().toISOString() })
         .eq('id', editingId)
+        .select('id')
 
       if (error) throw error
       showToast('Sugerencia actualizada')
@@ -213,6 +215,7 @@ export function SuggestionsPage() {
       .from('suggestions')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .select('id')
 
     if (error) {
       showToast('Error al actualizar el estado', 'error')
@@ -229,6 +232,7 @@ export function SuggestionsPage() {
       .from('suggestions')
       .delete()
       .eq('id', id)
+      .select('id')
 
     if (error) {
       showToast('Error al eliminar la sugerencia', 'error')
