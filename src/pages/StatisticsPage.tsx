@@ -13,6 +13,13 @@ interface Course {
   is_active: boolean
 }
 
+interface Profile {
+  id: string
+  user_id: string
+  name: string
+  role: string
+}
+
 interface Session {
   id: string
   course_id: string
@@ -61,6 +68,7 @@ function getDefaultDateEnd(): string {
 export function StatisticsPage() {
   const { profile } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
+  const [teachers, setTeachers] = useState<Profile[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
   const [ratings, setRatings] = useState<Rating[]>([])
   const [loading, setLoading] = useState(true)
@@ -68,6 +76,7 @@ export function StatisticsPage() {
   const [dateStart, setDateStart] = useState(getDefaultDateStart)
   const [dateEnd, setDateEnd] = useState(getDefaultDateEnd)
   const [selectedCourse, setSelectedCourse] = useState('all')
+  const [selectedTeacher, setSelectedTeacher] = useState('all')
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
 
@@ -134,10 +143,33 @@ export function StatisticsPage() {
   }, [profile])
 
   useEffect(() => {
+    async function fetchTeachers() {
+      if (!profile || profile.role !== 'admin') return
+      const { data } = await insforge.database
+        .from('profiles')
+        .select('id, user_id, name, role')
+        .in('role', ['Profesor', 'teacher'])
+        .order('name')
+      if (data) setTeachers(data as Profile[])
+    }
+    fetchTeachers()
+  }, [profile])
+
+  useEffect(() => {
     let cancelled = false
 
     async function fetchData() {
       setLoading(true)
+
+      let courseIds: string[] | null = null
+
+      if (selectedTeacher !== 'all') {
+        const { data: teacherCourses } = await insforge.database
+          .from('courses')
+          .select('id')
+          .eq('created_by', selectedTeacher)
+        courseIds = (teacherCourses as { id: string }[] || []).map(c => c.id)
+      }
 
       let sessionQuery = insforge.database
         .from('sessions')
@@ -145,6 +177,8 @@ export function StatisticsPage() {
 
       if (selectedCourse !== 'all') {
         sessionQuery = sessionQuery.eq('course_id', selectedCourse)
+      } else if (courseIds && courseIds.length > 0) {
+        sessionQuery = sessionQuery.in('course_id', courseIds)
       } else if (profile?.role !== 'admin' && courses.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courses.map(c => c.id))
       }
@@ -182,7 +216,7 @@ export function StatisticsPage() {
 
     fetchData()
     return () => { cancelled = true }
-  }, [dateStart, dateEnd, selectedCourse, courses, profile])
+  }, [dateStart, dateEnd, selectedCourse, selectedTeacher, courses, profile])
 
   const avgScore = useMemo(() => {
     if (ratings.length === 0) return 0
@@ -337,7 +371,7 @@ export function StatisticsPage() {
 
       {/* Filters */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+        <div className={`grid grid-cols-1 md:grid-cols-${profile?.role === 'admin' && teachers.length > 0 ? '4' : '3'} gap-lg`}>
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
             <input
@@ -356,6 +390,26 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
+          {profile?.role === 'admin' && teachers.length > 0 && (
+          <div>
+            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
+            <div className="relative">
+              <select
+                value={selectedTeacher}
+                onChange={e => { setSelectedTeacher(e.target.value); setSelectedCourse('all') }}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
+              >
+                <option value="all">Todos los docentes</option>
+                {teachers.map(t => (
+                  <option key={t.user_id} value={t.user_id}>{t.name}</option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
+                filter_list
+              </span>
+            </div>
+          </div>
+          )}
           {courses.length > 1 && (
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
