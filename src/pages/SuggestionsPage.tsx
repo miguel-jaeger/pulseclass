@@ -359,7 +359,7 @@ export function SuggestionsPage() {
                     </button>
                     {(isAdmin || canEditSuggestion(s.user_id)) && (
                       <select
-                        id="suggestion-status"
+                        id={`suggestion-status-${s.id}`}
                         name="status"
                         aria-label="Estado de sugerencia"
                         value={s.status}
