@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
@@ -78,6 +77,12 @@ export function StatisticsPage() {
       if (c) setCourseSearch(c.name)
     }
   }, [selectedCourse, courses])
+
+  useEffect(() => {
+    if (profile?.role === 'student' && courses.length === 1) {
+      setSelectedCourse(courses[0].id)
+    }
+  }, [courses, profile])
 
   useEffect(() => {
     async function fetchCourses() {
@@ -262,13 +267,6 @@ export function StatisticsPage() {
 
   return (
     <div className="pb-20 md:pb-0">
-      <div className="mb-lg">
-        <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline">
-          <span className="material-symbols-outlined text-lg">arrow_back</span>
-          Volver a cursos
-        </Link>
-      </div>
-
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Análisis de satisfacción por rango de fechas</p>
@@ -276,7 +274,7 @@ export function StatisticsPage() {
 
       {/* Filters */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+        <div className={`grid grid-cols-1 ${profile?.role !== 'student' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-lg`}>
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
             <input
@@ -295,6 +293,7 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
+          {profile?.role !== 'student' && (
           <div>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
@@ -324,6 +323,7 @@ export function StatisticsPage() {
               </span>
             </div>
           </div>
+          )}
         </div>
       </div>
 
