@@ -360,7 +360,7 @@ export function StatisticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5bdbb" />
                   <XAxis dataKey="score" stroke="#5c403f" />
                   <YAxis stroke="#5c403f" />
-                  <Tooltip formatter={(value: number) => [value, 'Cant:']} />
+                  <Tooltip formatter={(value: number) => [value, 'Cant']} />
                   <Bar dataKey="count" fill="#9e001f" />
                 </BarChart>
               </ResponsiveContainer>
