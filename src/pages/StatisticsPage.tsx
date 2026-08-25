@@ -76,8 +76,6 @@ export function StatisticsPage() {
   const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null)
   const [editingSuggestionText, setEditingSuggestionText] = useState('')
 
-  const [courseMembers, setCourseMembers] = useState<{ course_id: string; user_id: string }[]>([])
-
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
   useEffect(() => {
@@ -133,17 +131,6 @@ export function StatisticsPage() {
       }
     }
     fetchCourses()
-  }, [profile])
-
-  useEffect(() => {
-    async function fetchCourseMembers() {
-      if (!profile || profile.role === 'student') return
-      const { data } = await insforge.database
-        .from('course_members')
-        .select('course_id, user_id')
-      if (data) setCourseMembers(data as { course_id: string; user_id: string }[])
-    }
-    fetchCourseMembers()
   }, [profile])
 
   useEffect(() => {
