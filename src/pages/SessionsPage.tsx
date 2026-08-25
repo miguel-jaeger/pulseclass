@@ -27,6 +27,8 @@ export function SessionsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newSession, setNewSession] = useState({ date: '' })
+  const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [editDate, setEditDate] = useState('')
 
   useEffect(() => {
     if (courseId) {
@@ -88,6 +90,27 @@ export function SessionsPage() {
       .eq('id', sessionId)
 
     if (!error) {
+      fetchSessions()
+    }
+  }
+
+  const openEditModal = (session: Session) => {
+    setEditingSession(session)
+    setEditDate(session.date)
+  }
+
+  const updateSession = async () => {
+    if (!editingSession) return
+    const d = new Date(editDate + 'T00:00:00')
+    const title = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+    const { error } = await insforge.database
+      .from('sessions')
+      .update({ title, date: editDate })
+      .eq('id', editingSession.id)
+
+    if (!error) {
+      setEditingSession(null)
+      setEditDate('')
       fetchSessions()
     }
   }
@@ -198,13 +221,22 @@ export function SessionsPage() {
                             <span className="material-symbols-outlined text-xl">rate_review</span>
                           </Link>
                           {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
-                            <button
-                              onClick={() => deleteSession(session.id)}
-                              className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
-                              title="Eliminar"
-                            >
-                              <span className="material-symbols-outlined text-xl">delete</span>
-                            </button>
+                            <>
+                              <button
+                                onClick={() => openEditModal(session)}
+                                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                title="Editar"
+                              >
+                                <span className="material-symbols-outlined text-xl">edit</span>
+                              </button>
+                              <button
+                                onClick={() => deleteSession(session.id)}
+                                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                                title="Eliminar"
+                              >
+                                <span className="material-symbols-outlined text-xl">delete</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -246,13 +278,22 @@ export function SessionsPage() {
                       <span className="material-symbols-outlined text-xl">rate_review</span>
                     </Link>
                     {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
-                      <button
-                        onClick={() => deleteSession(session.id)}
-                        className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
-                        title="Eliminar"
-                      >
-                        <span className="material-symbols-outlined text-xl">delete</span>
-                      </button>
+                      <>
+                        <button
+                          onClick={() => openEditModal(session)}
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+                          title="Editar"
+                        >
+                          <span className="material-symbols-outlined text-xl">edit</span>
+                        </button>
+                        <button
+                          onClick={() => deleteSession(session.id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                          title="Eliminar"
+                        >
+                          <span className="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -287,6 +328,38 @@ export function SessionsPage() {
               >
                 <span className="material-symbols-outlined text-lg">add</span>
                 Crear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Session Modal */}
+      {editingSession && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar Sesión</h3>
+            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha</label>
+            <input
+              type="date"
+              value={editDate}
+              onChange={(e) => setEditDate(e.target.value)}
+              className="w-full border border-outline-variant rounded-xl px-md py-2 mb-lg bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+            <div className="flex justify-end gap-sm">
+              <button
+                onClick={() => { setEditingSession(null); setEditDate('') }}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+                Cancelar
+              </button>
+              <button
+                onClick={updateSession}
+                className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">save</span>
+                Guardar
               </button>
             </div>
           </div>
