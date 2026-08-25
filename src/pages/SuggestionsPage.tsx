@@ -105,14 +105,25 @@ export function SuggestionsPage() {
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'teacher'
+  const isAdmin = profile?.role === 'admin'
+  const isTeacher = profile?.role === 'teacher'
+  const [teacherStudentIds, setTeacherStudentIds] = useState<Set<string>>(new Set())
+
+  const canEditSuggestion = (suggestionUserId: string) => {
+    if (isAdmin) return true
+    if (isTeacher) return teacherStudentIds.has(suggestionUserId)
+    return false
+  }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 4000)
   }
 
-  useEffect(() => { fetchSuggestions() }, [])
+  useEffect(() => {
+    fetchSuggestions()
+    if (isTeacher) fetchTeacherStudents()
+  }, [])
 
   const fetchSuggestions = async () => {
     setLoading(true)
@@ -125,6 +136,27 @@ export function SuggestionsPage() {
       setSuggestions(data as Suggestion[])
     }
     setLoading(false)
+  }
+
+  const fetchTeacherStudents = async () => {
+    if (!profile?.user_id) return
+    const { data: myCourses } = await insforge.database
+      .from('course_members')
+      .select('course_id')
+      .eq('user_id', profile.user_id)
+    
+    if (!myCourses || myCourses.length === 0) return
+    
+    const courseIds = myCourses.map(c => c.course_id)
+    const { data: students } = await insforge.database
+      .from('course_members')
+      .select('user_id')
+      .in('course_id', courseIds)
+      .neq('user_id', profile.user_id)
+    
+    if (students) {
+      setTeacherStudentIds(new Set(students.map(s => s.user_id)))
+    }
   }
 
   const handleFileChange = (files: FileList | null, isEdit: boolean) => {
@@ -325,7 +357,7 @@ export function SuggestionsPage() {
                     >
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
-                    {isAdmin && (
+                    {(isAdmin || canEditSuggestion(s.user_id)) && (
                       <select
                         value={s.status}
                         onChange={(e) => handleStatusChange(s.id, e.target.value)}
@@ -338,7 +370,7 @@ export function SuggestionsPage() {
                         <option value="implementada">Implementada</option>
                       </select>
                     )}
-                    {(isOwn || isAdmin) && (
+                    {(isOwn || canEditSuggestion(s.user_id)) && (
                       <button
                         onClick={() => handleEdit(s)}
                         className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
@@ -347,7 +379,7 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </button>
                     )}
-                    {(isOwn || isAdmin) && (
+                    {(isOwn || canEditSuggestion(s.user_id)) && (
                       <button
                         onClick={() => handleDelete(s.id)}
                         className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"

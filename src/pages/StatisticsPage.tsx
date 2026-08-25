@@ -40,6 +40,7 @@ interface SessionStat {
 interface RatedItem {
   id: string
   studentId: string
+  sessionId: string
   sessionTitle: string
   date: string
   score: number
@@ -231,6 +232,7 @@ export function StatisticsPage() {
         return {
           id: r.id,
           studentId: r.student_id,
+          sessionId: r.session_id,
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -249,6 +251,7 @@ export function StatisticsPage() {
         return {
           id: r.id,
           studentId: r.student_id,
+          sessionId: r.session_id,
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -264,8 +267,12 @@ export function StatisticsPage() {
   const nivelLabel = avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
 
-  const canEdit = (studentId: string) => {
-    if (profile?.role === 'admin' || profile?.role === 'teacher') return true
+  const canEdit = (studentId: string, sessionId: string) => {
+    if (profile?.role === 'admin') return true
+    if (profile?.role === 'teacher') {
+      const session = sessions.find(s => s.id === sessionId)
+      return session && courseMembers.some(m => m.course_id === session.course_id && m.user_id === profile.user_id)
+    }
     return profile?.user_id === studentId
   }
 
@@ -572,7 +579,7 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
-                        {canEdit(item.studentId) && (
+                        {canEdit(item.studentId, item.sessionId) && (
                           <div className="ml-auto flex gap-sm shrink-0">
                             {editingCommentId === item.id ? (
                               <>
@@ -640,7 +647,7 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
-                        {canEdit(item.studentId) && (
+                        {canEdit(item.studentId, item.sessionId) && (
                           <div className="ml-auto flex gap-sm shrink-0">
                             {editingSuggestionId === item.id ? (
                               <>
