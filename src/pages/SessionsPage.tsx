@@ -61,7 +61,8 @@ export function SessionsPage() {
   }
 
   const createSession = async () => {
-    const title = 'Sesión'
+    const d = new Date(newSession.date + 'T00:00:00')
+    const title = d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
     const { error } = await insforge.database
       .from('sessions')
       .insert([{
