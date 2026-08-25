@@ -377,19 +377,25 @@ export function StatisticsPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-primary text-xl mb-xs">assessment</span>
+              <div className="flex items-center gap-xs mb-xs">
+                <span className="material-symbols-outlined text-primary text-base">assessment</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Total de evaluaciones</span>
+              </div>
               <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalEvaluaciones}</p>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Total de evaluaciones</p>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-primary text-xl mb-xs">trending_up</span>
+              <div className="flex items-center gap-xs mb-xs">
+                <span className="material-symbols-outlined text-primary text-base">trending_up</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Promedio general</span>
+              </div>
               <p className="font-headline-lg text-headline-lg text-primary font-bold">{avgScore.toFixed(1)}</p>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-primary text-xl mb-xs">emoji_emotions</span>
+              <div className="flex items-center gap-xs mb-xs">
+                <span className="material-symbols-outlined text-primary text-base">emoji_emotions</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
+              </div>
               <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
             </div>
           </div>
 
