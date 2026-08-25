@@ -361,7 +361,7 @@ export function SuggestionsPage() {
                       <select
                         value={s.status}
                         onChange={(e) => handleStatusChange(s.id, e.target.value)}
-                        className="border border-outline-variant rounded-lg px-sm py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+                        className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                       >
                         <option value="recibida">Recibida</option>
                         <option value="revision">Revisión</option>
