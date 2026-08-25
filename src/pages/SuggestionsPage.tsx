@@ -69,12 +69,15 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 async function restInsert(table: string, row: Record<string, unknown>) {
-  const res = await fetch(`${BASE_URL}/api/database/records/${table}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify(row),
-  })
-  if (!res.ok) throw new Error(`Insert failed: ${res.status}`)
+  const url = `${BASE_URL}/api/database/records/${table}`
+  const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() }
+  console.log('[rest] POST', url, JSON.stringify(row))
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(row) })
+  if (!res.ok) {
+    const body = await res.text()
+    console.error('[rest] INSERT ERROR', res.status, body)
+    throw new Error(`Insert failed: ${res.status} ${body}`)
+  }
 }
 
 async function restUpdate(table: string, id: string, patch: Record<string, unknown>) {
