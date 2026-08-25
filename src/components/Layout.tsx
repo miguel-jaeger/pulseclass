@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 
 const navItems = [
   { to: '/', icon: 'dashboard', label: 'Resumen' },
-  { to: '/courses', icon: 'star_rate', label: 'Cursos' },
+  { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
@@ -13,7 +13,7 @@ const navItems = [
 
 const bottomNavItems = [
   { to: '/', icon: 'home', label: 'Inicio', fill: true },
-  { to: '/courses', icon: 'grade', label: 'Cursos' },
+  { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
