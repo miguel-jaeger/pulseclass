@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -142,6 +143,9 @@ export function CoursesPage() {
     return matchesSearch && matchesStatus
   })
 
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredCourses.length)
+  const paginatedCourses = paginatedSlice(filteredCourses)
+
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando cursos...</div>
   }
@@ -208,11 +212,11 @@ export function CoursesPage() {
       </div>
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
-        Mostrando <span className="font-bold text-on-surface">{filteredCourses.length}</span> de <span className="font-bold text-on-surface">{courses.length}</span> cursos
+        Mostrando <span className="font-bold text-on-surface">{paginatedCourses.length}</span> de <span className="font-bold text-on-surface">{filteredCourses.length}</span> cursos
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg pb-20 md:pb-0">
-        {filteredCourses.map((course) => (
+        {paginatedCourses.map((course) => (
           <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${course.is_active ? 'border-outline-variant border-t-[3px] border-t-primary' : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'}`}>
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
@@ -269,6 +273,14 @@ export function CoursesPage() {
           </p>
         </div>
       )}
+
+      <Pagination
+        totalItems={filteredCourses.length}
+        page={page}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
