@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
-import { Pagination, usePagination } from '../components/Pagination'
+import { Pagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -181,13 +181,10 @@ export function SessionsPage() {
   const pastSessions = sessions.filter(s => categorizeSession(s, now) === 'past')
   const futureSessions = sessions.filter(s => categorizeSession(s, now) === 'future')
 
-  const { page: pageCurrent, perPage: perPageCurrent, setPage: setPageCurrent, setPerPage: setPerPageCurrent, paginatedSlice: paginatedCurrent } = usePagination(currentSessions.length, 10)
-  const { page: pagePast, perPage: perPagePast, setPage: setPagePast, setPerPage: setPerPagePast, paginatedSlice: paginatedPast } = usePagination(pastSessions.length, 10)
-  const { page: pageFuture, perPage: perPageFuture, setPage: setPageFuture, setPerPage: setPerPageFuture, paginatedSlice: paginatedFuture } = usePagination(futureSessions.length, 10)
-
-  const paginatedCurrentSessions = paginatedCurrent(currentSessions)
-  const paginatedPastSessions = paginatedPast(pastSessions)
-  const paginatedFutureSessions = paginatedFuture(futureSessions)
+  const [perPage, setPerPage] = useState(10)
+  const paginatedCurrent = perPage === 0 ? currentSessions : currentSessions.slice(0, perPage)
+  const paginatedPast = perPage === 0 ? pastSessions : pastSessions.slice(0, perPage)
+  const paginatedFuture = perPage === 0 ? futureSessions : futureSessions.slice(0, perPage)
 
   useEffect(() => {
     if (courseId) {
@@ -283,11 +280,7 @@ export function SessionsPage() {
     icon: string,
     sectionKey: string,
     sectionSessions: Session[],
-    paginatedSessions: Session[],
-    page: number,
-    perPage: number,
-    setPage: (p: number) => void,
-    setPerPage: (p: number) => void,
+    displayedSessions: Session[],
     isHighlighted: boolean
   ) => {
     if (sectionSessions.length === 0) return null
@@ -329,13 +322,12 @@ export function SessionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedSessions.map((session, index) => {
-                    const globalIndex = perPage === 0 ? sectionSessions.length - index : sectionSessions.indexOf(session)
+                  {displayedSessions.map((session, index) => {
                     return (
                       <SessionRow
                         key={session.id}
                         session={session}
-                        index={globalIndex}
+                        index={index}
                         profile={profile}
                         onEdit={openEditModal}
                         onDelete={deleteSession}
@@ -347,13 +339,12 @@ export function SessionsPage() {
             </div>
             {/* Mobile: Cards */}
             <div className="md:hidden space-y-sm">
-              {paginatedSessions.map((session, index) => {
-                const globalIndex = perPage === 0 ? sectionSessions.length - index : sectionSessions.indexOf(session)
+              {displayedSessions.map((session, index) => {
                 return (
                   <SessionCard
                     key={session.id}
                     session={session}
-                    index={globalIndex}
+                    index={index}
                     profile={profile}
                     onEdit={openEditModal}
                     onDelete={deleteSession}
@@ -361,13 +352,6 @@ export function SessionsPage() {
                 )
               })}
             </div>
-            <Pagination
-              totalItems={sectionSessions.length}
-              page={page}
-              perPage={perPage}
-              onPageChange={setPage}
-              onPerPageChange={setPerPage}
-            />
           </div>
         )}
       </div>
@@ -431,11 +415,19 @@ export function SessionsPage() {
         </div>
       ) : (
         <div className="space-y-md">
-          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFutureSessions, pageFuture, perPageFuture, setPageFuture, setPerPageFuture, false)}
-          {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, paginatedCurrentSessions, pageCurrent, perPageCurrent, setPageCurrent, setPerPageCurrent, true)}
-          {renderSection('Pasadas', 'history', 'past', pastSessions, paginatedPastSessions, pagePast, perPagePast, setPagePast, setPerPagePast, false)}
+          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFuture, false)}
+          {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, paginatedCurrent, true)}
+          {renderSection('Pasadas', 'history', 'past', pastSessions, paginatedPast, false)}
         </div>
       )}
+
+      <Pagination
+        totalItems={sessions.length}
+        page={1}
+        perPage={perPage}
+        onPageChange={() => {}}
+        onPerPageChange={setPerPage}
+      />
 
       {/* Create Session Modal */}
       {showCreateModal && (
