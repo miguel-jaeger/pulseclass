@@ -298,7 +298,7 @@ export function SuggestionsPage() {
           className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
         >
           <span className="material-symbols-outlined text-lg">add</span>
-          Nueva sugerencia
+          Crear
         </button>
       </header>
 
@@ -415,7 +415,7 @@ export function SuggestionsPage() {
       {showForm && (
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">            Crear</h3>
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear sugerencia</h3>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
