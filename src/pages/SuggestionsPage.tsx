@@ -68,33 +68,35 @@ function getAuthHeaders(): Record<string, string> {
   return insforge.getHttpClient().getHeaders()
 }
 
+function xhrRequest(method: string, url: string, body?: Record<string, unknown>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open(method, url)
+    const headers = getAuthHeaders()
+    Object.entries(headers).forEach(([k, v]) => xhr.setRequestHeader(k, v))
+    if (body) xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve()
+      else reject(new Error(`${method} failed: ${xhr.status} ${xhr.responseText}`))
+    }
+    xhr.onerror = () => reject(new Error(`${method} network error`))
+    xhr.send(body ? JSON.stringify(body) : undefined)
+  })
+}
+
 async function restInsert(table: string, row: Record<string, unknown>) {
   const url = `${BASE_URL}/api/database/records/${table}`
-  const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() }
-  console.log('[rest] POST', url, JSON.stringify(row))
-  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(row) })
-  if (!res.ok) {
-    const body = await res.text()
-    console.error('[rest] INSERT ERROR', res.status, body)
-    throw new Error(`Insert failed: ${res.status} ${body}`)
-  }
+  await xhrRequest('POST', url, row)
 }
 
 async function restUpdate(table: string, id: string, patch: Record<string, unknown>) {
-  const res = await fetch(`${BASE_URL}/api/database/records/${table}?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), 'Prefer': 'return=minimal' },
-    body: JSON.stringify(patch),
-  })
-  if (!res.ok) throw new Error(`Update failed: ${res.status}`)
+  const url = `${BASE_URL}/api/database/records/${table}?id=eq.${id}`
+  await xhrRequest('PATCH', url, patch)
 }
 
 async function restDelete(table: string, id: string) {
-  const res = await fetch(`${BASE_URL}/api/database/records/${table}?id=eq.${id}`, {
-    method: 'DELETE',
-    headers: { ...getAuthHeaders(), 'Prefer': 'return=minimal' },
-  })
-  if (!res.ok) throw new Error(`Delete failed: ${res.status}`)
+  const url = `${BASE_URL}/api/database/records/${table}?id=eq.${id}`
+  await xhrRequest('DELETE', url)
 }
 
 export function SuggestionsPage() {
