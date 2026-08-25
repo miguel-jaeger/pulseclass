@@ -267,7 +267,7 @@ export function ProfilePage() {
         )}
       </div>
 
-      <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className="flex justify-between items-center mb-lg">
           <h2 className="font-headline-sm text-headline-sm text-on-surface">Contraseña</h2>
           {!changingPassword && (
