@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from './useAuth'
 
@@ -15,6 +15,7 @@ export function useRatingVotes() {
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
   const [userVotes, setUserVotes] = useState<UserVotes>({})
   const [loading, setLoading] = useState(false)
+  const userVotesRef = useRef<UserVotes>({})
 
   const fetchVotes = useCallback(async (ratingIds: string[]) => {
     if (ratingIds.length === 0) return
@@ -44,13 +45,14 @@ export function useRatingVotes() {
 
     setVoteCounts(counts)
     setUserVotes(votes)
+    userVotesRef.current = votes
     setLoading(false)
   }, [user?.id])
 
   const vote = useCallback(async (ratingId: string, voteType: 'like' | 'dislike') => {
     if (!user) return
 
-    const currentVote = userVotes[ratingId]
+    const currentVote = userVotesRef.current[ratingId]
 
     if (currentVote === voteType) {
       const { error } = await insforge.database
@@ -60,7 +62,10 @@ export function useRatingVotes() {
         .eq('user_id', user.id)
 
       if (!error) {
-        setUserVotes(prev => ({ ...prev, [ratingId]: null }))
+        const updated = { ...userVotesRef.current, [ratingId]: null }
+        userVotesRef.current = updated
+        setUserVotes(updated)
+
         setVoteCounts(prev => ({
           ...prev,
           [ratingId]: {
@@ -84,7 +89,10 @@ export function useRatingVotes() {
         .insert([{ rating_id: ratingId, user_id: user.id, vote_type: voteType }])
 
       if (!error) {
-        setUserVotes(prev => ({ ...prev, [ratingId]: voteType }))
+        const updated = { ...userVotesRef.current, [ratingId]: voteType }
+        userVotesRef.current = updated
+        setUserVotes(updated)
+
         setVoteCounts(prev => {
           const prevVotes = prev[ratingId] || { likes: 0, dislikes: 0 }
           return {
@@ -97,7 +105,7 @@ export function useRatingVotes() {
         })
       }
     }
-  }, [user, userVotes])
+  }, [user])
 
   return { voteCounts, userVotes, loading, fetchVotes, vote }
 }
