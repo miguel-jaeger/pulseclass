@@ -32,8 +32,8 @@ interface Rating {
 
 interface SessionStat {
   id: string
-  title: string
-  date: string
+  courseName: string
+  dateRange: string
   count: number
   avg: number
 }
@@ -199,22 +199,27 @@ export function StatisticsPage() {
   }, [ratings])
 
   const sessionStats = useMemo<SessionStat[]>(() => {
-    const map = new Map<string, { title: string; date: string; count: number; sum: number }>()
+    const map = new Map<string, { courseName: string; count: number; sum: number }>()
     for (const r of ratings) {
       const s = sessions.find(sess => sess.id === r.session_id)
       if (!s) continue
-      const existing = map.get(r.session_id)
+      const course = courses.find(c => c.id === s.course_id)
+      const key = s.course_id
+      const existing = map.get(key)
       if (existing) {
         existing.count++
         existing.sum += r.score
       } else {
-        map.set(r.session_id, { title: s.title, date: s.date, count: 1, sum: r.score })
+        map.set(key, { courseName: course?.name ?? 'Sin curso', count: 1, sum: r.score })
       }
     }
+    const dStart = new Date(dateStart).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    const dEnd = new Date(dateEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    const dateRange = `${dStart} - ${dEnd}`
     return Array.from(map.entries())
-      .map(([id, v]) => ({ id, title: v.title, date: v.date, count: v.count, avg: v.sum / v.count }))
+      .map(([id, v]) => ({ id, courseName: v.courseName, dateRange, count: v.count, avg: v.sum / v.count }))
       .sort((a, b) => b.avg - a.avg)
-  }, [ratings, sessions])
+  }, [ratings, sessions, courses, dateStart, dateEnd])
 
   const commentsWithSession = useMemo<RatedItem[]>(() => {
     return ratings
@@ -398,14 +403,14 @@ export function StatisticsPage() {
           {/* Session Breakdown */}
           {sessionStats.length > 0 && (
             <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Sesión</h3>
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Curso</h3>
               <div className="space-y-sm md:space-y-0">
                 {/* Desktop table */}
                 <table className="w-full hidden md:table">
                   <thead>
                     <tr className="border-b border-outline-variant">
-                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Sesión</th>
-                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Fecha</th>
+                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Curso</th>
+                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Período</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Evaluaciones</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm">Promedio</th>
                     </tr>
@@ -413,10 +418,8 @@ export function StatisticsPage() {
                   <tbody>
                     {sessionStats.map(s => (
                       <tr key={s.id} className="border-b border-outline-variant last:border-0">
-                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{s.title}</td>
-                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">
-                          {new Date(s.date).toLocaleDateString('es-ES')}
-                        </td>
+                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{s.courseName}</td>
+                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">{s.dateRange}</td>
                         <td className="py-sm pr-md font-body-md text-body-md text-on-surface text-right">{s.count}</td>
                         <td className="py-sm font-body-md text-body-md text-on-surface text-right font-semibold">{s.avg.toFixed(1)}</td>
                       </tr>
@@ -427,11 +430,9 @@ export function StatisticsPage() {
                 <div className="md:hidden space-y-sm">
                   {sessionStats.map(s => (
                     <div key={s.id} className="border border-outline-variant rounded-xl p-md">
-                      <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{s.title}</p>
+                      <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{s.courseName}</p>
                       <div className="flex justify-between items-center mt-xs">
-                        <span className="font-body-xs text-body-xs text-on-surface-variant">
-                          {new Date(s.date).toLocaleDateString('es-ES')}
-                        </span>
+                        <span className="font-body-xs text-body-xs text-on-surface-variant">{s.dateRange}</span>
                         <div className="flex gap-md">
                           <span className="font-body-xs text-body-xs text-on-surface-variant">{s.count} eval.</span>
                           <span className="font-body-xs text-body-xs text-on-surface font-semibold">Prom: {s.avg.toFixed(1)}</span>
@@ -503,7 +504,7 @@ export function StatisticsPage() {
                 </div>
                 {sessionStats.length > 0 && (
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    {sessionStats.length} sesión{sessionStats.length !== 1 ? 'es' : ''} con evaluaciones en el rango seleccionado.
+                    {sessionStats.length} curso{sessionStats.length !== 1 ? 's' : ''} con evaluaciones en el rango seleccionado.
                   </p>
                 )}
               </div>
