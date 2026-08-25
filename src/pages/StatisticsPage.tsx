@@ -224,8 +224,8 @@ export function StatisticsPage() {
     }
     const [yS, mS, dS] = dateStart.split('-').map(Number)
     const [yE, mE, dE] = dateEnd.split('-').map(Number)
-    const dStart = new Date(yS, mS - 1, dS).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
-    const dEnd = new Date(yE, mE - 1, dE).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+    const dStart = `${String(dS).padStart(2, '0')}/${String(mS).padStart(2, '0')}/${yS}`
+    const dEnd = `${String(dE).padStart(2, '0')}/${String(mE).padStart(2, '0')}/${yE}`
     const dateRange = `${dStart} - ${dEnd}`
     return Array.from(map.entries())
       .map(([id, v]) => ({ id, courseName: v.courseName, dateRange, count: v.count, avg: v.sum / v.count }))
