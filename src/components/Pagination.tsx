@@ -13,8 +13,6 @@ const perPageOptions = [10, 20, 50, 100]
 export function Pagination({ totalItems, page, perPage, onPageChange, onPerPageChange }: PaginationProps) {
   const totalPages = perPage === 0 ? 1 : Math.ceil(totalItems / perPage)
 
-  if (totalItems === 0) return null
-
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-md mt-lg pt-lg border-t border-outline-variant">
       <div className="flex items-center gap-sm">
@@ -37,7 +35,7 @@ export function Pagination({ totalItems, page, perPage, onPageChange, onPerPageC
         </span>
       </div>
 
-      {perPage !== 0 && totalPages > 1 && (
+      {perPage !== 0 && (
         <div className="flex items-center gap-sm">
           <button
             onClick={() => onPageChange(page - 1)}
