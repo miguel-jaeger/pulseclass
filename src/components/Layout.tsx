@@ -101,24 +101,24 @@ export function Layout({ children }: { children: ReactNode }) {
       </main>
 
       {/* BottomNavBar (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 px-4 bg-surface border-t border-outline-variant shadow-md rounded-t-xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface border-t border-outline-variant flex justify-around items-center px-2" style={{ zIndex: 9999 }}>
         {filteredBottomNav.map((item) => (
           <Link
             key={item.to}
             to={item.to}
-            className={`flex flex-col items-center justify-center rounded-full px-4 py-1 scale-95 duration-100 ${
+            className={`flex flex-col items-center justify-center px-3 py-1 ${
               isActive(item.to)
-                ? 'bg-primary-container text-on-primary-container'
-                : 'text-on-surface-variant active:bg-surface-variant'
+                ? 'text-primary'
+                : 'text-on-surface-variant'
             }`}
           >
             <span
-              className="material-symbols-outlined"
+              className="material-symbols-outlined text-[22px]"
               style={item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined}
             >
               {item.icon}
             </span>
-            <span className="font-label-sm text-label-sm mt-1">{item.label}</span>
+            <span className="font-label-xs text-label-xs mt-0.5">{item.label}</span>
           </Link>
         ))}
       </nav>
