@@ -289,7 +289,7 @@ export function CourseMembersPage() {
     m.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const { page: membersPage, perPage: membersPerPage, setPage: setMembersPage, setPerPage: setMembersPerPage, paginatedSlice: membersPaginate } = usePagination(filteredMembers.length)
+  const { page: membersPage, perPage: membersPerPage, setPage: setMembersPage, setPerPage: setMembersPerPage, paginatedSlice: membersPaginate } = usePagination(filteredMembers.length, 10)
   const paginatedMembers = membersPaginate(filteredMembers)
 
   const availableUsers = allProfiles

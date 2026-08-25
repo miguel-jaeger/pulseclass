@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface UserProfile {
   id: string
@@ -182,6 +183,9 @@ export function AdminPage() {
     return matchesSearch && matchesRole
   })
 
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredUsers.length, 10)
+  const paginatedUsers = paginatedSlice(filteredUsers)
+
   if (profile?.role !== 'admin') {
     return (
       <div className="p-lg">
@@ -257,7 +261,7 @@ export function AdminPage() {
       </div>
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
-        Mostrando <span className="font-bold text-on-surface">{filteredUsers.length}</span> de <span className="font-bold text-on-surface">{users.length}</span> usuarios
+        Mostrando <span className="font-bold text-on-surface">{paginatedUsers.length}</span> de <span className="font-bold text-on-surface">{filteredUsers.length}</span> usuarios
       </p>
 
       {loading ? (
@@ -298,7 +302,7 @@ export function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
                     <td className="px-md py-3">
                       <input
@@ -349,7 +353,7 @@ export function AdminPage() {
           </div>
           {/* Mobile cards */}
           <div className="md:hidden">
-            {filteredUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <div key={user.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
                 <div className="flex items-start justify-between gap-sm">
                   <div className="flex items-center gap-sm min-w-0">
@@ -403,6 +407,14 @@ export function AdminPage() {
           )}
         </div>
       )}
+
+      <Pagination
+        totalItems={filteredUsers.length}
+        page={page}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       {/* Create User Modal */}
       {showCreateModal && (

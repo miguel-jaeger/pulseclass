@@ -143,7 +143,7 @@ export function CoursesPage() {
     return matchesSearch && matchesStatus
   })
 
-  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredCourses.length)
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredCourses.length, 10)
   const paginatedCourses = paginatedSlice(filteredCourses)
 
   if (loading) {

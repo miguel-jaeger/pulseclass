@@ -247,7 +247,7 @@ export function SuggestionsPage() {
   }
 
   const filtered = suggestions.filter(s => statusFilter === 'all' || s.status === statusFilter)
-  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filtered.length)
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filtered.length, 10)
   const paginatedSuggestions = paginatedSlice(filtered)
 
   if (loading) {

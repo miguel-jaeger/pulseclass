@@ -31,7 +31,7 @@ export function SessionsPage() {
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [editDate, setEditDate] = useState('')
 
-  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length)
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length, 10)
   const paginatedSessions = paginatedSlice(sessions)
 
   useEffect(() => {
