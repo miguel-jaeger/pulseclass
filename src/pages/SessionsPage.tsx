@@ -412,8 +412,8 @@ export function SessionsPage() {
         </div>
       ) : (
         <div className="space-y-md">
-          {renderSection('Futuras', 'schedule', 'future', futureSessions, false)}
           {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, true)}
+          {renderSection('Próximamente', 'schedule', 'future', futureSessions, false)}
           {renderSection('Pasadas', 'history', 'past', pastSessions, false)}
         </div>
       )}
