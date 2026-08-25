@@ -215,7 +215,7 @@ export function CoursesPage() {
         Mostrando <span className="font-bold text-on-surface">{paginatedCourses.length}</span> de <span className="font-bold text-on-surface">{filteredCourses.length}</span> cursos
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg pb-20 md:pb-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         {paginatedCourses.map((course) => (
           <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${course.is_active ? 'border-outline-variant border-t-[3px] border-t-primary' : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'}`}>
             <div className="flex justify-between items-start mb-md">
