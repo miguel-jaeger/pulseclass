@@ -112,7 +112,7 @@ export function SessionsPage() {
   }
 
   return (
-    <div>
+    <div className="pb-20 md:pb-0">
       <div className="mb-lg">
         <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-md">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -134,7 +134,6 @@ export function SessionsPage() {
               >
                 <span className="material-symbols-outlined text-base md:text-lg">bar_chart</span>
                 <span className="hidden sm:inline">Estadísticas</span>
-                <span className="sm:hidden">Estadísticas</span>
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
@@ -156,48 +155,109 @@ export function SessionsPage() {
             <p className="font-body-md text-body-md text-on-surface-variant">No hay sesiones creadas aún.</p>
           </div>
         ) : (
-          sessions.map((session) => (
-            <article key={session.id} className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-md md:p-lg hover:shadow-sm transition-all duration-200 pb-20 md:pb-md">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-sm">
-                <div className="min-w-0">
-                  <h3 className="font-title-sm md:font-headline-sm text-title-sm md:text-headline-sm text-on-surface truncate">{session.title}</h3>
-                  <p className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface-variant mt-xs">
-                    <span className="material-symbols-outlined text-xs md:text-sm align-middle mr-xs">calendar_today</span>
-                    {new Date(session.date).toLocaleDateString('es-ES', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                </div>
-                <div className="flex gap-sm flex-shrink-0 flex-wrap">
-                  <Link
-                    to={`/sessions/${session.id}`}
-                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-3 md:px-md rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-sm md:text-lg">visibility</span>
-                    <span className="hidden xs:inline">Detalles</span>
-                  </Link>
-                  <Link
-                    to={`/sessions/${session.id}/rate`}
-                    className="bg-primary text-on-primary font-bold py-1 px-3 md:px-md rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-1"
-                  >
-                    <span className="material-symbols-outlined text-sm md:text-lg">rate_review</span>
-                    <span className="hidden xs:inline">Evaluar</span>
-                  </Link>
-                  {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
-                    <button
-                      onClick={() => deleteSession(session.id)}
-                      className="bg-surface-container border border-error text-error font-bold py-1 px-2 md:px-3 rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
+          <>
+            {/* Desktop: Table */}
+            <div className="hidden md:block bg-surface border border-outline-variant rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-outline-variant bg-surface-container-low">
+                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">#</th>
+                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Curso</th>
+                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Fecha</th>
+                    <th className="text-right font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((session, index) => (
+                    <tr key={session.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
+                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{sessions.length - index}</td>
+                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{course?.name}</td>
+                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
+                        {new Date(session.date).toLocaleDateString('es-ES', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </td>
+                      <td className="px-md py-sm">
+                        <div className="flex gap-sm justify-end">
+                          <Link
+                            to={`/sessions/${session.id}`}
+                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            title="Detalles"
+                          >
+                            <span className="material-symbols-outlined text-lg">visibility</span>
+                          </Link>
+                          <Link
+                            to={`/sessions/${session.id}/rate`}
+                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            title="Evaluar"
+                          >
+                            <span className="material-symbols-outlined text-lg">rate_review</span>
+                          </Link>
+                          {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
+                            <button
+                              onClick={() => deleteSession(session.id)}
+                              className="text-on-surface-variant hover:text-error transition-colors"
+                              title="Eliminar"
+                            >
+                              <span className="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile: Compact cards */}
+            <div className="md:hidden space-y-sm">
+              {sessions.map((session, index) => (
+                <div key={session.id} className="bg-surface border border-outline-variant rounded-xl p-md flex items-center gap-md">
+                  <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
+                    {sessions.length - index}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{course?.name}</p>
+                    <p className="font-body-xs text-body-xs text-on-surface-variant">
+                      {new Date(session.date).toLocaleDateString('es-ES', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short'
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex gap-xs shrink-0">
+                    <Link
+                      to={`/sessions/${session.id}`}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+                      title="Detalles"
                     >
-                      <span className="material-symbols-outlined text-sm md:text-lg">delete</span>
-                    </button>
-                  )}
+                      <span className="material-symbols-outlined text-lg">visibility</span>
+                    </Link>
+                    <Link
+                      to={`/sessions/${session.id}/rate`}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+                      title="Evaluar"
+                    >
+                      <span className="material-symbols-outlined text-lg">rate_review</span>
+                    </Link>
+                    {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
+                      <button
+                        onClick={() => deleteSession(session.id)}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                        title="Eliminar"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ))
+              ))}
+            </div>
+          </>
         )}
       </div>
 
