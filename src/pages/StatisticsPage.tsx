@@ -261,7 +261,7 @@ export function StatisticsPage() {
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 md:pb-0">
+    <div className="pb-20 md:pb-0">
       <div className="mb-lg">
         <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
