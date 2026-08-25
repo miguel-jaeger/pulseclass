@@ -185,25 +185,25 @@ export function SessionsPage() {
                         <div className="flex gap-sm justify-end">
                           <Link
                             to={`/sessions/${session.id}`}
-                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
                             title="Detalles"
                           >
-                            <span className="material-symbols-outlined text-lg">visibility</span>
+                            <span className="material-symbols-outlined text-xl">visibility</span>
                           </Link>
                           <Link
                             to={`/sessions/${session.id}/rate`}
-                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
                             title="Evaluar"
                           >
-                            <span className="material-symbols-outlined text-lg">rate_review</span>
+                            <span className="material-symbols-outlined text-xl">rate_review</span>
                           </Link>
                           {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                             <button
                               onClick={() => deleteSession(session.id)}
-                              className="text-on-surface-variant hover:text-error transition-colors"
+                              className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
                               title="Eliminar"
                             >
-                              <span className="material-symbols-outlined text-lg">delete</span>
+                              <span className="material-symbols-outlined text-xl">delete</span>
                             </button>
                           )}
                         </div>
@@ -230,28 +230,28 @@ export function SessionsPage() {
                       })}
                     </p>
                   </div>
-                  <div className="flex gap-xs shrink-0">
+                  <div className="flex gap-sm shrink-0">
                     <Link
                       to={`/sessions/${session.id}`}
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container transition-colors"
                       title="Detalles"
                     >
-                      <span className="material-symbols-outlined text-lg">visibility</span>
+                      <span className="material-symbols-outlined text-xl">visibility</span>
                     </Link>
                     <Link
                       to={`/sessions/${session.id}/rate`}
-                      className="w-8 h-8 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
                       title="Evaluar"
                     >
-                      <span className="material-symbols-outlined text-lg">rate_review</span>
+                      <span className="material-symbols-outlined text-xl">rate_review</span>
                     </Link>
                     {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                       <button
                         onClick={() => deleteSession(session.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
                         title="Eliminar"
                       >
-                        <span className="material-symbols-outlined text-lg">delete</span>
+                        <span className="material-symbols-outlined text-xl">delete</span>
                       </button>
                     )}
                   </div>

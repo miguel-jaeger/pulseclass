@@ -191,7 +191,7 @@ export function AdminPage() {
   }
 
   return (
-    <div>
+    <div className="pb-20 md:pb-0">
       <header className="mb-xl flex justify-between items-end">
         <div>
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
@@ -278,7 +278,8 @@ export function AdminPage() {
               </button>
             </div>
           )}
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -291,7 +292,7 @@ export function AdminPage() {
                     />
                   </th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Nombre</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant hidden md:table-cell">Correo</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Correo</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Rol</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
                 </tr>
@@ -309,9 +310,8 @@ export function AdminPage() {
                     </td>
                     <td className="px-md py-3">
                       <div className="font-body-sm text-body-sm text-on-surface font-medium">{user.name}</div>
-                      <div className="font-body-sm text-body-sm text-on-surface-variant md:hidden">{user.email}</div>
                     </td>
-                    <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant hidden md:table-cell">{user.email}</td>
+                    <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant">{user.email}</td>
                     <td className="px-md py-3">
                       <span className={`inline-flex items-center px-sm py-xs rounded-full font-label-sm text-label-sm ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
@@ -328,17 +328,17 @@ export function AdminPage() {
                       <div className="flex items-center gap-sm">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
                           title="Editar usuario"
                         >
-                          <span className="material-symbols-outlined text-sm">edit</span>
+                          <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
                         <button
                           onClick={() => deleteUser(user.user_id)}
-                          className="text-error font-label-sm text-label-sm hover:underline flex items-center gap-1"
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
                           title="Eliminar usuario"
                         >
-                          <span className="material-symbols-outlined text-sm">delete</span>
+                          <span className="material-symbols-outlined text-xl">delete</span>
                         </button>
                       </div>
                     </td>
@@ -346,6 +346,53 @@ export function AdminPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Mobile cards */}
+          <div className="md:hidden">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
+                <div className="flex items-start justify-between gap-sm">
+                  <div className="flex items-center gap-sm min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.user_id)}
+                      onChange={() => toggleSelectUser(user.user_id)}
+                      className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate">{user.name}</div>
+                      <div className="font-body-xs text-body-xs text-on-surface-variant truncate">{user.email}</div>
+                      <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs mt-xs ${
+                        user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
+                        user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
+                        'bg-secondary-container text-on-secondary-container'
+                      }`}>
+                        <span className="material-symbols-outlined text-[12px] mr-[2px]">
+                          {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
+                        </span>
+                        {roleLabel(user.role)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-sm shrink-0">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
+                      title="Editar"
+                    >
+                      <span className="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button
+                      onClick={() => deleteUser(user.user_id)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
+                      title="Eliminar"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
           {filteredUsers.length === 0 && (
             <div className="text-center py-lg">

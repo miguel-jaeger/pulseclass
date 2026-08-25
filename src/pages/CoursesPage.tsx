@@ -235,25 +235,25 @@ export function CoursesPage() {
             <div className="mt-auto flex justify-end gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="w-8 h-8 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
+                className="w-9 h-9 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
                 title="Adicionar sesión"
               >
-                <span className="material-symbols-outlined text-lg">event</span>
+                <span className="material-symbols-outlined text-xl">event</span>
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
-                className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                className="w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
                 title="Adicionar miembros"
               >
-                <span className="material-symbols-outlined text-lg">group</span>
+                <span className="material-symbols-outlined text-xl">group</span>
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
-                  className="w-8 h-8 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                  className="w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
                   title="Editar curso"
                 >
-                  <span className="material-symbols-outlined text-lg">edit</span>
+                  <span className="material-symbols-outlined text-xl">edit</span>
                 </button>
               )}
             </div>
