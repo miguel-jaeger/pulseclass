@@ -16,9 +16,11 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
     "@vitejs/plugin-react": "^4.4.1",
+    "tailwindcss": "^4.3.3",
     "typescript": "~5.7.2",
     "vite": "^6.3.5"
   }
