@@ -34,11 +34,18 @@ export function CoursesPage() {
 
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [editForm, setEditForm] = useState({ name: '', description: '', is_active: true })
+  const [courseStats, setCourseStats] = useState<Record<string, { sessions: number; members: number }>>({})
 
   useEffect(() => {
     fetchCourses()
     if (profile?.role === 'admin') fetchTeachers()
   }, [])
+
+  useEffect(() => {
+    if (courses.length > 0) {
+      fetchCourseStats(courses.map(c => c.id))
+    }
+  }, [courses])
 
   const fetchCourses = async () => {
     if (profile?.role === 'admin') {
@@ -97,6 +104,21 @@ export function CoursesPage() {
       .eq('role', 'teacher')
       .order('name')
     if (!error && data) setTeachers(data as Teacher[])
+  }
+
+  const fetchCourseStats = async (courseIds: string[]) => {
+    const stats: Record<string, { sessions: number; members: number }> = {}
+    for (const id of courseIds) {
+      const [sessionsRes, membersRes] = await Promise.all([
+        insforge.database.from('sessions').select('id', { count: 'exact', head: true }).eq('course_id', id),
+        insforge.database.from('course_members').select('id', { count: 'exact', head: true }).eq('course_id', id)
+      ])
+      stats[id] = {
+        sessions: sessionsRes.count ?? 0,
+        members: membersRes.count ?? 0
+      }
+    }
+    setCourseStats(stats)
   }
 
   const createCourse = async () => {
@@ -306,17 +328,27 @@ export function CoursesPage() {
             <div className="mt-auto flex justify-end gap-sm">
               <Link
                 to={`/courses/${course.id}/sessions`}
-                className="w-9 h-9 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
-                title="Adicionar sesión"
+                className="relative w-9 h-9 bg-surface-container border border-primary text-primary rounded-full hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center justify-center"
+                title="Sesiones"
               >
                 <span className="material-symbols-outlined text-xl">event</span>
+                {courseStats[course.id]?.sessions != null && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-on-primary text-[10px] font-bold rounded-full px-1">
+                    {courseStats[course.id].sessions}
+                  </span>
+                )}
               </Link>
               <Link
                 to={`/courses/${course.id}/members`}
-                className="w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
-                title="Adicionar miembros"
+                className="relative w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
+                title="Miembros"
               >
                 <span className="material-symbols-outlined text-xl">group</span>
+                {courseStats[course.id]?.members != null && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-tertiary text-on-primary text-[10px] font-bold rounded-full px-1">
+                    {courseStats[course.id].members}
+                  </span>
+                )}
               </Link>
               {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
                 <button
