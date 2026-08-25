@@ -14,12 +14,11 @@ export function useRatingVotes() {
   const { user } = useAuth()
   const [voteCounts, setVoteCounts] = useState<VoteCounts>({})
   const [userVotes, setUserVotes] = useState<UserVotes>({})
-  const [loading, setLoading] = useState(false)
   const userVotesRef = useRef<UserVotes>({})
+  const voteCountsRef = useRef<VoteCounts>({})
 
   const fetchVotes = useCallback(async (ratingIds: string[]) => {
     if (ratingIds.length === 0) return
-    setLoading(true)
 
     const { data: votesData } = await insforge.database
       .from('rating_votes')
@@ -43,16 +42,17 @@ export function useRatingVotes() {
       }
     }
 
+    voteCountsRef.current = counts
+    userVotesRef.current = votes
     setVoteCounts(counts)
     setUserVotes(votes)
-    userVotesRef.current = votes
-    setLoading(false)
   }, [user?.id])
 
   const vote = useCallback(async (ratingId: string, voteType: 'like' | 'dislike') => {
     if (!user) return
 
     const currentVote = userVotesRef.current[ratingId]
+    const currentCounts = voteCountsRef.current[ratingId] || { likes: 0, dislikes: 0 }
 
     if (currentVote === voteType) {
       const { error } = await insforge.database
@@ -62,18 +62,18 @@ export function useRatingVotes() {
         .eq('user_id', user.id)
 
       if (!error) {
-        const updated = { ...userVotesRef.current, [ratingId]: null }
-        userVotesRef.current = updated
-        setUserVotes(updated)
-
-        setVoteCounts(prev => ({
-          ...prev,
+        const newVote = { ...userVotesRef.current, [ratingId]: null }
+        const newCounts = {
+          ...voteCountsRef.current,
           [ratingId]: {
-            ...prev[ratingId],
-            likes: prev[ratingId].likes - (voteType === 'like' ? 1 : 0),
-            dislikes: prev[ratingId].dislikes - (voteType === 'dislike' ? 1 : 0)
+            likes: currentCounts.likes - (voteType === 'like' ? 1 : 0),
+            dislikes: currentCounts.dislikes - (voteType === 'dislike' ? 1 : 0)
           }
-        }))
+        }
+        userVotesRef.current = newVote
+        voteCountsRef.current = newCounts
+        setUserVotes(newVote)
+        setVoteCounts(newCounts)
       }
     } else {
       if (currentVote) {
@@ -89,23 +89,21 @@ export function useRatingVotes() {
         .insert([{ rating_id: ratingId, user_id: user.id, vote_type: voteType }])
 
       if (!error) {
-        const updated = { ...userVotesRef.current, [ratingId]: voteType }
-        userVotesRef.current = updated
-        setUserVotes(updated)
-
-        setVoteCounts(prev => {
-          const prevVotes = prev[ratingId] || { likes: 0, dislikes: 0 }
-          return {
-            ...prev,
-            [ratingId]: {
-              likes: prevVotes.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
-              dislikes: prevVotes.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)
-            }
+        const newVote = { ...userVotesRef.current, [ratingId]: voteType }
+        const newCounts = {
+          ...voteCountsRef.current,
+          [ratingId]: {
+            likes: currentCounts.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
+            dislikes: currentCounts.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)
           }
-        })
+        }
+        userVotesRef.current = newVote
+        voteCountsRef.current = newCounts
+        setUserVotes(newVote)
+        setVoteCounts(newCounts)
       }
     }
   }, [user])
 
-  return { voteCounts, userVotes, loading, fetchVotes, vote }
+  return { voteCounts, userVotes, fetchVotes, vote }
 }

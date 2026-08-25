@@ -174,10 +174,10 @@ export function StatisticsPage() {
       setSessions(sessionsData as Session[])
       setRatings((ratingsData as Rating[]) || [])
 
+      setLoading(false)
+
       const ratingIds = (ratingsData as Rating[] || []).map(r => r.id)
       fetchVotes(ratingIds)
-
-      setLoading(false)
     }
 
     fetchData()
