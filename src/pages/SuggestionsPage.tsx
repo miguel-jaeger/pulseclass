@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -246,6 +247,8 @@ export function SuggestionsPage() {
   }
 
   const filtered = suggestions.filter(s => statusFilter === 'all' || s.status === statusFilter)
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filtered.length)
+  const paginatedSuggestions = paginatedSlice(filtered)
 
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
@@ -294,7 +297,7 @@ export function SuggestionsPage() {
         </div>
       ) : (
         <div className="space-y-md">
-          {filtered.map(s => {
+          {paginatedSuggestions.map(s => {
             const isOwn = s.user_id === user?.id
             const hasImages = s.images && s.images.length > 0
             return (
@@ -367,6 +370,14 @@ export function SuggestionsPage() {
           })}
         </div>
       )}
+
+      <Pagination
+        totalItems={filtered.length}
+        page={page}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       {/* Create Modal */}
       {showForm && (
