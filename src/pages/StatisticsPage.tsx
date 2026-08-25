@@ -377,25 +377,25 @@ export function StatisticsPage() {
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm">
-                <span className="material-symbols-outlined text-primary text-lg">assessment</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Total Evaluaciones:</span>
-                <span className="font-headline-sm text-headline-sm text-primary font-bold ml-auto">{totalEvaluaciones}</span>
+              <div className="flex items-center gap-sm mb-sm">
+                <span className="material-symbols-outlined text-primary">assessment</span>
+                <h3 className="font-label-md text-label-md text-on-surface-variant">Total Evaluaciones</h3>
               </div>
+              <p className="font-headline-lg text-headline-lg text-primary font-bold">{totalEvaluaciones}</p>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm">
-                <span className="material-symbols-outlined text-primary text-lg">trending_up</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Promedio:</span>
-                <span className="font-headline-sm text-headline-sm text-primary font-bold ml-auto">{avgScore.toFixed(1)}</span>
+              <div className="flex items-center gap-sm mb-sm">
+                <span className="material-symbols-outlined text-primary">trending_up</span>
+                <h3 className="font-label-md text-label-md text-on-surface-variant">Promedio</h3>
               </div>
+              <p className="font-headline-lg text-headline-lg text-primary font-bold">{avgScore.toFixed(1)}</p>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-center gap-sm">
-                <span className="material-symbols-outlined text-primary text-lg">emoji_emotions</span>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel:</span>
-                <span className={`font-headline-sm text-headline-sm font-bold ml-auto ${nivelColor}`}>{nivelLabel}</span>
+              <div className="flex items-center gap-sm mb-sm">
+                <span className="material-symbols-outlined text-primary">emoji_emotions</span>
+                <h3 className="font-label-md text-label-md text-on-surface-variant">Nivel</h3>
               </div>
+              <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
             </div>
           </div>
 
