@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../hooks/useTheme'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -38,6 +39,7 @@ export { Avatar }
 
 export function ProfilePage() {
   const { profile, user, signOut, refreshProfile } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [editing, setEditing] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [name, setName] = useState(profile?.name || '')
@@ -321,6 +323,31 @@ export function ProfilePage() {
         ) : (
           <p className="font-body-sm text-body-sm text-on-surface-variant">Para cambiar tu contraseña, haz clic en el enlace de arriba.</p>
         )}
+      </div>
+
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+        <h2 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Apariencia</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-md">
+            <span className="material-symbols-outlined text-on-surface-variant">{theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
+            <div>
+              <p className="font-body-md text-body-md text-on-surface font-medium">Modo oscuro</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                {theme === 'dark' ? 'Tema oscuro activado' : 'Tema claro activado'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+              theme === 'dark' ? 'bg-primary' : 'bg-surface-container-highest'
+            }`}
+          >
+            <span className={`inline-block h-5 w-5 transform rounded-full bg-on-primary transition-transform shadow-sm ${
+              theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
       </div>
 
       <div className="md:hidden mt-xl">
