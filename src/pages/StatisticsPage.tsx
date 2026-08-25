@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 interface Course {
   id: string
@@ -256,7 +256,7 @@ export function StatisticsPage() {
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-20 md:pb-0">
       <div className="mb-lg">
         <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -360,12 +360,12 @@ export function StatisticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5bdbb" />
                   <XAxis dataKey="score" stroke="#5c403f" />
                   <YAxis stroke="#5c403f" />
-                  <Tooltip />
+                  <Tooltip formatter={(value: number) => [value, 'Cant:']} />
                   <Bar dataKey="count" fill="#9e001f" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg overflow-hidden">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución por Categorías</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -374,8 +374,9 @@ export function StatisticsPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                    outerRadius={100}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    innerRadius={40}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -384,6 +385,11 @@ export function StatisticsPage() {
                     <Cell fill="#ba1a1a" />
                   </Pie>
                   <Tooltip />
+                  <Legend
+                    formatter={(value: string) => value}
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '12px' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -393,10 +399,12 @@ export function StatisticsPage() {
           {sessionStats.length > 0 && (
             <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Sesión</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="space-y-sm md:space-y-0">
+                {/* Desktop table */}
+                <table className="w-full hidden md:table">
                   <thead>
                     <tr className="border-b border-outline-variant">
+                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Sesión</th>
                       <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Fecha</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Evaluaciones</th>
                       <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm">Promedio</th>
@@ -405,6 +413,7 @@ export function StatisticsPage() {
                   <tbody>
                     {sessionStats.map(s => (
                       <tr key={s.id} className="border-b border-outline-variant last:border-0">
+                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{s.title}</td>
                         <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">
                           {new Date(s.date).toLocaleDateString('es-ES')}
                         </td>
@@ -414,13 +423,30 @@ export function StatisticsPage() {
                     ))}
                   </tbody>
                 </table>
+                {/* Mobile cards */}
+                <div className="md:hidden space-y-sm">
+                  {sessionStats.map(s => (
+                    <div key={s.id} className="border border-outline-variant rounded-xl p-md">
+                      <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{s.title}</p>
+                      <div className="flex justify-between items-center mt-xs">
+                        <span className="font-body-xs text-body-xs text-on-surface-variant">
+                          {new Date(s.date).toLocaleDateString('es-ES')}
+                        </span>
+                        <div className="flex gap-md">
+                          <span className="font-body-xs text-body-xs text-on-surface-variant">{s.count} eval.</span>
+                          <span className="font-body-xs text-body-xs text-on-surface font-semibold">Prom: {s.avg.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* Comments / Suggestions Tabs */}
           <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-            <div className="flex gap-sm mb-lg">
+            <div className="flex gap-sm mb-lg flex-wrap">
               <button
                 onClick={() => setActiveTab('overview')}
                 className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
@@ -486,17 +512,17 @@ export function StatisticsPage() {
                   <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios disponibles.</p>
                 ) : (
                   commentsWithSession.map(item => (
-                    <div key={item.id} className="border-l-[3px] border-primary pl-md py-sm">
-                      <div className="flex items-center gap-sm mb-xs">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold">
+                    <div key={item.id} className="border-l-[3px] border-primary pl-md py-sm overflow-hidden">
+                      <div className="flex items-center gap-sm mb-xs flex-wrap">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <span className="font-body-sm text-body-sm text-on-surface font-medium">{item.sessionTitle}</span>
-                        <span className="font-body-sm text-body-sm text-on-surface-variant">
+                        <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        <span className="font-body-xs text-body-xs text-on-surface-variant shrink-0">
                           {new Date(item.date).toLocaleDateString('es-ES')}
                         </span>
                       </div>
-                      <p className="font-body-md text-body-md text-on-surface">{item.text}</p>
+                      <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                     </div>
                   ))
                 )}
@@ -509,17 +535,17 @@ export function StatisticsPage() {
                   <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias disponibles.</p>
                 ) : (
                   suggestionsWithSession.map(item => (
-                    <div key={item.id} className="border-l-[3px] border-tertiary pl-md py-sm">
-                      <div className="flex items-center gap-sm mb-xs">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold">
+                    <div key={item.id} className="border-l-[3px] border-tertiary pl-md py-sm overflow-hidden">
+                      <div className="flex items-center gap-sm mb-xs flex-wrap">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <span className="font-body-sm text-body-sm text-on-surface font-medium">{item.sessionTitle}</span>
-                        <span className="font-body-sm text-body-sm text-on-surface-variant">
+                        <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        <span className="font-body-xs text-body-xs text-on-surface-variant shrink-0">
                           {new Date(item.date).toLocaleDateString('es-ES')}
                         </span>
                       </div>
-                      <p className="font-body-md text-body-md text-on-surface">{item.text}</p>
+                      <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                     </div>
                   ))
                 )}
