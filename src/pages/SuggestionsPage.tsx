@@ -105,7 +105,7 @@ export function SuggestionsPage() {
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
-  const isAdmin = profile?.role === 'admin'
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'teacher'
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -338,7 +338,7 @@ export function SuggestionsPage() {
                         <option value="implementada">Implementada</option>
                       </select>
                     )}
-                    {isOwn && (
+                    {(isOwn || isAdmin) && (
                       <button
                         onClick={() => handleEdit(s)}
                         className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
@@ -383,7 +383,7 @@ export function SuggestionsPage() {
       {showForm && (
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Nueva sugerencia</h3>
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">            Crear</h3>
 
             <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
