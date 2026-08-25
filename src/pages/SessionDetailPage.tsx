@@ -135,7 +135,7 @@ export function SessionDetailPage() {
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">{session?.title}</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
           <span className="material-symbols-outlined text-sm align-middle mr-xs">calendar_today</span>
-          {new Date(session?.date || '').toLocaleDateString('es-ES', {
+          {new Date((session?.date || '') + 'T12:00:00').toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',

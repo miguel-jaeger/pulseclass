@@ -186,7 +186,6 @@ export function SessionsPage() {
                 <thead>
                   <tr className="border-b border-outline-variant bg-surface-container-low">
                     <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">#</th>
-                    <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Curso</th>
                     <th className="text-left font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Fecha</th>
                     <th className="text-right font-body-sm text-body-sm text-on-surface-variant px-md py-sm">Acciones</th>
                   </tr>
@@ -195,9 +194,8 @@ export function SessionsPage() {
                   {sessions.map((session, index) => (
                     <tr key={session.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
                       <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">{sessions.length - index}</td>
-                      <td className="px-md py-sm font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{course?.name}</td>
                       <td className="px-md py-sm font-body-sm text-body-sm text-on-surface-variant">
-                        {new Date(session.date).toLocaleDateString('es-ES', {
+                        {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
                           weekday: 'short',
                           day: 'numeric',
                           month: 'short',
@@ -253,9 +251,8 @@ export function SessionsPage() {
                     {sessions.length - index}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{course?.name}</p>
                     <p className="font-body-xs text-body-xs text-on-surface-variant">
-                      {new Date(session.date).toLocaleDateString('es-ES', {
+                      {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
                         weekday: 'short',
                         day: 'numeric',
                         month: 'short'
