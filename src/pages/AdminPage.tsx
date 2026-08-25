@@ -215,6 +215,8 @@ export function AdminPage() {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
           <input
             type="text"
+            id="user-search"
+            name="search"
             placeholder="Buscar por nombre o correo..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -222,6 +224,8 @@ export function AdminPage() {
           />
         </div>
         <select
+          id="role-filter"
+          name="roleFilter"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
           className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
@@ -290,6 +294,8 @@ export function AdminPage() {
                   <th className="px-md py-3 text-left w-10">
                     <input
                       type="checkbox"
+                      id="select-all-users"
+                      name="selectAll"
                       checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
                       onChange={toggleSelectAllUsers}
                       className="w-4 h-4 accent-primary rounded"
@@ -307,6 +313,7 @@ export function AdminPage() {
                     <td className="px-md py-3">
                       <input
                         type="checkbox"
+                        name="selectUser"
                         checked={selectedUsers.has(user.user_id)}
                         onChange={() => toggleSelectUser(user.user_id)}
                         className="w-4 h-4 accent-primary rounded"
@@ -359,6 +366,7 @@ export function AdminPage() {
                   <div className="flex items-center gap-sm min-w-0">
                     <input
                       type="checkbox"
+                      name="selectUser"
                       checked={selectedUsers.has(user.user_id)}
                       onChange={() => toggleSelectUser(user.user_id)}
                       className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
@@ -423,9 +431,11 @@ export function AdminPage() {
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Usuario</h3>
             <div className="space-y-md">
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
+                <label htmlFor="create-name" className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
                 <input
                   type="text"
+                  id="create-name"
+                  name="name"
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -433,9 +443,11 @@ export function AdminPage() {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+                <label htmlFor="create-email" className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
                 <input
                   type="email"
+                  id="create-email"
+                  name="email"
                   value={createForm.email}
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -443,9 +455,11 @@ export function AdminPage() {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña</label>
+                <label htmlFor="create-password" className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña</label>
                 <input
                   type="password"
+                  id="create-password"
+                  name="password"
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -453,8 +467,10 @@ export function AdminPage() {
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
+                <label htmlFor="create-role" className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
                 <select
+                  id="create-role"
+                  name="role"
                   value={createForm.role}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -496,26 +512,32 @@ export function AdminPage() {
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar Usuario</h3>
             <div className="space-y-md">
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
+                <label htmlFor="edit-name" className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
                 <input
                   type="text"
+                  id="edit-name"
+                  name="name"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+                <label htmlFor="edit-email" className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
                 <input
                   type="email"
+                  id="edit-email"
+                  name="email"
                   value={editForm.email}
                   disabled
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface-container font-body-sm text-body-sm text-on-surface-variant cursor-not-allowed"
                 />
               </div>
               <div>
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
+                <label htmlFor="edit-role" className="block font-label-md text-label-md text-on-surface mb-xs">Rol</label>
                 <select
+                  id="edit-role"
+                  name="role"
                   value={editForm.role}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -526,9 +548,11 @@ export function AdminPage() {
                 </select>
               </div>
               <div className="border-t border-outline-variant pt-md mt-md">
-                <label className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña (opcional)</label>
+                <label htmlFor="edit-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña (opcional)</label>
                 <input
                   type="password"
+                  id="edit-password"
+                  name="password"
                   value={editForm.password}
                   onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"

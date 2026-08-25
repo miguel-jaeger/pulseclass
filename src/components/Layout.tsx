@@ -85,7 +85,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </nav>
 
       {/* TopAppBar (Mobile) */}
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 bg-surface border-b border-outline-variant md:hidden">
+      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-12 h-16 bg-surface border-b border-outline-variant md:hidden">
         <div className="flex items-center gap-sm">
           <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary-container text-lg">school</span>
@@ -98,7 +98,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 ml-0 md:ml-64 pt-16 md:pt-xl pb-16 md:pb-xl px-margin-mobile md:px-margin-desktop max-w-[max-width] mx-auto w-full min-h-screen">
+      <main className="flex-1 ml-0 md:ml-64 pt-16 md:pt-xl pb-16 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen">
         {children}
       </main>
 

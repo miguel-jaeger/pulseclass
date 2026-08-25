@@ -386,8 +386,10 @@ export function StatisticsPage() {
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className={`grid grid-cols-1 md:grid-cols-${profile?.role === 'admin' && teachers.length > 0 ? '4' : '3'} gap-lg`}>
           <div>
-            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
+            <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
             <input
+              id="date-start"
+              name="dateStart"
               type="date"
               value={dateStart}
               onChange={e => setDateStart(e.target.value)}
@@ -395,8 +397,10 @@ export function StatisticsPage() {
             />
           </div>
           <div>
-            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha fin</label>
+            <label htmlFor="date-end" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha fin</label>
             <input
+              id="date-end"
+              name="dateEnd"
               type="date"
               value={dateEnd}
               onChange={e => setDateEnd(e.target.value)}
@@ -405,9 +409,11 @@ export function StatisticsPage() {
           </div>
           {profile?.role === 'admin' && teachers.length > 0 && (
           <div className="relative" ref={teacherRef}>
-            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
+            <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
             <div className="relative">
               <input
+                id="teacher-search"
+                name="teacherSearch"
                 type="text"
                 value={teacherSearch}
                 onChange={e => { setTeacherSearch(e.target.value); setTeacherDropdownOpen(true) }}
@@ -452,9 +458,11 @@ export function StatisticsPage() {
           )}
           {courses.length > 1 && (
           <div>
-            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
+            <label htmlFor="course-filter" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
               <select
+                id="course-filter"
+                name="courseFilter"
                 value={selectedCourse}
                 onChange={e => setSelectedCourse(e.target.value)}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
@@ -717,6 +725,9 @@ export function StatisticsPage() {
                       </div>
                       {editingCommentId === item.id ? (
                         <textarea
+                          id="edit-comment"
+                          name="comment"
+                          aria-label="Editar comentario"
                           value={editingCommentText}
                           onChange={e => setEditingCommentText(e.target.value)}
                           rows={3}
@@ -809,6 +820,9 @@ export function StatisticsPage() {
                       </div>
                       {editingSuggestionId === item.id ? (
                         <textarea
+                          id="edit-suggestion"
+                          name="suggestion"
+                          aria-label="Editar sugerencia"
                           value={editingSuggestionText}
                           onChange={e => setEditingSuggestionText(e.target.value)}
                           rows={3}

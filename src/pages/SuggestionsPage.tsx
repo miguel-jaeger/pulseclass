@@ -359,6 +359,9 @@ export function SuggestionsPage() {
                     </button>
                     {(isAdmin || canEditSuggestion(s.user_id)) && (
                       <select
+                        id="suggestion-status"
+                        name="status"
+                        aria-label="Estado de sugerencia"
                         value={s.status}
                         onChange={(e) => handleStatusChange(s.id, e.target.value)}
                         className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -417,8 +420,10 @@ export function SuggestionsPage() {
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear sugerencia</h3>
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
+            <label htmlFor="create-type" className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
+              id="create-type"
+              name="type"
               value={formType}
               onChange={(e) => setFormType(e.target.value)}
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -429,8 +434,10 @@ export function SuggestionsPage() {
               <option value="contenido">Contenido</option>
             </select>
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
+            <label htmlFor="create-description" className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
             <textarea
+              id="create-description"
+              name="description"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               rows={4}
@@ -438,9 +445,11 @@ export function SuggestionsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
             />
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes (opcional)</label>
+            <label htmlFor="create-images" className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes (opcional)</label>
             <input
               ref={createFileRef}
+              id="create-images"
+              name="images"
               type="file"
               accept="image/*"
               multiple
@@ -497,8 +506,10 @@ export function SuggestionsPage() {
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar sugerencia</h3>
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
+            <label htmlFor="edit-type" className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
+              id="edit-type"
+              name="type"
               value={editType}
               onChange={(e) => setEditType(e.target.value)}
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -509,8 +520,10 @@ export function SuggestionsPage() {
               <option value="contenido">Contenido</option>
             </select>
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
+            <label htmlFor="edit-description" className="block font-label-md text-label-md text-on-surface mb-xs">Descripción</label>
             <textarea
+              id="edit-description"
+              name="description"
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               rows={4}
@@ -518,9 +531,11 @@ export function SuggestionsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 mb-md bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
             />
 
-            <label className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes</label>
+            <label htmlFor="edit-images" className="block font-label-md text-label-md text-on-surface mb-xs">Imágenes</label>
             <input
               ref={editFileRef}
+              id="edit-images"
+              name="images"
               type="file"
               accept="image/*"
               multiple

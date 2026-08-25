@@ -54,41 +54,31 @@
   --color-on-tertiary-fixed-variant: #454748;
   --color-scrim: #000000;
 
-  --spacing-lg: 24px;
-  --spacing-gutter: 16px;
-  --spacing-margin-mobile: 16px;
-  --spacing-xs: 4px;
-  --spacing-base: 4px;
-  --spacing-xl: 32px;
-  --spacing-margin-desktop: 48px;
-  --spacing-md: 16px;
-  --spacing-sm: 8px;
-  --spacing-max-width: 1200px;
-
-  --font-body-sm: 'Inter', sans-serif;
-  --font-headline-lg-mobile: 'Inter', sans-serif;
-  --font-label-sm: 'Inter', sans-serif;
-  --font-label-md: 'Inter', sans-serif;
-  --font-headline-md: 'Inter', sans-serif;
-  --font-body-md: 'Inter', sans-serif;
-  --font-body-lg: 'Inter', sans-serif;
-  --font-headline-lg: 'Inter', sans-serif;
-  --font-headline-sm: 'Inter', sans-serif;
-
-  --text-body-sm: 14px;
-  --text-headline-lg-mobile: 24px;
-  --text-label-sm: 12px;
-  --text-label-md: 14px;
-  --text-headline-md: 24px;
-  --text-body-md: 16px;
-  --text-body-lg: 18px;
-  --text-headline-lg: 32px;
-  --text-headline-sm: 20px;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
 
   --radius-sm: 0.125rem;
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
   --radius-full: 0.75rem;
+}
+
+@utility margin-mobile {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@utility margin-desktop {
+  padding-left: 3rem;
+  padding-right: 3rem;
+}
+
+@utility max-width-site {
+  max-width: 1200px;
 }
 
 .dark {
@@ -150,17 +140,6 @@ body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  min-width: 320px;
-  min-height: 100vh;
 }
 
 .material-symbols-outlined {

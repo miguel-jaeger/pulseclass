@@ -165,6 +165,8 @@ export function ProfilePage() {
           <input
             ref={fileRef}
             type="file"
+            id="avatar-upload"
+            name="avatar"
             accept="image/*"
             onChange={handleAvatarUpload}
             className="hidden"
@@ -205,18 +207,22 @@ export function ProfilePage() {
         {editing ? (
           <div className="space-y-md">
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
+              <label htmlFor="profile-name" className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
               <input
                 type="text"
+                id="profile-name"
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
+              <label htmlFor="profile-email" className="block font-label-md text-label-md text-on-surface mb-xs">Correo electrónico</label>
               <input
                 type="email"
+                id="profile-email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -284,9 +290,11 @@ export function ProfilePage() {
         {changingPassword ? (
           <div className="space-y-md">
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña</label>
+              <label htmlFor="new-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña</label>
               <input
                 type="password"
+                id="new-password"
+                name="newPassword"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
@@ -294,9 +302,11 @@ export function ProfilePage() {
               />
             </div>
             <div>
-              <label className="block font-label-md text-label-md text-on-surface mb-xs">Confirmar nueva contraseña</label>
+              <label htmlFor="confirm-password" className="block font-label-md text-label-md text-on-surface mb-xs">Confirmar nueva contraseña</label>
               <input
                 type="password"
+                id="confirm-password"
+                name="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
