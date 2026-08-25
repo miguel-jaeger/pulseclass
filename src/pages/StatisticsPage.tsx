@@ -188,13 +188,13 @@ export function StatisticsPage() {
   }, [ratings])
 
   const categoryData = useMemo(() => {
-    const alto = ratings.filter(r => r.score >= 8).length
-    const medio = ratings.filter(r => r.score >= 5 && r.score < 8).length
-    const bajo = ratings.filter(r => r.score < 5).length
+    const alto = ratings.filter(r => r.score >= 9).length
+    const medio = ratings.filter(r => r.score >= 7 && r.score <= 8).length
+    const bajo = ratings.filter(r => r.score <= 6).length
     return [
-      { name: 'Alto (8-10)', value: alto },
-      { name: 'Medio (5-7)', value: medio },
-      { name: 'Bajo (1-4)', value: bajo }
+      { name: 'Satisfecho (9-10)', value: alto },
+      { name: 'Neutral (7-8)', value: medio },
+      { name: 'Insatisfecho (1-6)', value: bajo }
     ]
   }, [ratings])
 
@@ -380,9 +380,9 @@ export function StatisticsPage() {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    <Cell fill="#9e001f" />
-                    <Cell fill="#c8c6c5" />
-                    <Cell fill="#ba1a1a" />
+                    <Cell fill="#2e7d32" />
+                    <Cell fill="#f9a825" />
+                    <Cell fill="#c62828" />
                   </Pie>
                   <Tooltip />
                   <Legend
@@ -448,6 +448,7 @@ export function StatisticsPage() {
           <div className="bg-surface border border-outline-variant rounded-xl p-lg">
             <div className="flex gap-sm mb-lg flex-wrap">
               <button
+                title="Resumen"
                 onClick={() => setActiveTab('overview')}
                 className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
                   activeTab === 'overview'
@@ -456,9 +457,10 @@ export function StatisticsPage() {
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">summarize</span>
-                Resumen
+                <span className="hidden sm:inline">Resumen</span>
               </button>
               <button
+                title="Comentarios"
                 onClick={() => setActiveTab('comments')}
                 className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
                   activeTab === 'comments'
@@ -467,9 +469,10 @@ export function StatisticsPage() {
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">comment</span>
-                Comentarios
+                <span className="hidden sm:inline">Comentarios</span>
               </button>
               <button
+                title="Sugerencias"
                 onClick={() => setActiveTab('suggestions')}
                 className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
                   activeTab === 'suggestions'
@@ -478,7 +481,7 @@ export function StatisticsPage() {
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">lightbulb</span>
-                Sugerencias
+                <span className="hidden sm:inline">Sugerencias</span>
               </button>
             </div>
 
@@ -518,9 +521,6 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
-                        <span className="font-body-xs text-body-xs text-on-surface-variant shrink-0">
-                          {new Date(item.date).toLocaleDateString('es-ES')}
-                        </span>
                       </div>
                       <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                     </div>
@@ -541,9 +541,6 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
-                        <span className="font-body-xs text-body-xs text-on-surface-variant shrink-0">
-                          {new Date(item.date).toLocaleDateString('es-ES')}
-                        </span>
                       </div>
                       <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
                     </div>
