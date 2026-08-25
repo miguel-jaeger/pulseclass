@@ -446,7 +446,7 @@ export function StatisticsPage() {
 
           {/* Comments / Suggestions Tabs */}
           <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-            <div className="flex gap-sm mb-lg flex-wrap">
+            <div className="flex gap-sm mb-lg flex-wrap justify-center">
               <button
                 title="Resumen"
                 onClick={() => setActiveTab('overview')}
