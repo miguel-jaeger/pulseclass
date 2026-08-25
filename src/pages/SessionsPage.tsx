@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
-import { Pagination } from '../components/Pagination'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -177,14 +177,12 @@ export function SessionsPage() {
   })
 
   const now = new Date()
-  const currentSessions = sessions.filter(s => categorizeSession(s, now) === 'current')
-  const pastSessions = sessions.filter(s => categorizeSession(s, now) === 'past')
-  const futureSessions = sessions.filter(s => categorizeSession(s, now) === 'future')
 
-  const [perPage, setPerPage] = useState(10)
-  const paginatedCurrent = perPage === 0 ? currentSessions : currentSessions.slice(0, perPage)
-  const paginatedPast = perPage === 0 ? pastSessions : pastSessions.slice(0, perPage)
-  const paginatedFuture = perPage === 0 ? futureSessions : futureSessions.slice(0, perPage)
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sessions.length, 10)
+  const paginatedSessions = paginatedSlice(sessions)
+  const currentSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'current')
+  const pastSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'past')
+  const futureSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'future')
 
   useEffect(() => {
     if (courseId) {
@@ -280,7 +278,6 @@ export function SessionsPage() {
     icon: string,
     sectionKey: string,
     sectionSessions: Session[],
-    displayedSessions: Session[],
     isHighlighted: boolean
   ) => {
     if (sectionSessions.length === 0) return null
@@ -322,7 +319,7 @@ export function SessionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedSessions.map((session, index) => {
+                  {sectionSessions.map((session, index) => {
                     return (
                       <SessionRow
                         key={session.id}
@@ -339,7 +336,7 @@ export function SessionsPage() {
             </div>
             {/* Mobile: Cards */}
             <div className="md:hidden space-y-sm">
-              {displayedSessions.map((session, index) => {
+              {sectionSessions.map((session, index) => {
                 return (
                   <SessionCard
                     key={session.id}
@@ -415,17 +412,17 @@ export function SessionsPage() {
         </div>
       ) : (
         <div className="space-y-md">
-          {renderSection('Futuras', 'schedule', 'future', futureSessions, paginatedFuture, false)}
-          {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, paginatedCurrent, true)}
-          {renderSection('Pasadas', 'history', 'past', pastSessions, paginatedPast, false)}
+          {renderSection('Futuras', 'schedule', 'future', futureSessions, false)}
+          {renderSection('Actuales (esta semana)', 'today', 'current', currentSessions, true)}
+          {renderSection('Pasadas', 'history', 'past', pastSessions, false)}
         </div>
       )}
 
       <Pagination
         totalItems={sessions.length}
-        page={1}
+        page={page}
         perPage={perPage}
-        onPageChange={() => {}}
+        onPageChange={setPage}
         onPerPageChange={setPerPage}
       />
 
