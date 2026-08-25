@@ -30,6 +30,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const SESSION_KEY = 'pulseclass_session'
+
+function saveSession(user: User) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(user))
+}
+
+function loadSession(): User | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as User
+  } catch {
+    return null
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY)
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -60,18 +80,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function hydrateAuth() {
+      // Try SDK first (works if session is in memory)
       const { data, error } = await insforge.auth.getCurrentUser()
 
       if (cancelled) return
 
-      if (error || !data?.user) {
-        setUser(null)
-        setProfile(null)
-      } else {
+      if (!error && data?.user) {
         setUser(data.user as User)
+        saveSession(data.user as User)
         const profileData = await fetchProfile(data.user.id)
-        if (!cancelled) {
-          setProfile(profileData)
+        if (!cancelled) setProfile(profileData)
+      } else {
+        // SDK failed — try localStorage fallback
+        const saved = loadSession()
+        if (saved) {
+          setUser(saved)
+          const profileData = await fetchProfile(saved.id)
+          if (!cancelled) setProfile(profileData)
+        } else {
+          setUser(null)
+          setProfile(null)
         }
       }
 
@@ -87,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
+      saveSession(data.user as User)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
@@ -97,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
+      saveSession(data.user as User)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
@@ -107,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       redirectTo: window.location.origin
     })
     if (error) throw error
+    // OAuth redirect — session will be saved after redirect via hydrateAuth
   }
 
   const signInWithGithub = async () => {
@@ -114,11 +145,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       redirectTo: window.location.origin
     })
     if (error) throw error
+    // OAuth redirect — session will be saved after redirect via hydrateAuth
   }
 
   const signOut = async () => {
     const { error } = await insforge.auth.signOut()
     if (error) throw error
+    clearSession()
     setUser(null)
     setProfile(null)
   }
