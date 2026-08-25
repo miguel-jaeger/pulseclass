@@ -121,29 +121,33 @@ export function SessionsPage() {
         </Link>
       </div>
 
-      <header className="mb-xl flex justify-between items-end">
-        <div>
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">{course?.name}</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{course?.description}</p>
-        </div>
-        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
-          <div className="flex gap-sm">
-            <button
-              onClick={() => navigate('/statistics')}
-              className="bg-surface-container border border-outline-variant text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-xs"
-            >
-              <span className="material-symbols-outlined text-lg">bar_chart</span>
-              Estadísticas
-            </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
-            >
-              <span className="material-symbols-outlined text-lg">add</span>
-              Crear Sesión
-            </button>
+      <header className="mb-xl">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-md">
+          <div className="min-w-0">
+            <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface truncate">{course?.name}</h1>
+            <p className="font-body-sm md:font-body-md text-body-sm md:text-body-md text-on-surface-variant mt-xs line-clamp-2">{course?.description}</p>
           </div>
-        )}
+          {(profile?.role === 'admin' || profile?.role === 'teacher') && (
+            <div className="flex gap-sm flex-shrink-0">
+              <button
+                onClick={() => navigate('/statistics')}
+                className="bg-surface-container border border-outline-variant text-on-surface font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-base md:text-lg">bar_chart</span>
+                <span className="hidden sm:inline">Estadísticas</span>
+                <span className="sm:hidden">Stats</span>
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-primary text-on-primary font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-base md:text-lg">add</span>
+                <span className="hidden sm:inline">Crear Sesión</span>
+                <span className="sm:hidden">Crear</span>
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="space-y-md">
@@ -154,12 +158,12 @@ export function SessionsPage() {
           </div>
         ) : (
           sessions.map((session) => (
-            <article key={session.id} className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-lg hover:shadow-sm transition-all duration-200">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-headline-sm text-headline-sm text-on-surface">{session.title}</h3>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">
-                    <span className="material-symbols-outlined text-sm align-middle mr-xs">calendar_today</span>
+            <article key={session.id} className="bg-surface border border-outline-variant border-t-[3px] border-t-primary rounded-xl p-md md:p-lg hover:shadow-sm transition-all duration-200 pb-20 md:pb-md">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-sm">
+                <div className="min-w-0">
+                  <h3 className="font-title-sm md:font-headline-sm text-title-sm md:text-headline-sm text-on-surface truncate">{session.title}</h3>
+                  <p className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface-variant mt-xs">
+                    <span className="material-symbols-outlined text-xs md:text-sm align-middle mr-xs">calendar_today</span>
                     {new Date(session.date).toLocaleDateString('es-ES', {
                       weekday: 'long',
                       year: 'numeric',
@@ -168,27 +172,27 @@ export function SessionsPage() {
                     })}
                   </p>
                 </div>
-                <div className="flex gap-sm">
+                <div className="flex gap-sm flex-shrink-0 flex-wrap">
                   <Link
                     to={`/sessions/${session.id}`}
-                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-md rounded-full font-label-md text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center gap-xs"
+                    className="bg-surface-container border border-outline-variant text-on-surface-variant font-bold py-1 px-3 md:px-md rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center gap-1"
                   >
-                    <span className="material-symbols-outlined text-lg">visibility</span>
-                    Detalles
+                    <span className="material-symbols-outlined text-sm md:text-lg">visibility</span>
+                    <span className="hidden xs:inline">Detalles</span>
                   </Link>
                   <Link
                     to={`/sessions/${session.id}/rate`}
-                    className="bg-primary text-on-primary font-bold py-1 px-md rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+                    className="bg-primary text-on-primary font-bold py-1 px-3 md:px-md rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-1"
                   >
-                    <span className="material-symbols-outlined text-lg">rate_review</span>
-                    Evaluar
+                    <span className="material-symbols-outlined text-sm md:text-lg">rate_review</span>
+                    <span className="hidden xs:inline">Evaluar</span>
                   </Link>
                   {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
                     <button
                       onClick={() => deleteSession(session.id)}
-                      className="bg-surface-container border border-error text-error font-bold py-1 px-3 rounded-full font-label-md text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
+                      className="bg-surface-container border border-error text-error font-bold py-1 px-2 md:px-3 rounded-full font-label-xs md:font-label-md text-label-xs md:text-label-md hover:bg-error-container hover:text-on-error-container transition-colors"
                     >
-                      <span className="material-symbols-outlined text-lg">delete</span>
+                      <span className="material-symbols-outlined text-sm md:text-lg">delete</span>
                     </button>
                   )}
                 </div>
