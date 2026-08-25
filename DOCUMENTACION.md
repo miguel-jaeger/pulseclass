@@ -86,13 +86,14 @@ PulseClass es una aplicación web diseñada para evaluar la satisfacción de los
 - Activar/desactivar cursos
 - Barra de resumen con cantidades (activos/inactivos/total)
 - Filtro por estado y búsqueda
+- Filtro por docente (solo administradores) con búsqueda
 - Paginación con selector de elementos por página
 
 **Pasos para implementar:**
 1. Crear tabla `courses` con RLS
 2. Implementar `CoursesPage.tsx` con tarjetas de cursos
 3. Agregar modales para crear/editar cursos
-4. Implementar filtros y paginación
+4. Implementar filtros (búsqueda, estado, docente) y paginación
 5. Configurar permisos por rol (admin: todo, teacher: propios cursos)
 
 ### 3. Gestión de Sesiones

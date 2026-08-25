@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
@@ -13,6 +13,11 @@ interface Course {
   is_active: boolean
 }
 
+interface Teacher {
+  user_id: string
+  name: string
+}
+
 export function CoursesPage() {
   const { profile } = useAuth()
   const [courses, setCourses] = useState<Course[]>([])
@@ -21,12 +26,18 @@ export function CoursesPage() {
   const [newCourse, setNewCourse] = useState({ name: '', description: '' })
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [selectedTeacher, setSelectedTeacher] = useState('all')
+  const [teacherSearch, setTeacherSearch] = useState('')
+  const [teacherDropdownOpen, setTeacherDropdownOpen] = useState(false)
+  const teacherRef = useRef<HTMLDivElement>(null)
 
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const [editForm, setEditForm] = useState({ name: '', description: '', is_active: true })
 
   useEffect(() => {
     fetchCourses()
+    if (profile?.role === 'admin') fetchTeachers()
   }, [])
 
   const fetchCourses = async () => {
@@ -77,6 +88,15 @@ export function CoursesPage() {
       }
     }
     setLoading(false)
+  }
+
+  const fetchTeachers = async () => {
+    const { data, error } = await insforge.database
+      .from('profiles')
+      .select('user_id, name')
+      .eq('role', 'teacher')
+      .order('name')
+    if (!error && data) setTeachers(data as Teacher[])
   }
 
   const createCourse = async () => {
@@ -140,7 +160,8 @@ export function CoursesPage() {
     const matchesStatus = statusFilter === 'all' ||
       (statusFilter === 'active' && c.is_active) ||
       (statusFilter === 'inactive' && !c.is_active)
-    return matchesSearch && matchesStatus
+    const matchesTeacher = selectedTeacher === 'all' || c.created_by === selectedTeacher
+    return matchesSearch && matchesStatus && matchesTeacher
   })
 
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredCourses.length, 10)
@@ -179,6 +200,52 @@ export function CoursesPage() {
             className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
           />
         </div>
+        {profile?.role === 'admin' && teachers.length > 0 && (
+          <div className="relative" ref={teacherRef}>
+            <div className="relative">
+              <input
+                type="text"
+                value={teacherSearch}
+                onChange={e => { setTeacherSearch(e.target.value); setTeacherDropdownOpen(true) }}
+                onFocus={() => setTeacherDropdownOpen(true)}
+                placeholder="Buscar docente..."
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10"
+              />
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
+                person
+              </span>
+              {teacherDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
+                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${
+                      selectedTeacher === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
+                    }`}
+                  >
+                    Todos los docentes
+                  </button>
+                  {teachers
+                    .filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase()))
+                    .map(t => (
+                      <button
+                        key={t.user_id}
+                        onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(t.name); setTeacherDropdownOpen(false) }}
+                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${
+                          selectedTeacher === t.user_id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
+                        }`}
+                      >
+                        {t.name}
+                      </button>
+                    ))
+                  }
+                  {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron docentes</div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
