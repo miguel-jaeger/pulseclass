@@ -39,6 +39,7 @@ interface SessionStat {
 
 interface RatedItem {
   id: string
+  studentId: string
   sessionTitle: string
   date: string
   score: number
@@ -68,6 +69,11 @@ export function StatisticsPage() {
   const [selectedCourse, setSelectedCourse] = useState('all')
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
+
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editingCommentText, setEditingCommentText] = useState('')
+  const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null)
+  const [editingSuggestionText, setEditingSuggestionText] = useState('')
 
   useEffect(() => {
     if (profile?.role === 'student' && courses.length === 1) {
@@ -224,6 +230,7 @@ export function StatisticsPage() {
         const s = sessions.find(sess => sess.id === r.session_id)
         return {
           id: r.id,
+          studentId: r.student_id,
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -241,6 +248,7 @@ export function StatisticsPage() {
         const s = sessions.find(sess => sess.id === r.session_id)
         return {
           id: r.id,
+          studentId: r.student_id,
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -255,6 +263,61 @@ export function StatisticsPage() {
 
   const nivelLabel = avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
+
+  const canEdit = (studentId: string) => {
+    if (profile?.role === 'admin' || profile?.role === 'teacher') return true
+    return profile?.user_id === studentId
+  }
+
+  const handleSaveComment = async (ratingId: string) => {
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ comment: editingCommentText })
+      .eq('id', ratingId)
+
+    if (!error) {
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: editingCommentText } : r))
+      setEditingCommentId(null)
+      setEditingCommentText('')
+    }
+  }
+
+  const handleDeleteComment = async (ratingId: string) => {
+    if (!confirm('¿Eliminar este comentario?')) return
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ comment: '' })
+      .eq('id', ratingId)
+
+    if (!error) {
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: '' } : r))
+    }
+  }
+
+  const handleSaveSuggestion = async (ratingId: string) => {
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ suggestion: editingSuggestionText })
+      .eq('id', ratingId)
+
+    if (!error) {
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: editingSuggestionText } : r))
+      setEditingSuggestionId(null)
+      setEditingSuggestionText('')
+    }
+  }
+
+  const handleDeleteSuggestion = async (ratingId: string) => {
+    if (!confirm('¿Eliminar esta sugerencia?')) return
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ suggestion: '' })
+      .eq('id', ratingId)
+
+    if (!error) {
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: '' } : r))
+    }
+  }
 
   return (
     <div className="pb-20 md:pb-0">
@@ -509,8 +572,56 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        {canEdit(item.studentId) && (
+                          <div className="ml-auto flex gap-sm shrink-0">
+                            {editingCommentId === item.id ? (
+                              <>
+                                <button
+                                  onClick={() => handleSaveComment(item.id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
+                                  title="Guardar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">check</span>
+                                </button>
+                                <button
+                                  onClick={() => { setEditingCommentId(null); setEditingCommentText('') }}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  title="Cancelar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => { setEditingCommentId(item.id); setEditingCommentText(item.text) }}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  title="Editar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteComment(item.id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                                  title="Eliminar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                      {editingCommentId === item.id ? (
+                        <textarea
+                          value={editingCommentText}
+                          onChange={e => setEditingCommentText(e.target.value)}
+                          rows={3}
+                          className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none mt-sm"
+                        />
+                      ) : (
+                        <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                      )}
                     </div>
                   ))
                 )}
@@ -529,8 +640,56 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        {canEdit(item.studentId) && (
+                          <div className="ml-auto flex gap-sm shrink-0">
+                            {editingSuggestionId === item.id ? (
+                              <>
+                                <button
+                                  onClick={() => handleSaveSuggestion(item.id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full bg-primary text-on-primary transition-colors"
+                                  title="Guardar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">check</span>
+                                </button>
+                                <button
+                                  onClick={() => { setEditingSuggestionId(null); setEditingSuggestionText('') }}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  title="Cancelar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">close</span>
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => { setEditingSuggestionId(item.id); setEditingSuggestionText(item.text) }}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                                  title="Editar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">edit</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSuggestion(item.id)}
+                                  className="w-7 h-7 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                                  title="Eliminar"
+                                >
+                                  <span className="material-symbols-outlined text-sm">delete</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                      {editingSuggestionId === item.id ? (
+                        <textarea
+                          value={editingSuggestionText}
+                          onChange={e => setEditingSuggestionText(e.target.value)}
+                          rows={3}
+                          className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none mt-sm"
+                        />
+                      ) : (
+                        <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                      )}
                     </div>
                   ))
                 )}
