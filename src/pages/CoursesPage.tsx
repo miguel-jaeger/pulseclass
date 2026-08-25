@@ -283,8 +283,8 @@ export function CoursesPage() {
       />
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Curso</h3>
             <input
               type="text"
@@ -321,8 +321,8 @@ export function CoursesPage() {
       )}
 
       {editingCourse && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar Curso</h3>
 
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Nombre</label>
@@ -363,15 +363,15 @@ export function CoursesPage() {
               </button>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-sm">
               <button
                 onClick={() => deleteCourse(editingCourse.id, editingCourse.name)}
-                className="text-error font-label-md text-label-md hover:bg-error-container px-md py-2 rounded-full transition-colors flex items-center gap-xs"
+                className="text-error font-label-md text-label-md hover:bg-error-container px-md py-2 rounded-full transition-colors flex items-center gap-xs justify-center"
               >
                 <span className="material-symbols-outlined text-lg">delete</span>
                 Eliminar
               </button>
-              <div className="flex gap-sm">
+              <div className="flex gap-sm justify-end">
                 <button
                   onClick={() => setEditingCourse(null)}
                   className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
