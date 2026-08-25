@@ -15,6 +15,7 @@ interface Profile {
   user_id: string
   role: 'admin' | 'teacher' | 'student'
   name: string
+  avatar_url?: string
 }
 
 interface AuthContextType {

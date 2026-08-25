@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { Avatar } from '../pages/ProfilePage'
 import type { ReactNode } from 'react'
 
 const navItems = [
@@ -67,7 +68,7 @@ export function Layout({ children }: { children: ReactNode }) {
               to="/profile"
               className="flex items-center gap-md px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
             >
-              <span className="material-symbols-outlined">account_circle</span>
+              <Avatar url={profile?.avatar_url} name={profile?.name} size="sm" />
               <span className="truncate">{profile?.name || 'Usuario'}</span>
             </Link>
             <button
@@ -90,7 +91,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
         </div>
         <Link to="/profile" className="flex items-center gap-4 text-primary">
-          <span className="material-symbols-outlined">account_circle</span>
+          <Avatar url={profile?.avatar_url} name={profile?.name} size="sm" />
         </Link>
       </header>
 

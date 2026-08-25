@@ -1,10 +1,43 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 
+const CLOUDINARY_CLOUD = 'dhecags26'
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
+
+async function uploadToCloudinary(file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  formData.append('folder', 'pulseclass/avatars')
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) throw new Error('Error al subir imagen')
+  const data = await res.json()
+  return data.secure_url
+}
+
+function Avatar({ url, name, size = 'lg' }: { url?: string; name?: string; size?: 'sm' | 'md' | 'lg' }) {
+  const sizes = { sm: 'w-8 h-8 text-sm', md: 'w-12 h-12 text-lg', lg: 'w-24 h-24 text-3xl' }
+  const initials = (name || '?').charAt(0).toUpperCase()
+
+  if (url) {
+    return <img src={url} alt={name} className={`${sizes[size]} rounded-full object-cover`} />
+  }
+  return (
+    <div className={`${sizes[size]} rounded-full bg-primary-container flex items-center justify-center`}>
+      <span className="text-on-primary-container font-bold">{initials}</span>
+    </div>
+  )
+}
+
+export { Avatar }
+
 export function ProfilePage() {
-  const { profile, user, signOut } = useAuth()
+  const { profile, user, signOut, refreshProfile } = useAuth()
   const [editing, setEditing] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
   const [name, setName] = useState(profile?.name || '')
@@ -14,6 +47,31 @@ export function ProfilePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    setError('')
+    try {
+      const url = await uploadToCloudinary(file)
+      const { error } = await insforge.database
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('user_id', profile?.user_id)
+      if (error) throw error
+      await refreshProfile()
+      setSuccess('Foto de perfil actualizada.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al subir imagen'
+      setError(message)
+    } finally {
+      setUploadingAvatar(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   const handleSaveProfile = async () => {
     setError('')
@@ -28,7 +86,7 @@ export function ProfilePage() {
       if (error) throw error
       setSuccess('Perfil actualizado correctamente.')
       setEditing(false)
-      window.location.reload()
+      await refreshProfile()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al guardar cambios'
       setError(message)
@@ -94,6 +152,38 @@ export function ProfilePage() {
           <p className="font-body-sm text-body-sm text-on-secondary-container">{success}</p>
         </div>
       )}
+
+      {/* Avatar Section */}
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+        <h2 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Foto de perfil</h2>
+        <div className="flex items-center gap-lg">
+          <div className="relative group">
+            <Avatar url={profile?.avatar_url} name={profile?.name} size="lg" />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="absolute inset-0 rounded-full bg-scrim/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-on-primary text-2xl">
+                {uploadingAvatar ? 'hourglass_empty' : 'photo_camera'}
+              </span>
+            </button>
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+          <div>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {uploadingAvatar ? 'Subiendo...' : 'Haz clic en la imagen para cambiarla'}
+            </p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">JPG, PNG. Máx 5MB.</p>
+          </div>
+        </div>
+      </div>
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className="flex justify-between items-center mb-lg">
