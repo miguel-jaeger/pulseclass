@@ -407,15 +407,22 @@ export function StatisticsPage() {
                   </tbody>
                 </table>
                 {/* Mobile cards */}
-                <div className="md:hidden space-y-sm">
+                <div className="md:hidden space-y-md">
                   {sessionStats.map(s => (
-                    <div key={s.id} className="border border-outline-variant rounded-xl p-md">
-                      <p className="font-body-sm text-body-sm text-on-surface font-medium truncate">{s.courseName}</p>
-                      <div className="flex justify-between items-center mt-xs">
-                        <span className="font-body-xs text-body-xs text-on-surface-variant">{s.dateRange}</span>
-                        <div className="flex gap-md">
-                          <span className="font-body-xs text-body-xs text-on-surface-variant">{s.count} eval.</span>
-                          <span className="font-body-xs text-body-xs text-on-surface font-semibold">Prom: {s.avg.toFixed(1)}</span>
+                    <div key={s.id} className="border border-outline-variant rounded-xl p-md text-center">
+                      <p className="font-body-md text-body-md text-on-surface font-medium mb-sm">{s.courseName}</p>
+                      <div className="flex justify-center gap-lg">
+                        <div>
+                          <p className="font-body-xs text-body-xs text-on-surface-variant">Período</p>
+                          <p className="font-body-sm text-body-sm text-on-surface">{s.dateRange}</p>
+                        </div>
+                        <div>
+                          <p className="font-body-xs text-body-xs text-on-surface-variant">Evaluaciones</p>
+                          <p className="font-body-sm text-body-sm text-on-surface font-bold">{s.count}</p>
+                        </div>
+                        <div>
+                          <p className="font-body-xs text-body-xs text-on-surface-variant">Promedio</p>
+                          <p className="font-body-sm text-body-sm text-on-surface font-bold">{s.avg.toFixed(1)}</p>
                         </div>
                       </div>
                     </div>
