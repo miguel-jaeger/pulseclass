@@ -191,23 +191,23 @@ export function CoursesPage() {
       </div>
 
       {/* Summary Bar */}
-      <div className="flex flex-wrap items-center justify-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
+      <div className="flex items-center justify-between bg-surface border border-outline-variant rounded-xl px-sm md:px-md py-sm mb-lg">
         <div className="flex items-center gap-xs">
-          <span className="material-symbols-outlined text-primary text-lg">menu_book</span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">Total:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.length}</span>
+          <span className="material-symbols-outlined text-primary text-base md:text-lg">menu_book</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface-variant">Total:</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface font-bold">{courses.length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
-          <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">Activos:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.filter(c => c.is_active).length}</span>
+          <span className="material-symbols-outlined text-green-600 text-base md:text-lg">check_circle</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface-variant">Activos:</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface font-bold">{courses.filter(c => c.is_active).length}</span>
         </div>
         <div className="w-px h-4 bg-outline-variant"></div>
         <div className="flex items-center gap-xs">
-          <span className="material-symbols-outlined text-on-surface-variant text-lg">pause_circle</span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">Inactivos:</span>
-          <span className="font-body-sm text-body-sm text-on-surface font-bold">{courses.filter(c => !c.is_active).length}</span>
+          <span className="material-symbols-outlined text-on-surface-variant text-base md:text-lg">pause_circle</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface-variant">Inactivos:</span>
+          <span className="font-body-xs md:font-body-sm text-body-xs md:text-body-sm text-on-surface font-bold">{courses.filter(c => !c.is_active).length}</span>
         </div>
       </div>
 
