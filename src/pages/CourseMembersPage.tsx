@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -288,6 +289,9 @@ export function CourseMembersPage() {
     m.email?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  const { page: membersPage, perPage: membersPerPage, setPage: setMembersPage, setPerPage: setMembersPerPage, paginatedSlice: membersPaginate } = usePagination(filteredMembers.length)
+  const paginatedMembers = membersPaginate(filteredMembers)
+
   const availableUsers = allProfiles
     .filter(u => !members.some(m => m.user_id === u.user_id))
     .filter(u =>
@@ -494,7 +498,7 @@ export function CourseMembersPage() {
               </div>
             )}
 
-            {filteredMembers.map((member) => (
+            {paginatedMembers.map((member) => (
               <div key={member.id} className="flex justify-between items-center bg-surface border border-outline-variant rounded-xl p-md hover:shadow-sm transition-all">
                 <div className="flex items-center gap-md">
                   {canManage && (
@@ -539,6 +543,14 @@ export function CourseMembersPage() {
           </>
         )}
       </div>
+
+      <Pagination
+        totalItems={filteredMembers.length}
+        page={membersPage}
+        perPage={membersPerPage}
+        onPageChange={setMembersPage}
+        onPerPageChange={setMembersPerPage}
+      />
 
       {/* Import CSV Modal */}
       {showImportModal && (
