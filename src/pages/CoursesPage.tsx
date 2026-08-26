@@ -107,18 +107,17 @@ export function CoursesPage() {
   }
 
   const fetchCourseStats = async (courseIds: string[]) => {
-    const stats: Record<string, { sessions: number; members: number }> = {}
-    for (const id of courseIds) {
-      const [sessionsRes, membersRes] = await Promise.all([
-        insforge.database.from('sessions').select('id', { count: 'exact', head: true }).eq('course_id', id),
-        insforge.database.from('course_members').select('id', { count: 'exact', head: true }).eq('course_id', id)
-      ])
-      stats[id] = {
-        sessions: sessionsRes.count ?? 0,
-        members: membersRes.count ?? 0
+    const { data, error } = await insforge.database
+      .from('course_stats')
+      .select('course_id, session_count, member_count')
+      .in('course_id', courseIds)
+    if (!error && data) {
+      const stats: Record<string, { sessions: number; members: number }> = {}
+      for (const row of data as { course_id: string; session_count: number; member_count: number }[]) {
+        stats[row.course_id] = { sessions: row.session_count, members: row.member_count }
       }
+      setCourseStats(stats)
     }
-    setCourseStats(stats)
   }
 
   const createCourse = async () => {
