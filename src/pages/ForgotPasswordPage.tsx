@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 
 type Step = 'email' | 'code' | 'password' | 'done'
+
+const CODE_EXPIRY_SECONDS = 300 // 5 minutes
 
 export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email')
@@ -13,16 +15,35 @@ export function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [token, setToken] = useState('')
+  const [secondsLeft, setSecondsLeft] = useState(CODE_EXPIRY_SECONDS)
+  const [canResend, setCanResend] = useState(false)
 
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault()
+  useEffect(() => {
+    if (step !== 'code') return
+    if (secondsLeft <= 0) {
+      setCanResend(true)
+      return
+    }
+    const timer = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          setCanResend(true)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [step, secondsLeft])
+
+  const sendCode = useCallback(async (targetEmail: string) => {
     setError('')
     setLoading(true)
     try {
-      const { error } = await insforge.auth.sendResetPasswordEmail({
-        email
-      })
+      const { error } = await insforge.auth.sendResetPasswordEmail({ email: targetEmail })
       if (error) throw error
+      setSecondsLeft(CODE_EXPIRY_SECONDS)
+      setCanResend(false)
       setStep('code')
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
@@ -32,6 +53,15 @@ export function ForgotPasswordPage() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  const handleSendCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await sendCode(email)
+  }
+
+  const handleResend = async () => {
+    await sendCode(email)
   }
 
   const handleVerifyCode = async (e: React.FormEvent) => {
@@ -39,18 +69,16 @@ export function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
-      const { data, error } = await insforge.auth.exchangeResetPasswordToken({
-        email,
-        code
-      })
+      const { data, error } = await insforge.auth.exchangeResetPasswordToken({ email, code })
       if (error) throw error
-      if (!data?.token) throw new Error('No se pudo obtener el token de restablecimiento')
+      if (!data?.token) throw new Error('No se pudo obtener el token')
       setToken(data.token)
       setStep('password')
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
       const message = raw.includes('expired') ? 'El código ha expirado. Solicita uno nuevo.'
         : raw.includes('invalid') ? 'Código inválido. Verifica e intenta de nuevo.'
+        : raw.includes('Bad Request') ? 'Código inválido o expirado. Solicita uno nuevo.'
         : raw || 'Código inválido o expirado'
       setError(message)
     } finally {
@@ -71,10 +99,7 @@ export function ForgotPasswordPage() {
     }
     setLoading(true)
     try {
-      const { error } = await insforge.auth.resetPassword({
-        newPassword,
-        otp: token
-      })
+      const { error } = await insforge.auth.resetPassword({ newPassword, otp: token })
       if (error) throw error
       setStep('done')
     } catch (err: unknown) {
@@ -86,6 +111,12 @@ export function ForgotPasswordPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${m}:${sec.toString().padStart(2, '0')}`
   }
 
   return (
@@ -113,15 +144,13 @@ export function ForgotPasswordPage() {
             <>
               <h2 className="font-title-lg text-title-lg text-on-surface mb-sm">Verificar código</h2>
               <p className="font-body-md text-body-md text-on-surface-variant">
-                Ingresa el código de 6 dígitos que recibiste en <strong className="text-on-surface">{email}</strong>
+                Ingresa el código de 6 dígitos que enviamos a <strong className="text-on-surface">{email}</strong>
               </p>
             </>
           ) : step === 'password' ? (
             <>
               <h2 className="font-title-lg text-title-lg text-on-surface mb-sm">Nueva contraseña</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant">
-                Ingresa tu nueva contraseña.
-              </p>
+              <p className="font-body-md text-body-md text-on-surface-variant">Ingresa tu nueva contraseña.</p>
             </>
           ) : (
             <>
@@ -154,11 +183,9 @@ export function ForgotPasswordPage() {
                 placeholder="correo@ejemplo.com"
               />
             </div>
-
             {error && (
               <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl">{error}</p>
             )}
-
             <button
               type="submit"
               disabled={loading}
@@ -185,13 +212,21 @@ export function ForgotPasswordPage() {
               />
             </div>
 
+            {secondsLeft > 0 ? (
+              <p className="text-center font-body-sm text-body-sm text-on-surface-variant">
+                El código expira en <strong className="text-on-surface">{formatTime(secondsLeft)}</strong>
+              </p>
+            ) : (
+              <p className="text-center font-body-sm text-body-sm text-error">El código ha expirado</p>
+            )}
+
             {error && (
               <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl">{error}</p>
             )}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || code.length < 6}
               className="w-full py-3 bg-primary text-on-primary font-bold rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-xs"
             >
               <span className="material-symbols-outlined text-lg">verified</span>
@@ -200,7 +235,16 @@ export function ForgotPasswordPage() {
 
             <button
               type="button"
-              onClick={() => { setStep('email'); setCode(''); setError('') }}
+              onClick={handleResend}
+              disabled={!canResend || loading}
+              className="w-full py-2 text-primary font-label-md text-label-md hover:bg-primary-container rounded-full transition-colors disabled:opacity-50 disabled:text-on-surface-variant"
+            >
+              {canResend ? 'Reenviar código' : `Reenviar en ${formatTime(secondsLeft)}`}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setStep('email'); setCode(''); setError(''); setSecondsLeft(CODE_EXPIRY_SECONDS); setCanResend(false) }}
               className="w-full py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container rounded-full transition-colors"
             >
               Usar otro correo
@@ -222,7 +266,6 @@ export function ForgotPasswordPage() {
                 autoFocus
               />
             </div>
-
             <div>
               <label htmlFor="confirm-password" className="block font-label-md text-label-md text-on-surface mb-xs">Confirmar contraseña</label>
               <input
@@ -236,11 +279,9 @@ export function ForgotPasswordPage() {
                 placeholder="Repite tu contraseña"
               />
             </div>
-
             {error && (
               <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl">{error}</p>
             )}
-
             <button
               type="submit"
               disabled={loading}
