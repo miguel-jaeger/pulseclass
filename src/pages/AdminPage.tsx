@@ -482,7 +482,7 @@ export function AdminPage() {
               </div>
             </div>
             {formError && (
-              <p className="font-body-sm text-body-sm text-on-error bg-error-container p-sm rounded-xl mt-md">{formError}</p>
+              <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl mt-md">{formError}</p>
             )}
             <div className="flex justify-end gap-sm mt-lg">
               <button
@@ -561,7 +561,7 @@ export function AdminPage() {
               </div>
             </div>
             {formError && (
-              <p className="font-body-sm text-body-sm text-on-error bg-error-container p-sm rounded-xl mt-md">{formError}</p>
+              <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl mt-md">{formError}</p>
             )}
             <div className="flex justify-end gap-sm mt-lg">
               <button

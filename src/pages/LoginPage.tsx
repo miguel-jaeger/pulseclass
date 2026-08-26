@@ -85,7 +85,7 @@ export function LoginPage() {
           </div>
 
           {error && (
-            <p className="font-body-sm text-body-sm text-on-error bg-error-container p-sm rounded-xl">{error}</p>
+            <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl">{error}</p>
           )}
 
           <button
