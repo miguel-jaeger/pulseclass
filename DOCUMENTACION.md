@@ -4,6 +4,79 @@
 
 PulseClass es una aplicación web diseñada para evaluar la satisfacción de los estudiantes al finalizar cada clase. Permite a los profesores crear cursos y sesiones, y a los estudiantes calificar su experiencia con un sistema de puntuación del 1 al 10, comentarios y sugerencias.
 
+## Requisitos Previos
+
+### Software Necesario
+
+| Requisito | Versión mínima | Verificar con |
+|-----------|---------------|---------------|
+| Node.js | 18+ | `node -v` |
+| npm | 9+ | `npm -v` |
+| Git | 2.x | `git --version` |
+
+### Servicios Externos
+
+- **Cuenta en [InsForge](https://insforge.dev)** (plan gratuito suficiente para desarrollo)
+  - Proyecto backend creado con nombre `pulseclassbackend`
+  - Autenticación habilitada (email/contraseña + OAuth con Google y GitHub)
+  - Tablas creadas: `profiles`, `courses`, `course_members`, `sessions`, `ratings`, `comment_stars`, `suggestions`, `rating_votes`, `course_stats`
+  - Políticas RLS configuradas en todas las tablas
+  - Triggers activos en `sessions` y `course_members` para actualizar `course_stats`
+
+### Variables de Entorno
+
+Crear archivo `.env.local` en la raíz del proyecto con las siguientes variables:
+
+```
+VITE_INSFORGE_URL=https://<tu-proyecto>.us-west.insforge.app
+VITE_INSFORGE_ANON_KEY=<tu-anon-key>
+```
+
+Obtener estos valores desde el panel de InsForge → Settings → API.
+
+### Herramientas de Desarrollo
+
+- **Editor:** VS Code (recomendado) con extensiones:
+  - Tailwind CSS IntelliSense
+  - ES7+ React/Redux/React-Native snippets
+  - Prettier
+- **Terminal:** PowerShell, Git Bash, o terminal integrada del editor
+
+### Navegadores Soportados
+
+- Chrome 90+
+- Firefox 90+
+- Safari 15+
+- Edge 90+
+
+### Instalación
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/miguel-jaeger/pulseclass.git
+cd pulseclass
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.local.example .env.local
+# Editar .env.local con tus credenciales de InsForge
+
+# Ejecutar en modo desarrollo
+npm run dev
+```
+
+El servidor de desarrollo arranca en `http://localhost:3000`.
+
+### Comandos Disponibles
+
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Inicia servidor de desarrollo (Vite) |
+| `npm run build` | Compila TypeScript + genera build de producción |
+| `npm run preview` | Vista previa del build de producción |
+
 ## Arquitectura del Sistema
 
 ### Stack Tecnológico
