@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
@@ -28,6 +28,17 @@ export function SessionDetailPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [ratings, setRatings] = useState<Rating[]>([])
   const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const ratingsRef = useRef<Rating[]>([])
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  useEffect(() => {
+    ratingsRef.current = ratings
+  }, [ratings])
 
   useEffect(() => {
     if (sessionId) {
@@ -55,27 +66,28 @@ export function SessionDetailPage() {
       .eq('session_id', sessionId)
 
     if (!ratingsError && ratingsData) {
-      const ratingsWithStars = await Promise.all(
-        (ratingsData as Rating[]).map(async (rating) => {
-          const { count } = await insforge.database
-            .from('comment_stars')
-            .select('*', { count: 'exact', head: true })
-            .eq('rating_id', rating.id)
+      const ratingIds = (ratingsData as Rating[]).map(r => r.id)
 
-          const { data: userStar } = await insforge.database
-            .from('comment_stars')
-            .select('id')
-            .eq('rating_id', rating.id)
-            .eq('student_id', user?.id)
-            .single()
+      const { data: starsData } = await insforge.database
+        .from('comment_stars')
+        .select('rating_id, student_id')
+        .in('rating_id', ratingIds)
 
-          return {
-            ...rating,
-            star_count: count || 0,
-            has_starred: !!userStar
-          }
-        })
-      )
+      const starCounts: Record<string, number> = {}
+      const userStars: Record<string, boolean> = {}
+
+      for (const star of starsData || []) {
+        starCounts[star.rating_id] = (starCounts[star.rating_id] || 0) + 1
+        if (star.student_id === user?.id) {
+          userStars[star.rating_id] = true
+        }
+      }
+
+      const ratingsWithStars = (ratingsData as Rating[]).map(rating => ({
+        ...rating,
+        star_count: starCounts[rating.id] || 0,
+        has_starred: !!userStars[rating.id]
+      }))
 
       setRatings(ratingsWithStars)
     }
@@ -83,23 +95,41 @@ export function SessionDetailPage() {
   }
 
   const toggleStar = async (ratingId: string, hasStarred: boolean) => {
+    if (!user) return
+
+    const prevRatings = ratingsRef.current
+    const rating = prevRatings.find(r => r.id === ratingId)
+    if (!rating) return
+
+    setRatings(prev => prev.map(r =>
+      r.id === ratingId
+        ? { ...r, has_starred: !hasStarred, star_count: (r.star_count || 0) + (hasStarred ? -1 : 1) }
+        : r
+    ))
+
     if (hasStarred) {
       const { error } = await insforge.database
         .from('comment_stars')
         .delete()
         .eq('rating_id', ratingId)
-        .eq('student_id', user?.id)
+        .eq('student_id', user.id)
 
-      if (!error) {
-        fetchRatings()
+      if (error) {
+        setRatings(prevRatings)
+        showToast('No se pudo quitar la estrella', 'error')
+      } else {
+        showToast('Estrella quitada')
       }
     } else {
       const { error } = await insforge.database
         .from('comment_stars')
-        .insert([{ rating_id: ratingId, student_id: user?.id }])
+        .insert([{ rating_id: ratingId, student_id: user.id }])
 
-      if (!error) {
-        fetchRatings()
+      if (error) {
+        setRatings(prevRatings)
+        showToast('No se pudo marcar la estrella', 'error')
+      } else {
+        showToast('Estrella marcada')
       }
     }
   }
@@ -197,6 +227,14 @@ export function SessionDetailPage() {
               )}
             </article>
           ))}
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-lg left-1/2 -translate-x-1/2 px-lg py-sm rounded-full font-label-md text-label-md shadow-lg z-50 transition-all ${
+          toast.type === 'success' ? 'bg-success-container text-on-success-container' : 'bg-error-container text-on-error-container'
+        }`}>
+          {toast.message}
         </div>
       )}
     </div>
