@@ -22,7 +22,11 @@ export function LoginPage() {
         await signInWithEmail(email, password)
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al autenticarse'
+      const raw = err instanceof Error ? err.message : ''
+      const message = raw.includes('Invalid login credentials') ? 'Correo o contraseña incorrectos'
+        : raw.includes('Email not confirmed') ? 'Correo no verificado. Revisa tu bandeja de entrada.'
+        : raw.includes('rate') ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
+        : raw || 'Error al autenticarse'
       setError(message)
     } finally {
       setLoading(false)

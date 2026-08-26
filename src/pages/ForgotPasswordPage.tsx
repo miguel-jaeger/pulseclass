@@ -25,7 +25,9 @@ export function ForgotPasswordPage() {
       if (error) throw error
       setStep('code')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al enviar el correo'
+      const raw = err instanceof Error ? err.message : ''
+      const message = raw.includes('rate') ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
+        : raw || 'Error al enviar el correo'
       setError(message)
     } finally {
       setLoading(false)
@@ -46,7 +48,10 @@ export function ForgotPasswordPage() {
       setToken(data.token)
       setStep('password')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Código inválido o expirado'
+      const raw = err instanceof Error ? err.message : ''
+      const message = raw.includes('expired') ? 'El código ha expirado. Solicita uno nuevo.'
+        : raw.includes('invalid') ? 'Código inválido. Verifica e intenta de nuevo.'
+        : raw || 'Código inválido o expirado'
       setError(message)
     } finally {
       setLoading(false)
@@ -73,7 +78,10 @@ export function ForgotPasswordPage() {
       if (error) throw error
       setStep('done')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al restablecer la contraseña'
+      const raw = err instanceof Error ? err.message : ''
+      const message = raw.includes('expired') ? 'El enlace ha expirado. Solicita uno nuevo.'
+        : raw.includes('invalid') ? 'Enlace inválido. Solicita uno nuevo.'
+        : raw || 'Error al restablecer la contraseña'
       setError(message)
     } finally {
       setLoading(false)
