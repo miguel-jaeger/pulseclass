@@ -22,6 +22,15 @@ interface Rating {
   has_starred?: boolean
 }
 
+interface Reply {
+  id: string
+  rating_id: string
+  user_id: string
+  content: string
+  created_at: string
+  user_name?: string
+}
+
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { user, profile } = useAuth()
@@ -30,6 +39,9 @@ export function SessionDetailPage() {
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const ratingsRef = useRef<Rating[]>([])
+  const [repliesMap, setRepliesMap] = useState<Record<string, Reply[]>>({})
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -90,8 +102,44 @@ export function SessionDetailPage() {
       }))
 
       setRatings(ratingsWithStars)
+      fetchReplies(ratingIds)
     }
     setLoading(false)
+  }
+
+  const fetchReplies = async (ratingIds: string[]) => {
+    if (ratingIds.length === 0) return
+
+    const { data: repliesData } = await insforge.database
+      .from('comment_replies')
+      .select('id, rating_id, user_id, content, created_at')
+      .in('rating_id', ratingIds)
+      .order('created_at', { ascending: true })
+
+    const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
+
+    let profilesMap: Record<string, string> = {}
+    if (userIds.length > 0) {
+      const { data: profilesData } = await insforge.database
+        .from('profiles')
+        .select('user_id, name')
+        .in('user_id', userIds)
+
+      for (const p of profilesData || []) {
+        profilesMap[p.user_id] = p.name
+      }
+    }
+
+    const grouped: Record<string, Reply[]> = {}
+    for (const reply of repliesData || []) {
+      if (!grouped[reply.rating_id]) grouped[reply.rating_id] = []
+      grouped[reply.rating_id].push({
+        ...reply,
+        user_name: profilesMap[reply.user_id] || 'Usuario'
+      })
+    }
+
+    setRepliesMap(grouped)
   }
 
   const toggleStar = async (ratingId: string, hasStarred: boolean) => {
@@ -131,6 +179,46 @@ export function SessionDetailPage() {
       } else {
         showToast('Estrella marcada')
       }
+    }
+  }
+
+  const addReply = async (ratingId: string) => {
+    if (!user || !replyText.trim()) return
+
+    const content = replyText.trim()
+    const tempId = `temp-${Date.now()}`
+    const userName = profile?.name || 'Tú'
+
+    setRepliesMap(prev => ({
+      ...prev,
+      [ratingId]: [
+        ...(prev[ratingId] || []),
+        { id: tempId, rating_id: ratingId, user_id: user.id, content, created_at: new Date().toISOString(), user_name: userName }
+      ]
+    }))
+    setReplyText('')
+    setReplyingTo(null)
+
+    const { data, error } = await insforge.database
+      .from('comment_replies')
+      .insert([{ rating_id: ratingId, user_id: user.id, content }])
+      .select('id, created_at')
+      .single()
+
+    if (error) {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).filter(r => r.id !== tempId)
+      }))
+      showToast('No se pudo enviar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).map(r =>
+          r.id === tempId ? { ...r, id: data.id, created_at: data.created_at } : r
+        )
+      }))
+      showToast('Respuesta enviada')
     }
   }
 
@@ -224,6 +312,60 @@ export function SessionDetailPage() {
                     <span className="font-semibold">Sugerencia:</span> {rating.suggestion}
                   </p>
                 </div>
+              )}
+
+              {(repliesMap[rating.id]?.length || 0) > 0 && (
+                <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
+                  {repliesMap[rating.id]?.map(reply => (
+                    <div key={reply.id} className="flex gap-sm items-start">
+                      <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-xs">
+                          <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                          <span className="font-body-xs text-body-xs text-on-surface-variant">
+                            {new Date(reply.created_at).toLocaleDateString('es-ES')}
+                          </span>
+                        </div>
+                        <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {replyingTo === rating.id ? (
+                <div className="mt-md flex gap-sm">
+                  <input
+                    type="text"
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addReply(rating.id)}
+                    placeholder="Escribe una respuesta..."
+                    autoFocus
+                    className="flex-1 bg-surface-container-low rounded-full px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button
+                    onClick={() => addReply(rating.id)}
+                    disabled={!replyText.trim()}
+                    className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                  >
+                    Enviar
+                  </button>
+                  <button
+                    onClick={() => { setReplyingTo(null); setReplyText('') }}
+                    className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setReplyingTo(rating.id)}
+                  className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                  Responder
+                </button>
               )}
             </article>
           ))}
