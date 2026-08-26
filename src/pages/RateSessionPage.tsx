@@ -113,7 +113,7 @@ export function RateSessionPage() {
         .eq('id', existingRating.id)
 
       if (updateError) {
-        setError('Error al actualizar: ' + updateError.message)
+        setError('Error al actualizar la calificación')
         setSaving(false)
         return
       }
@@ -129,7 +129,7 @@ export function RateSessionPage() {
         }])
 
       if (insertError) {
-        setError('Error al guardar: ' + insertError.message)
+        setError('Error al guardar la calificación')
         setSaving(false)
         return
       }

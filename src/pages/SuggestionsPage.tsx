@@ -77,7 +77,7 @@ async function suggestAction(action: string, id?: string, data?: Record<string, 
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Error ${res.status}`)
+    throw new Error(body.error || `Error del servidor (${res.status})`)
   }
   if (res.status === 204) return null
   return res.json()
