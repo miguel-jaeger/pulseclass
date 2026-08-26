@@ -139,6 +139,14 @@ El servidor de desarrollo arranca en `http://localhost:3000`.
    - `updated_at` (TIMESTAMPTZ)
    - Actualizado automáticamente por triggers al insertar/eliminar sesiones y miembros
 
+9. **comment_replies** - Respuestas a comentarios y sugerencias
+   - `id` (UUID, PRIMARY KEY)
+   - `rating_id` (UUID, FK a ratings, ON DELETE CASCADE)
+   - `user_id` (UUID, FK a auth.users, ON DELETE CASCADE)
+   - `content` (TEXT, NOT NULL)
+   - `created_at` (TIMESTAMPTZ)
+   - RLS: Miembros del curso pueden ver e insertar, usuarios pueden eliminar las suyas
+
 ## Funcionalidades Principales
 
 ### 1. Sistema de Autenticación
@@ -320,6 +328,56 @@ El servidor de desarrollo arranca en `http://localhost:3000`.
 2. Implementar sidebar desktop y bottom nav móvil
 3. Configurar rutas protegidas
 4. Agregar padding responsive con Tailwind
+
+### 12. Sistema de Respuestas a Comentarios
+
+**Commits:** `f26ce95`
+
+- Respuestas a comentarios y sugerencias en SessionDetailPage
+- Tabla `comment_replies` con RLS (solo miembros del curso)
+- Bulk fetch de respuestas junto con ratings (una sola query)
+- Optimistic UI para agregar respuestas (actualización inmediata)
+- UI con botón responder, textarea de 3 líneas y lista de respuestas
+- Toast notifications para feedback al usuario
+
+**Pasos para implementar:**
+1. Crear tabla `comment_replies` con RLS
+2. Implementar bulk fetch de respuestas en `fetchRatings`
+3. Agregar función `addReply` con optimistic UI
+4. Crear UI con textarea, botones enviar/cancelar y lista de respuestas
+5. Configurar permisos: cualquier usuario autenticado del curso puede responder
+
+### 13. Recuperación de Contraseña
+
+**Commits:** `5b5b2b4`, `05f5631`, `1cfdc0f`
+
+- Flujo unificado de olvidé mi contraseña con código de verificación
+- Countdown timer para reenvío de código
+- Botón de reenviar código
+- Traducción de errores del SDK al español
+- Manejo de errores de red y tokens nulos
+
+**Pasos para implementar:**
+1. Crear página unificada de recuperación con input de código
+2. Implementar countdown timer (60 segundos)
+3. Agregar botón de reenviar código
+4. Traducir mensajes de error del SDK al español
+5. Manejar errores de red y tokens expirados
+
+### 14. Permisos de Sesiones por Rol
+
+**Commits:** `22b52eb`
+
+- Profesores pueden editar/eliminar sesiones en sus cursos
+- Admin puede editar/eliminar cualquier sesión
+- Mensaje de error claro cuando no se tiene permiso
+- Verificación de permisos antes de realizar acciones
+
+**Pasos para implementar:**
+1. Verificar rol del usuario antes de mostrar botones de edición
+2. Implementar lógica de permisos: admin (todo), teacher (propios cursos)
+3. Mostrar mensaje de error específico cuando no se tiene permiso
+4. Deshabilitar acciones no permitidas en la UI
 
 ## Pasos Generales para Replicar el Sistema
 

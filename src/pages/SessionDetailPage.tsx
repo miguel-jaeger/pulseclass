@@ -42,6 +42,10 @@ export function SessionDetailPage() {
   const [repliesMap, setRepliesMap] = useState<Record<string, Reply[]>>({})
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
+  const [editingRating, setEditingRating] = useState<string | null>(null)
+  const [editRatingText, setEditRatingText] = useState<{ comment: string; suggestion: string }>({ comment: '', suggestion: '' })
+  const [editingReply, setEditingReply] = useState<string | null>(null)
+  const [editReplyText, setEditReplyText] = useState('')
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -222,6 +226,74 @@ export function SessionDetailPage() {
     }
   }
 
+  const canEdit = (ownerId: string) => user?.id === ownerId || profile?.role === 'admin'
+
+  const updateRating = async (ratingId: string) => {
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ comment: editRatingText.comment, suggestion: editRatingText.suggestion })
+      .eq('id', ratingId)
+
+    if (error) {
+      showToast('No se pudo editar el comentario', 'error')
+    } else {
+      setRatings(prev => prev.map(r =>
+        r.id === ratingId ? { ...r, comment: editRatingText.comment, suggestion: editRatingText.suggestion } : r
+      ))
+      setEditingRating(null)
+      showToast('Comentario editado')
+    }
+  }
+
+  const deleteRating = async (ratingId: string) => {
+    const { error } = await insforge.database
+      .from('ratings')
+      .delete()
+      .eq('id', ratingId)
+
+    if (error) {
+      showToast('No se pudo eliminar el comentario', 'error')
+    } else {
+      setRatings(prev => prev.filter(r => r.id !== ratingId))
+      showToast('Comentario eliminado')
+    }
+  }
+
+  const updateReply = async (replyId: string, ratingId: string) => {
+    const { error } = await insforge.database
+      .from('comment_replies')
+      .update({ content: editReplyText })
+      .eq('id', replyId)
+
+    if (error) {
+      showToast('No se pudo editar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).map(r => r.id === replyId ? { ...r, content: editReplyText } : r)
+      }))
+      setEditingReply(null)
+      showToast('Respuesta editada')
+    }
+  }
+
+  const deleteReply = async (replyId: string, ratingId: string) => {
+    const { error } = await insforge.database
+      .from('comment_replies')
+      .delete()
+      .eq('id', replyId)
+
+    if (error) {
+      showToast('No se pudo eliminar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).filter(r => r.id !== replyId)
+      }))
+      showToast('Respuesta eliminada')
+    }
+  }
+
   if (loading) {
     return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
   }
@@ -289,29 +361,82 @@ export function SessionDetailPage() {
                     {new Date(rating.created_at).toLocaleDateString('es-ES')}
                   </span>
                 </div>
-                <button
-                  onClick={() => toggleStar(rating.id, rating.has_starred || false)}
-                  className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                    rating.has_starred
-                      ? 'bg-primary-container text-on-primary-container'
-                      : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
-                  <span>{rating.star_count || 0}</span>
-                </button>
+                <div className="flex items-center gap-xs">
+                  {canEdit(rating.student_id) && (
+                    <>
+                      <button
+                        onClick={() => { setEditingRating(rating.id); setEditRatingText({ comment: rating.comment || '', suggestion: rating.suggestion || '' }) }}
+                        className="p-xs rounded-full text-on-surface-variant hover:text-primary hover:bg-secondary-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">edit</span>
+                      </button>
+                      <button
+                        onClick={() => deleteRating(rating.id)}
+                        className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => toggleStar(rating.id, rating.has_starred || false)}
+                    className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                      rating.has_starred
+                        ? 'bg-primary-container text-on-primary-container'
+                        : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
+                    <span>{rating.star_count || 0}</span>
+                  </button>
+                </div>
               </div>
 
-              {rating.comment && (
-                <p className="font-body-md text-body-md text-on-surface mb-md">{rating.comment}</p>
-              )}
-
-              {rating.suggestion && (
-                <div className="bg-surface-container-low rounded-xl p-md">
-                  <p className="font-body-sm text-body-sm text-on-surface">
-                    <span className="font-semibold">Sugerencia:</span> {rating.suggestion}
-                  </p>
+              {editingRating === rating.id ? (
+                <div className="mb-md space-y-sm">
+                  <textarea
+                    value={editRatingText.comment}
+                    onChange={e => setEditRatingText(prev => ({ ...prev, comment: e.target.value }))}
+                    placeholder="Comentario..."
+                    rows={3}
+                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                  />
+                  <textarea
+                    value={editRatingText.suggestion}
+                    onChange={e => setEditRatingText(prev => ({ ...prev, suggestion: e.target.value }))}
+                    placeholder="Sugerencia..."
+                    rows={3}
+                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                  />
+                  <div className="flex gap-sm justify-end">
+                    <button
+                      onClick={() => updateRating(rating.id)}
+                      className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => setEditingRating(null)}
+                      className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {rating.comment && (
+                    <p className="font-body-md text-body-md text-on-surface mb-md">{rating.comment}</p>
+                  )}
+
+                  {rating.suggestion && (
+                    <div className="bg-surface-container-low rounded-xl p-md">
+                      <p className="font-body-sm text-body-sm text-on-surface">
+                        <span className="font-semibold">Sugerencia:</span> {rating.suggestion}
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               {(repliesMap[rating.id]?.length || 0) > 0 && (
@@ -325,8 +450,49 @@ export function SessionDetailPage() {
                           <span className="font-body-xs text-body-xs text-on-surface-variant">
                             {new Date(reply.created_at).toLocaleDateString('es-ES')}
                           </span>
+                          {canEdit(reply.user_id) && (
+                            <>
+                              <button
+                                onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                              </button>
+                              <button
+                                onClick={() => deleteReply(reply.id, rating.id)}
+                                className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                              </button>
+                            </>
+                          )}
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                        {editingReply === reply.id ? (
+                          <div className="mt-xs flex flex-col gap-xs">
+                            <textarea
+                              value={editReplyText}
+                              onChange={e => setEditReplyText(e.target.value)}
+                              rows={2}
+                              className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                            />
+                            <div className="flex gap-xs justify-end">
+                              <button
+                                onClick={() => updateReply(reply.id, rating.id)}
+                                className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                              >
+                                Guardar
+                              </button>
+                              <button
+                                onClick={() => setEditingReply(null)}
+                                className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -334,29 +500,30 @@ export function SessionDetailPage() {
               )}
 
               {replyingTo === rating.id ? (
-                <div className="mt-md flex gap-sm">
-                  <input
-                    type="text"
+                <div className="mt-md flex flex-col gap-sm">
+                  <textarea
                     value={replyText}
                     onChange={e => setReplyText(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && addReply(rating.id)}
                     placeholder="Escribe una respuesta..."
+                    rows={3}
                     autoFocus
-                    className="flex-1 bg-surface-container-low rounded-full px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
                   />
-                  <button
-                    onClick={() => addReply(rating.id)}
-                    disabled={!replyText.trim()}
-                    className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
-                  >
-                    Enviar
-                  </button>
-                  <button
-                    onClick={() => { setReplyingTo(null); setReplyText('') }}
-                    className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
-                  >
-                    Cancelar
-                  </button>
+                  <div className="flex gap-sm justify-end">
+                    <button
+                      onClick={() => addReply(rating.id)}
+                      disabled={!replyText.trim()}
+                      className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                    >
+                      Enviar
+                    </button>
+                    <button
+                      onClick={() => { setReplyingTo(null); setReplyText('') }}
+                      className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button

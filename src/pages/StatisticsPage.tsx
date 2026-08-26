@@ -321,7 +321,7 @@ export function StatisticsPage() {
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
 
   const canEdit = (studentId: string) => {
-    if (profile?.role === 'admin' || profile?.role === 'teacher') return true
+    if (profile?.role === 'admin') return true
     return profile?.user_id === studentId
   }
 
