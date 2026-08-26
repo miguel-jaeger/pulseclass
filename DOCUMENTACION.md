@@ -59,6 +59,13 @@ PulseClass es una aplicación web diseñada para evaluar la satisfacción de los
    - `user_id` (UUID, FK a auth.users)
    - `vote_type` (TEXT: 'like', 'dislike')
 
+8. **course_stats** - Estadísticas cacheadas de cursos
+   - `course_id` (UUID, FK a courses, PRIMARY KEY)
+   - `session_count` (INTEGER, default 0)
+   - `member_count` (INTEGER, default 0)
+   - `updated_at` (TIMESTAMPTZ)
+   - Actualizado automáticamente por triggers al insertar/eliminar sesiones y miembros
+
 ## Funcionalidades Principales
 
 ### 1. Sistema de Autenticación
@@ -80,36 +87,44 @@ PulseClass es una aplicación web diseñada para evaluar la satisfacción de los
 
 ### 2. Gestión de Cursos
 
-**Commits:** `ff3a48a`, `6aa8167`, `f96cafb`, `26a1d3d`
+**Commits:** `ff3a48a`, `6aa8167`, `f96cafb`, `26a1d3d`, `c398bd0`, `e029e4e`
 
 - CRUD completo de cursos (crear, editar, eliminar)
 - Activar/desactivar cursos
 - Barra de resumen con cantidades (activos/inactivos/total)
 - Filtro por estado y búsqueda
 - Filtro por docente (solo administradores) con búsqueda
+- Badges con cantidad de sesiones y miembros en cada curso
+- Tabla `course_stats` con triggers para caché de estadísticas
 - Paginación con selector de elementos por página
 
 **Pasos para implementar:**
 1. Crear tabla `courses` con RLS
-2. Implementar `CoursesPage.tsx` con tarjetas de cursos
-3. Agregar modales para crear/editar cursos
-4. Implementar filtros (búsqueda, estado, docente) y paginación
-5. Configurar permisos por rol (admin: todo, teacher: propios cursos)
+2. Crear tabla `course_stats` con triggers automáticos
+3. Implementar `CoursesPage.tsx` con tarjetas de cursos y badges
+4. Agregar modales para crear/editar cursos
+5. Implementar filtros (búsqueda, estado, docente) y paginación
+6. Configurar permisos por rol (admin: todo, teacher: propios cursos)
 
 ### 3. Gestión de Sesiones
 
-**Commits:** `1df6408`, `d585ad3`, `1f3895a`
+**Commits:** `1df6408`, `d585ad3`, `1f3895a`, `6cb301a`, `9ccd058`
 
 - Crear sesiones vinculadas a cursos
 - Tabla desktop / tarjetas móviles
 - Editar fecha de sesión (admin/profesor)
 - Título automático basado en fecha
+- Sesiones agrupadas por categorías colapsables: Esta semana, Próximamente, Pasadas
+- Paginador único que respeta el orden de categorías
+- Orden: sesiones de la semana actual primero, luego futuras, luego pasadas
 
 **Pasos para implementar:**
 1. Crear tabla `sessions` con RLS
-2. Implementar `SessionsPage.tsx`
-3. Agregar botón de edición para admin/profesor
-4. Implementar responsive design (tabla/tarjetas)
+2. Implementar `SessionsPage.tsx` con grupos colapsables
+3. Agregar lógica de categorización por semana (actual/futura/pasada)
+4. Implementar paginación con orden de categorías
+5. Agregar botón de edición para admin/profesor
+6. Implementar responsive design (tabla/tarjetas)
 
 ### 4. Sistema de Calificación
 
@@ -254,7 +269,8 @@ npm install -D tailwindcss @tailwindcss/vite
 ### 3. Base de Datos
 1. Ejecutar migración inicial: `migrations/20260822173117_create-schema.sql`
 2. Ejecutar migraciones adicionales en orden cronológico
-3. Configurar RLS policies
+3. Ejecutar migración de course_stats: `migrations/20260825110000_create-course-stats.sql`
+4. Configurar RLS policies
 
 ### 4. Desarrollo Frontend
 1. Implementar autenticación (`useAuth.tsx`, `LoginPage.tsx`)
