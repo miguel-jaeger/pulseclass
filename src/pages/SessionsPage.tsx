@@ -175,6 +175,12 @@ export function SessionsPage() {
     current: false,
     future: true
   })
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   const now = new Date()
 
@@ -251,7 +257,9 @@ export function SessionsPage() {
       .delete()
       .eq('id', sessionId)
 
-    if (!error) {
+    if (error) {
+      showToast('No tienes permiso para eliminar esta sesión', 'error')
+    } else {
       fetchSessions()
     }
   }
@@ -270,7 +278,9 @@ export function SessionsPage() {
       .update({ title, date: editDate })
       .eq('id', editingSession.id)
 
-    if (!error) {
+    if (error) {
+      showToast('No tienes permiso para editar esta sesión', 'error')
+    } else {
       setEditingSession(null)
       setEditDate('')
       fetchSessions()
@@ -494,6 +504,14 @@ export function SessionsPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-20 left-1/2 -translate-x-1/2 px-lg py-3 rounded-full font-label-md text-label-md shadow-lg z-50 transition-all ${
+          toast.type === 'success' ? 'bg-success-container text-on-success-container' : 'bg-error-container text-on-error-container'
+        }`}>
+          {toast.message}
         </div>
       )}
     </div>
