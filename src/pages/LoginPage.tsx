@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function LoginPage() {
@@ -71,7 +72,14 @@ export function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña</label>
+            <div className="flex items-center justify-between mb-xs">
+              <label htmlFor="password" className="font-label-md text-label-md text-on-surface">Contraseña</label>
+              {!isSignUp && (
+                <Link to="/forgot-password" className="font-body-sm text-body-sm text-primary hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              )}
+            </div>
             <input
               id="password"
               type="password"
