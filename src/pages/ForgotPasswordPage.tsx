@@ -20,8 +20,7 @@ export function ForgotPasswordPage() {
     setLoading(true)
     try {
       const { error } = await insforge.auth.sendResetPasswordEmail({
-        email,
-        redirectTo: `${window.location.origin}/forgot-password`
+        email
       })
       if (error) throw error
       setStep('code')
