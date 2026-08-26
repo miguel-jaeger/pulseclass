@@ -23,6 +23,7 @@ export function ResetPasswordPage() {
         code
       })
       if (error) throw error
+      if (!data?.token) throw new Error('No se pudo obtener el token de restablecimiento')
       setToken(data.token)
       setStep('password')
     } catch (err: unknown) {
