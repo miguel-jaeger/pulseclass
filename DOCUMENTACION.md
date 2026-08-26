@@ -461,6 +461,7 @@ pulseclass/
 - Los permisos se verifican por rol (admin, teacher, student)
 - Los profesores solo acceden a sus cursos
 - Los estudiantes solo ven cursos donde están inscritos
+- **Edición/Eliminación:** Los usuarios pueden editar/eliminar su propio contenido. El administrador puede editar/eliminar cualquier contenido. Los profesores NO pueden editar contenido de otros usuarios.
 
 ### Performance
 - Lazy loading de `StatisticsPage` para reducir bundle inicial
