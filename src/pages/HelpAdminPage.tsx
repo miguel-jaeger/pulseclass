@@ -20,6 +20,7 @@ export function HelpAdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({ title: '', description: '', youtube_code: '' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -110,6 +111,11 @@ export function HelpAdminPage() {
       }
     }
   }
+
+  const filteredVideos = videos.filter(v =>
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar este video de ayuda?')) return
@@ -234,14 +240,32 @@ export function HelpAdminPage() {
         </div>
       )}
 
+      {videos.length > 0 && (
+        <div className="relative mb-lg">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Buscar por título o descripción..."
+            className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+          />
+        </div>
+      )}
+
       {videos.length === 0 ? (
         <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">play_circle</span>
           <p className="font-body-md text-body-md text-on-surface-variant">No hay videos de ayuda. Crea el primero.</p>
         </div>
+      ) : filteredVideos.length === 0 ? (
+        <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">search_off</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No se encontraron videos para "{searchQuery}".</p>
+        </div>
       ) : (
         <div className="space-y-md">
-          {videos.map(video => (
+          {filteredVideos.map(video => (
             <div key={video.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
               <div className="flex items-start gap-md">
                 <div className="w-40 aspect-video rounded-lg overflow-hidden bg-surface-container shrink-0 hidden sm:block">

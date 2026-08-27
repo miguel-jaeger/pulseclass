@@ -31,6 +31,7 @@ export function HelpPage() {
   const [editingComment, setEditingComment] = useState<string | null>(null)
   const [editCommentText, setEditCommentText] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -90,6 +91,11 @@ export function HelpPage() {
   const canEditComment = (comment: HelpComment) => {
     return user?.id === comment.user_id || profile?.role === 'admin'
   }
+
+  const filteredVideos = videos.filter(v =>
+    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  )
 
   const addComment = async (videoId: string) => {
     if (!user || !newComment[videoId]?.trim()) return
@@ -193,18 +199,36 @@ export function HelpPage() {
   return (
     <div className="pb-20 md:pb-0">
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Videos</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Ayuda</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
       </header>
+
+      {videos.length > 0 && (
+        <div className="relative mb-lg">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Buscar por título o descripción..."
+            className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+          />
+        </div>
+      )}
 
       {videos.length === 0 ? (
         <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">video_library</span>
           <p className="font-body-md text-body-md text-on-surface-variant">No hay videos disponibles.</p>
         </div>
+      ) : filteredVideos.length === 0 ? (
+        <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">search_off</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No se encontraron videos para "{searchQuery}".</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
-          {videos.map(video => (
+          {filteredVideos.map(video => (
             <article
               key={video.id}
               className={`bg-surface border border-outline-variant rounded-xl overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${

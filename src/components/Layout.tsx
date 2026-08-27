@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Avatar } from '../pages/ProfilePage'
@@ -8,7 +9,7 @@ const navItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/videos', icon: 'video_library', label: 'Videos' },
+  { to: '/videos', icon: 'video_library', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
@@ -22,13 +23,14 @@ const bottomNavItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/videos', icon: 'video_library', label: 'Videos' },
+  { to: '/videos', icon: 'video_library', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
   const location = useLocation()
+  const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
@@ -55,12 +57,50 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="flex-1 space-y-xs">
-          {filteredNavItems.map((item) => (
-            <div key={item.to}>
+          {filteredNavItems.map((item) => {
+            const isLast = item.to === '/admin'
+            if (isLast) {
+              return (
+                <div key={item.to}>
+                  <button
+                    onClick={() => setAdminOpen(!adminOpen)}
+                    className={`w-full flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+                      location.pathname.startsWith('/admin')
+                        ? 'bg-primary-container text-on-primary-container font-bold'
+                        : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined">{item.icon}</span>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <span className={`material-symbols-outlined text-lg transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                  </button>
+                  {adminOpen && (
+                    <div className="ml-5 mt-xs space-y-xs border-l-2 border-outline-variant pl-3">
+                      {adminSubItems.map(sub => (
+                        <Link
+                          key={sub.to}
+                          to={sub.to}
+                          className={`flex items-center gap-sm px-3 py-1.5 rounded-lg font-body-sm text-body-sm transition-all ${
+                            (sub.to === '/admin' ? location.pathname === '/admin' : isActive(sub.to))
+                              ? 'bg-secondary-container text-on-surface font-medium'
+                              : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base">{sub.icon}</span>
+                          <span>{sub.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            return (
               <Link
+                key={item.to}
                 to={item.to}
                 className={`flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-                  (item.to === '/admin' ? location.pathname.startsWith('/admin') : isActive(item.to))
+                  isActive(item.to)
                     ? 'bg-primary-container text-on-primary-container font-bold'
                     : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
                 }`}
@@ -68,26 +108,8 @@ export function Layout({ children }: { children: ReactNode }) {
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
-              {item.to === '/admin' && location.pathname.startsWith('/admin') && (
-                <div className="ml-6 mt-xs space-y-xs">
-                  {adminSubItems.map(sub => (
-                    <Link
-                      key={sub.to}
-                      to={sub.to}
-                      className={`flex items-center gap-md px-4 py-1.5 rounded-full font-body-sm text-body-sm transition-all ${
-                        (sub.to === '/admin' ? location.pathname === '/admin' : isActive(sub.to))
-                          ? 'bg-secondary-container text-on-surface font-medium'
-                          : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-lg">{sub.icon}</span>
-                      <span>{sub.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="mt-auto space-y-sm">
