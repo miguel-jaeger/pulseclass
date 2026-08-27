@@ -14,6 +14,7 @@ import { SessionDetailPage } from './pages/SessionDetailPage'
 import { CourseMembersPage } from './pages/CourseMembersPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SuggestionsPage } from './pages/SuggestionsPage'
+import { HelpPage } from './pages/HelpPage'
 import type { ReactNode } from 'react'
 
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage'))
@@ -109,6 +110,11 @@ function AppRoutes() {
       <Route path="/suggestions" element={
         <ProtectedRoute>
           <SuggestionsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/help" element={
+        <ProtectedRoute>
+          <HelpPage />
         </ProtectedRoute>
       } />
     </Routes>

@@ -8,6 +8,7 @@ const navItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
+  { to: '/help', icon: 'help_circle', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
@@ -16,6 +17,7 @@ const bottomNavItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
+  { to: '/help', icon: 'help_circle', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
