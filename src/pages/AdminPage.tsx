@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { Pagination, usePagination } from '../components/Pagination'
@@ -201,13 +202,22 @@ export function AdminPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
-        <button
-          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
-        >
-          <span className="material-symbols-outlined text-lg">person_add</span>
-          Crear
-        </button>
+        <div className="flex gap-sm">
+          <Link
+            to="/admin/help"
+            className="bg-surface-container text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:bg-secondary-container transition-colors flex items-center gap-xs"
+          >
+            <span className="material-symbols-outlined text-lg">help_circle</span>
+            Videos de Ayuda
+          </Link>
+          <button
+            onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+            className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+          >
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            Crear
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-col md:flex-row gap-md mb-lg">
