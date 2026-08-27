@@ -537,7 +537,7 @@ export function StatisticsPage() {
       </header>
 
       {/* Filters */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className="flex flex-col md:flex-row gap-lg items-end">
           <div className="w-full md:w-auto">
             <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Inicio</label>
