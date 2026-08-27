@@ -82,6 +82,7 @@ export function StatisticsPage() {
   const [teacherDropdownOpen, setTeacherDropdownOpen] = useState(false)
   const teacherRef = useRef<HTMLDivElement>(null)
   const [courseDropdownOpen, setCourseDropdownOpen] = useState(false)
+  const [courseSearch, setCourseSearch] = useState('')
   const courseRef = useRef<HTMLDivElement>(null)
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
@@ -106,11 +107,13 @@ export function StatisticsPage() {
       }
       if (courseRef.current && !courseRef.current.contains(e.target as Node)) {
         setCourseDropdownOpen(false)
+        const course = courses.find(c => c.id === selectedCourse)
+        setCourseSearch(course?.name || '')
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [courses, selectedCourse])
 
   useEffect(() => {
     async function fetchCourses() {
@@ -468,36 +471,44 @@ export function StatisticsPage() {
           <div className="w-full md:w-auto md:min-w-[200px]" ref={courseRef}>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
-              <button
-                onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary text-left appearance-none pr-10 truncate"
-              >
-                {selectedCourse === 'all' ? 'Todos los cursos' : courses.find(c => c.id === selectedCourse)?.name || 'Todos los cursos'}
-              </button>
+              <input
+                type="text"
+                value={courseSearch}
+                onChange={e => { setCourseSearch(e.target.value); setCourseDropdownOpen(true) }}
+                onFocus={() => setCourseDropdownOpen(true)}
+                placeholder={selectedCourse === 'all' ? 'Buscar curso...' : courses.find(c => c.id === selectedCourse)?.name || 'Buscar curso...'}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10 truncate"
+              />
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
-                filter_list
+                search
               </span>
               {courseDropdownOpen && (
                 <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg overflow-visible">
                   <button
-                    onClick={() => { setSelectedCourse('all'); setCourseDropdownOpen(false) }}
+                    onClick={() => { setSelectedCourse('all'); setCourseSearch(''); setCourseDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                       selectedCourse === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
                     Todos los cursos
                   </button>
-                  {courses.map(c => (
-                    <button
-                      key={c.id}
-                      onClick={() => { setSelectedCourse(c.id); setCourseDropdownOpen(false) }}
-                      className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
-                        selectedCourse === c.id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
-                      }`}
-                    >
-                      {c.name}
-                    </button>
-                  ))}
+                  {courses
+                    .filter(c => c.name.toLowerCase().includes(courseSearch.toLowerCase()))
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => { setSelectedCourse(c.id); setCourseSearch(c.name); setCourseDropdownOpen(false) }}
+                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
+                          selectedCourse === c.id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    ))
+                  }
+                  {courses.filter(c => c.name.toLowerCase().includes(courseSearch.toLowerCase())).length === 0 && (
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron cursos</div>
+                  )}
                 </div>
               )}
             </div>
