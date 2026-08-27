@@ -269,7 +269,58 @@ export function AdminPage() {
       </p>
 
       {loading ? (
-        <p className="font-body-md text-body-md text-on-surface-variant">Cargando usuarios...</p>
+        <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+          <table className="w-full hidden md:table">
+            <thead>
+              <tr className="border-b border-outline-variant">
+                <th className="w-10 px-md py-3"><div className="h-4 w-4 bg-surface-container animate-pulse rounded" /></th>
+                <th className="text-left px-md py-3"><div className="h-4 w-20 bg-surface-container animate-pulse rounded" /></th>
+                <th className="text-left px-md py-3"><div className="h-4 w-16 bg-surface-container animate-pulse rounded" /></th>
+                <th className="text-left px-md py-3"><div className="h-4 w-8 bg-surface-container animate-pulse rounded" /></th>
+                <th className="text-right px-md py-3"><div className="h-4 w-16 bg-surface-container animate-pulse rounded" /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 2, 3, 4, 5].map(i => (
+                <tr key={i} className="border-b border-outline-variant last:border-0">
+                  <td className="px-md py-3"><div className="h-4 w-4 bg-surface-container animate-pulse rounded" /></td>
+                  <td className="px-md py-3">
+                    <div className="h-4 w-32 bg-surface-container animate-pulse rounded mb-1" />
+                    <div className="h-3 w-40 bg-surface-container animate-pulse rounded" />
+                  </td>
+                  <td className="px-md py-3"><div className="h-5 w-16 bg-surface-container animate-pulse rounded-full" /></td>
+                  <td className="px-md py-3"><div className="h-4 w-20 bg-surface-container animate-pulse rounded" /></td>
+                  <td className="px-md py-3">
+                    <div className="flex gap-sm justify-end">
+                      <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                      <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="md:hidden p-md space-y-md">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="border border-outline-variant rounded-xl p-md">
+                <div className="flex items-center gap-sm mb-sm">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+                  <div className="flex-1">
+                    <div className="h-4 w-32 bg-surface-container animate-pulse rounded mb-1" />
+                    <div className="h-3 w-40 bg-surface-container animate-pulse rounded" />
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-sm">
+                  <div className="h-5 w-16 bg-surface-container animate-pulse rounded-full" />
+                  <div className="flex gap-sm">
+                    <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                    <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
           {selectedUsers.size > 0 && (

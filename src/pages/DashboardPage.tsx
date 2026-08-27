@@ -218,9 +218,32 @@ export function DashboardPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-sm text-on-surface-variant">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-          <p className="font-body-md text-body-md">Cargando cursos...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <div className="flex justify-between items-start mb-md">
+                <div className="flex-1">
+                  <div className="h-5 w-32 bg-surface-container animate-pulse rounded mb-sm" />
+                  <div className="h-3 w-48 bg-surface-container animate-pulse rounded" />
+                </div>
+                <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+              </div>
+              <div className="flex gap-lg mt-auto">
+                <div className="flex items-center gap-xs">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+                  <div className="h-4 w-8 bg-surface-container animate-pulse rounded" />
+                </div>
+                <div className="flex items-center gap-xs">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+                  <div className="h-4 w-8 bg-surface-container animate-pulse rounded" />
+                </div>
+                <div className="flex items-center gap-xs">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+                  <div className="h-4 w-8 bg-surface-container animate-pulse rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : summaries.length === 0 ? (
         <div className="text-center py-xl">

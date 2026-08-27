@@ -283,7 +283,42 @@ export function SuggestionsPage() {
   const paginatedSuggestions = paginatedSlice(filtered)
 
   if (loading) {
-    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
+    return (
+      <div className="pb-20 md:pb-0">
+        <div className="mb-xl flex justify-between items-end">
+          <div>
+            <div className="h-8 w-36 bg-surface-container animate-pulse rounded mb-sm" />
+            <div className="h-4 w-52 bg-surface-container animate-pulse rounded" />
+          </div>
+          <div className="h-10 w-24 bg-surface-container animate-pulse rounded-full" />
+        </div>
+        <div className="flex gap-sm mb-lg flex-wrap">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="h-9 w-20 bg-surface-container animate-pulse rounded-full" />
+          ))}
+        </div>
+        <div className="space-y-md">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <div className="flex items-center gap-sm mb-sm">
+                <div className="h-5 w-16 bg-surface-container animate-pulse rounded-full" />
+                <div className="h-5 w-20 bg-surface-container animate-pulse rounded-full" />
+                <div className="h-5 w-8 bg-surface-container animate-pulse rounded-full" />
+              </div>
+              <div className="h-4 w-full bg-surface-container animate-pulse rounded mb-sm" />
+              <div className="h-4 w-3/4 bg-surface-container animate-pulse rounded mb-md" />
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-xs">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded-full" />
+                  <div className="h-3 w-24 bg-surface-container animate-pulse rounded" />
+                </div>
+                <div className="h-3 w-20 bg-surface-container animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (

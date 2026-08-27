@@ -189,7 +189,52 @@ export function CoursesPage() {
   const paginatedCourses = paginatedSlice(filteredCourses)
 
   if (loading) {
-    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando cursos...</div>
+    return (
+      <div className="pb-20 md:pb-0">
+        <div className="mb-xl flex justify-between items-end">
+          <div>
+            <div className="h-8 w-32 bg-surface-container animate-pulse rounded mb-sm" />
+            <div className="h-4 w-48 bg-surface-container animate-pulse rounded" />
+          </div>
+          <div className="h-10 w-24 bg-surface-container animate-pulse rounded-full" />
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+          <div className="flex gap-lg">
+            <div className="h-10 flex-1 bg-surface-container animate-pulse rounded-xl" />
+            <div className="h-10 w-32 bg-surface-container animate-pulse rounded-xl" />
+            <div className="h-10 w-32 bg-surface-container animate-pulse rounded-xl" />
+          </div>
+        </div>
+        <div className="bg-surface border border-outline-variant rounded-xl p-md mb-xl flex gap-lg">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-xs">
+              <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+              <div className="h-4 w-16 bg-surface-container animate-pulse rounded" />
+              <div className="h-5 w-8 bg-surface-container animate-pulse rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <div className="flex justify-between items-start mb-md">
+                <div className="flex-1">
+                  <div className="h-5 w-36 bg-surface-container animate-pulse rounded mb-sm" />
+                  <div className="h-3 w-20 bg-surface-container animate-pulse rounded-full" />
+                </div>
+              </div>
+              <div className="h-3 w-full bg-surface-container animate-pulse rounded mb-sm" />
+              <div className="h-3 w-2/3 bg-surface-container animate-pulse rounded mb-md" />
+              <div className="flex gap-sm">
+                <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+                <div className="h-8 w-8 bg-surface-container animate-pulse rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
