@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
   id: string
@@ -186,6 +187,9 @@ export function DashboardPage() {
     ? summaries.reduce((sum, s) => sum + s.avgScore * s.ratingCount, 0) / totalRatings
     : 0
 
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(summaries.length, 6)
+  const paginatedSummaries = paginatedSlice(summaries)
+
   return (
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
@@ -252,7 +256,7 @@ export function DashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-          {summaries.map(({ course, sessionCount, ratingCount, avgScore }) => (
+          {paginatedSummaries.map(({ course, sessionCount, ratingCount, avgScore }) => (
             <Link
               key={course.id}
               to={`/courses/${course.id}/sessions`}
@@ -286,6 +290,16 @@ export function DashboardPage() {
             </Link>
           ))}
         </div>
+      )}
+
+      {summaries.length > 0 && (
+        <Pagination
+          totalItems={summaries.length}
+          page={page}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+        />
       )}
     </div>
   )
