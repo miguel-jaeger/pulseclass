@@ -392,9 +392,9 @@ export function StatisticsPage() {
 
       {/* Filters */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-        <div className={`grid grid-cols-1 gap-lg ${profile?.role === 'admin' && teachers.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
-          <div>
-            <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
+        <div className="flex flex-col md:flex-row gap-lg items-end">
+          <div className="w-full md:w-auto">
+            <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Inicio</label>
             <input
               id="date-start"
               name="dateStart"
@@ -404,8 +404,8 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
-          <div>
-            <label htmlFor="date-end" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha fin</label>
+          <div className="w-full md:w-auto">
+            <label htmlFor="date-end" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fin</label>
             <input
               id="date-end"
               name="dateEnd"
@@ -416,7 +416,7 @@ export function StatisticsPage() {
             />
           </div>
           {profile?.role === 'admin' && teachers.length > 0 && (
-          <div className="relative" ref={teacherRef}>
+          <div className="w-full md:w-auto md:min-w-[200px]" ref={teacherRef}>
             <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
             <div className="relative">
               <input
@@ -426,17 +426,17 @@ export function StatisticsPage() {
                 value={teacherSearch}
                 onChange={e => { setTeacherSearch(e.target.value); setTeacherDropdownOpen(true) }}
                 onFocus={() => setTeacherDropdownOpen(true)}
-                placeholder="Buscar docente..."
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10"
+                placeholder="Buscar..."
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10 truncate"
               />
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
                 search
               </span>
               {teacherDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg overflow-visible">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   <button
                     onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
-                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                       selectedTeacher === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
@@ -448,7 +448,7 @@ export function StatisticsPage() {
                       <button
                         key={t.user_id}
                         onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(t.name); setTeacherDropdownOpen(false); setSelectedCourse('all') }}
-                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                           selectedTeacher === t.user_id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                         }`}
                       >
@@ -457,7 +457,7 @@ export function StatisticsPage() {
                     ))
                   }
                   {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
-                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">No se encontraron docentes</div>
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron docentes</div>
                   )}
                 </div>
               )}
@@ -465,12 +465,12 @@ export function StatisticsPage() {
           </div>
           )}
           {courses.length > 1 && (
-          <div className="relative" ref={courseRef}>
+          <div className="w-full md:w-auto md:min-w-[200px]" ref={courseRef}>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
               <button
                 onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary text-left appearance-none pr-10"
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary text-left appearance-none pr-10 truncate"
               >
                 {selectedCourse === 'all' ? 'Todos los cursos' : courses.find(c => c.id === selectedCourse)?.name || 'Todos los cursos'}
               </button>
@@ -478,10 +478,10 @@ export function StatisticsPage() {
                 filter_list
               </span>
               {courseDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg overflow-visible">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   <button
                     onClick={() => { setSelectedCourse('all'); setCourseDropdownOpen(false) }}
-                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                       selectedCourse === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
@@ -491,7 +491,7 @@ export function StatisticsPage() {
                     <button
                       key={c.id}
                       onClick={() => { setSelectedCourse(c.id); setCourseDropdownOpen(false) }}
-                      className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                      className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                         selectedCourse === c.id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                       }`}
                     >
