@@ -378,6 +378,14 @@ export function CourseMembersPage() {
             >
               <span className="material-symbols-outlined text-lg">upload_file</span>
             </button>
+            <a
+              href="https://res.cloudinary.com/dhecags26/raw/upload/v1787804153/example-import_geijtw.csv"
+              download
+              className="bg-secondary-container text-on-surface font-bold py-2 px-3 rounded-full hover:opacity-90 transition-opacity flex items-center justify-center"
+              title="Descargar plantilla de ejemplo"
+            >
+              <span className="material-symbols-outlined text-lg">download</span>
+            </a>
           </div>
         )}
       </div>
