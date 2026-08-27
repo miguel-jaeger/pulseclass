@@ -326,7 +326,7 @@ export function SuggestionsPage() {
       <header className="mb-xl flex justify-between items-end">
         <div>
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Sugerencias</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras para la plataforma</p>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras, reporta problemas o sugiere nuevas funcionalidades para la plataforma.</p>
         </div>
         <button
           onClick={() => setShowForm(true)}

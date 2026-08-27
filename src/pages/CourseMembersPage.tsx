@@ -348,7 +348,7 @@ export function CourseMembersPage() {
 
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Miembros</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{course?.name}</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los participantes del curso {course?.name}.</p>
       </header>
 
       <div className="flex flex-col md:flex-row gap-md mb-lg">

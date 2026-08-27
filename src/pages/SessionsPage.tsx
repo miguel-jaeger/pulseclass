@@ -406,7 +406,7 @@ export function SessionsPage() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-md">
           <div className="min-w-0">
             <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface truncate">{course?.name}</h1>
-            <p className="font-body-sm md:font-body-md text-body-sm md:text-body-md text-on-surface-variant mt-xs line-clamp-2">{course?.description}</p>
+            <p className="font-body-sm md:font-body-md text-body-sm md:text-body-md text-on-surface-variant mt-xs line-clamp-2">Gestiona las sesiones de calificación de este curso.</p>
           </div>
           {(profile?.role === 'admin' || profile?.role === 'teacher') && (
             <div className="flex gap-sm flex-shrink-0">
@@ -415,8 +415,7 @@ export function SessionsPage() {
                 className="bg-primary text-on-primary font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
                 <span className="material-symbols-outlined text-base md:text-lg">add</span>
-                <span className="hidden sm:inline">Crear Sesión</span>
-                <span className="sm:hidden">Crear</span>
+                Crear
               </button>
             </div>
           )}
