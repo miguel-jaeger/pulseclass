@@ -388,6 +388,7 @@ export function StatisticsPage() {
 
   const canEdit = (studentId: string) => {
     if (profile?.role === 'admin') return true
+    if (profile?.role === 'teacher') return true
     return profile?.user_id === studentId
   }
 

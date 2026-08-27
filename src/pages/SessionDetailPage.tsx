@@ -227,7 +227,7 @@ export function SessionDetailPage() {
     }
   }
 
-  const canEdit = (ownerId: string) => user?.id === ownerId || profile?.role === 'admin'
+  const canEdit = (ownerId: string) => user?.id === ownerId || profile?.role === 'admin' || profile?.role === 'teacher'
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database

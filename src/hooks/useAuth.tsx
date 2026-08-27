@@ -72,9 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!profileData) return null
 
+      const rawRole = profileData.role || 'student'
+      const normalizedRole =
+        rawRole === 'Administrador' || rawRole === 'admin' ? 'admin'
+        : rawRole === 'Profesor' || rawRole === 'teacher' ? 'teacher'
+        : 'student'
+
       return {
         ...profileData,
-        role: profileData.role || 'student'
+        role: normalizedRole
       } as Profile
     } catch {
       return null
