@@ -344,200 +344,389 @@ export function SessionDetailPage() {
         </Link>
       </div>
 
-      <h2 className="font-headline-md text-headline-md text-on-surface mb-md">Comentarios de estudiantes</h2>
+      <div className="flex gap-sm mb-lg flex-wrap justify-center">
+        <button
+          title="Comentarios"
+          onClick={() => setActiveTab('comments')}
+          className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+            activeTab === 'comments'
+              ? 'bg-primary-container text-on-primary-container font-bold'
+              : 'text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">comment</span>
+          <span className="hidden sm:inline">Comentarios</span>
+        </button>
+        <button
+          title="Sugerencias"
+          onClick={() => setActiveTab('suggestions')}
+          className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+            activeTab === 'suggestions'
+              ? 'bg-primary-container text-on-primary-container font-bold'
+              : 'text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">lightbulb</span>
+          <span className="hidden sm:inline">Sugerencias</span>
+        </button>
+      </div>
 
-      {ratings.length === 0 ? (
-        <div className="text-center py-lg">
-          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">chat_bubble_outline</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios aún.</p>
-        </div>
-      ) : (
-        <div className="space-y-md">
-          {ratings.map((rating) => (
-            <article key={rating.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex justify-between items-start mb-md">
-                <div className="flex items-center gap-sm">
-                  <span className="font-headline-sm text-headline-sm text-primary font-bold">{rating.score}/10</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">
-                    {new Date(rating.created_at).toLocaleDateString('es-ES')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-xs">
-                  {canEdit(rating.student_id) && (
-                    <>
+      {activeTab === 'comments' && (
+        <>
+          {ratings.filter(r => r.comment).length === 0 ? (
+            <div className="text-center py-lg">
+              <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">chat_bubble_outline</span>
+              <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios aún.</p>
+            </div>
+          ) : (
+            <div className="space-y-md">
+              {ratings.filter(r => r.comment).map((rating) => (
+                <article key={rating.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
+                  <div className="flex justify-between items-start mb-md">
+                    <div className="flex items-center gap-sm">
+                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{rating.score}/10</span>
+                      <span className="font-body-sm text-body-sm text-on-surface-variant">
+                        {new Date(rating.created_at).toLocaleDateString('es-ES')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-xs">
+                      {canEdit(rating.student_id) && (
+                        <>
+                          <button
+                            onClick={() => { setEditingRating(rating.id); setEditRatingText({ comment: rating.comment || '', suggestion: rating.suggestion || '' }) }}
+                            className="p-xs rounded-full text-on-surface-variant hover:text-primary hover:bg-secondary-container transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteRating(rating.id)}
+                            className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </>
+                      )}
                       <button
-                        onClick={() => { setEditingRating(rating.id); setEditRatingText({ comment: rating.comment || '', suggestion: rating.suggestion || '' }) }}
-                        className="p-xs rounded-full text-on-surface-variant hover:text-primary hover:bg-secondary-container transition-colors"
+                        onClick={() => toggleStar(rating.id, rating.has_starred || false)}
+                        className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                          rating.has_starred
+                            ? 'bg-primary-container text-on-primary-container'
+                            : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                        }`}
                       >
-                        <span className="material-symbols-outlined text-lg">edit</span>
+                        <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
+                        <span>{rating.star_count || 0}</span>
                       </button>
-                      <button
-                        onClick={() => deleteRating(rating.id)}
-                        className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => toggleStar(rating.id, rating.has_starred || false)}
-                    className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                      rating.has_starred
-                        ? 'bg-primary-container text-on-primary-container'
-                        : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
-                    <span>{rating.star_count || 0}</span>
-                  </button>
-                </div>
-              </div>
-
-              {editingRating === rating.id ? (
-                <div className="mb-md space-y-sm">
-                  <textarea
-                    value={editRatingText.comment}
-                    onChange={e => setEditRatingText(prev => ({ ...prev, comment: e.target.value }))}
-                    placeholder="Comentario..."
-                    rows={3}
-                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
-                  />
-                  <textarea
-                    value={editRatingText.suggestion}
-                    onChange={e => setEditRatingText(prev => ({ ...prev, suggestion: e.target.value }))}
-                    placeholder="Sugerencia..."
-                    rows={3}
-                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
-                  />
-                  <div className="flex gap-sm justify-end">
-                    <button
-                      onClick={() => updateRating(rating.id)}
-                      className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm"
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      onClick={() => setEditingRating(null)}
-                      className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
-                    >
-                      Cancelar
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <>
-                  {rating.comment && (
+
+                  {editingRating === rating.id ? (
+                    <div className="mb-md space-y-sm">
+                      <textarea
+                        value={editRatingText.comment}
+                        onChange={e => setEditRatingText(prev => ({ ...prev, comment: e.target.value }))}
+                        placeholder="Comentario..."
+                        rows={3}
+                        className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <div className="flex gap-sm justify-end">
+                        <button
+                          onClick={() => updateRating(rating.id)}
+                          className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={() => setEditingRating(null)}
+                          className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <p className="font-body-md text-body-md text-on-surface mb-md">{rating.comment}</p>
                   )}
 
-                  {rating.suggestion && (
-                    <div className="bg-surface-container-low rounded-xl p-md">
-                      <p className="font-body-sm text-body-sm text-on-surface">
-                        <span className="font-semibold">Sugerencia:</span> {rating.suggestion}
-                      </p>
+                  {(repliesMap[rating.id]?.length || 0) > 0 && (
+                    <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
+                      {repliesMap[rating.id]?.map(reply => (
+                        <div key={reply.id} className="flex gap-sm items-start">
+                          <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-xs">
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                              <span className="font-body-xs text-body-xs text-on-surface-variant">
+                                {new Date(reply.created_at).toLocaleDateString('es-ES')}
+                              </span>
+                              {canEdit(reply.user_id) && (
+                                <>
+                                  <button
+                                    onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => deleteReply(reply.id, rating.id)}
+                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                            {editingReply === reply.id ? (
+                              <div className="mt-xs flex flex-col gap-xs">
+                                <textarea
+                                  value={editReplyText}
+                                  onChange={e => setEditReplyText(e.target.value)}
+                                  rows={2}
+                                  className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                                />
+                                <div className="flex gap-xs justify-end">
+                                  <button
+                                    onClick={() => updateReply(reply.id, rating.id)}
+                                    className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                                  >
+                                    Guardar
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingReply(null)}
+                                    className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
-                </>
-              )}
 
-              {(repliesMap[rating.id]?.length || 0) > 0 && (
-                <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
-                  {repliesMap[rating.id]?.map(reply => (
-                    <div key={reply.id} className="flex gap-sm items-start">
-                      <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-xs">
-                          <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
-                          <span className="font-body-xs text-body-xs text-on-surface-variant">
-                            {new Date(reply.created_at).toLocaleDateString('es-ES')}
-                          </span>
-                          {canEdit(reply.user_id) && (
-                            <>
-                              <button
-                                onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
-                                className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                              >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                              </button>
-                              <button
-                                onClick={() => deleteReply(reply.id, rating.id)}
-                                className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                              >
-                                <span className="material-symbols-outlined text-sm">delete</span>
-                              </button>
-                            </>
-                          )}
-                        </div>
-                        {editingReply === reply.id ? (
-                          <div className="mt-xs flex flex-col gap-xs">
-                            <textarea
-                              value={editReplyText}
-                              onChange={e => setEditReplyText(e.target.value)}
-                              rows={2}
-                              className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
-                            />
-                            <div className="flex gap-xs justify-end">
-                              <button
-                                onClick={() => updateReply(reply.id, rating.id)}
-                                className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
-                              >
-                                Guardar
-                              </button>
-                              <button
-                                onClick={() => setEditingReply(null)}
-                                className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
-                        )}
+                  {replyingTo === rating.id ? (
+                    <div className="mt-md flex flex-col gap-sm">
+                      <textarea
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        placeholder="Escribe una respuesta..."
+                        rows={3}
+                        autoFocus
+                        className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <div className="flex gap-sm justify-end">
+                        <button
+                          onClick={() => addReply(rating.id)}
+                          disabled={!replyText.trim()}
+                          className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                        >
+                          Enviar
+                        </button>
+                        <button
+                          onClick={() => { setReplyingTo(null); setReplyText('') }}
+                          className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                        >
+                          Cancelar
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ) : (
+                    <button
+                      onClick={() => setReplyingTo(rating.id)}
+                      className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                      Responder
+                    </button>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
-              {replyingTo === rating.id ? (
-                <div className="mt-md flex flex-col gap-sm">
-                  <textarea
-                    value={replyText}
-                    onChange={e => setReplyText(e.target.value)}
-                    placeholder="Escribe una respuesta..."
-                    rows={3}
-                    autoFocus
-                    className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
-                  />
-                  <div className="flex gap-sm justify-end">
-                    <button
-                      onClick={() => addReply(rating.id)}
-                      disabled={!replyText.trim()}
-                      className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
-                    >
-                      Enviar
-                    </button>
-                    <button
-                      onClick={() => { setReplyingTo(null); setReplyText('') }}
-                      className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
-                    >
-                      Cancelar
-                    </button>
+      {activeTab === 'suggestions' && (
+        <>
+          {ratings.filter(r => r.suggestion).length === 0 ? (
+            <div className="text-center py-lg">
+              <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">lightbulb</span>
+              <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias aún.</p>
+            </div>
+          ) : (
+            <div className="space-y-md">
+              {ratings.filter(r => r.suggestion).map((rating) => (
+                <article key={rating.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
+                  <div className="flex justify-between items-start mb-md">
+                    <div className="flex items-center gap-sm">
+                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{rating.score}/10</span>
+                      <span className="font-body-sm text-body-sm text-on-surface-variant">
+                        {new Date(rating.created_at).toLocaleDateString('es-ES')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-xs">
+                      {canEdit(rating.student_id) && (
+                        <>
+                          <button
+                            onClick={() => { setEditingRating(rating.id); setEditRatingText({ comment: rating.comment || '', suggestion: rating.suggestion || '' }) }}
+                            className="p-xs rounded-full text-on-surface-variant hover:text-primary hover:bg-secondary-container transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteRating(rating.id)}
+                            className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => toggleStar(rating.id, rating.has_starred || false)}
+                        className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
+                          rating.has_starred
+                            ? 'bg-primary-container text-on-primary-container'
+                            : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
+                        <span>{rating.star_count || 0}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setReplyingTo(rating.id)}
-                  className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
-                >
-                  <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
-                  Responder
-                </button>
-              )}
-            </article>
-          ))}
-        </div>
+
+                  {editingRating === rating.id ? (
+                    <div className="mb-md space-y-sm">
+                      <textarea
+                        value={editRatingText.suggestion}
+                        onChange={e => setEditRatingText(prev => ({ ...prev, suggestion: e.target.value }))}
+                        placeholder="Sugerencia..."
+                        rows={3}
+                        className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <div className="flex gap-sm justify-end">
+                        <button
+                          onClick={() => updateRating(rating.id)}
+                          className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={() => setEditingRating(null)}
+                          className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="font-body-md text-body-md text-on-surface mb-md">{rating.suggestion}</p>
+                  )}
+
+                  {(repliesMap[rating.id]?.length || 0) > 0 && (
+                    <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
+                      {repliesMap[rating.id]?.map(reply => (
+                        <div key={reply.id} className="flex gap-sm items-start">
+                          <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-xs">
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                              <span className="font-body-xs text-body-xs text-on-surface-variant">
+                                {new Date(reply.created_at).toLocaleDateString('es-ES')}
+                              </span>
+                              {canEdit(reply.user_id) && (
+                                <>
+                                  <button
+                                    onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => deleteReply(reply.id, rating.id)}
+                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                            {editingReply === reply.id ? (
+                              <div className="mt-xs flex flex-col gap-xs">
+                                <textarea
+                                  value={editReplyText}
+                                  onChange={e => setEditReplyText(e.target.value)}
+                                  rows={2}
+                                  className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                                />
+                                <div className="flex gap-xs justify-end">
+                                  <button
+                                    onClick={() => updateReply(reply.id, rating.id)}
+                                    className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                                  >
+                                    Guardar
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingReply(null)}
+                                    className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {replyingTo === rating.id ? (
+                    <div className="mt-md flex flex-col gap-sm">
+                      <textarea
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        placeholder="Escribe una respuesta..."
+                        rows={3}
+                        autoFocus
+                        className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <div className="flex gap-sm justify-end">
+                        <button
+                          onClick={() => addReply(rating.id)}
+                          disabled={!replyText.trim()}
+                          className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                        >
+                          Enviar
+                        </button>
+                        <button
+                          onClick={() => { setReplyingTo(null); setReplyText('') }}
+                          className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setReplyingTo(rating.id)}
+                      className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                      Responder
+                    </button>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {toast && (
