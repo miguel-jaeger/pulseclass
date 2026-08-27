@@ -208,7 +208,7 @@ export function HelpAdminPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0 overflow-hidden">
+    <div className="pb-20 md:pb-0">
       <header className="mb-xl flex flex-col sm:flex-row sm:items-end sm:justify-between gap-md">
         <div className="min-w-0">
           <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">
@@ -380,18 +380,11 @@ export function HelpAdminPage() {
                       </div>
                     </td>
                     <td className="px-md py-3">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{video.title}</div>
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[150px]">{video.title}</div>
                     </td>
                     <td className="px-md py-3">
                       {video.description ? (
-                        <div className="relative group max-w-[300px]">
-                          <p className="font-body-sm text-body-sm text-on-surface-variant truncate cursor-default">{video.description}</p>
-                          <div className="absolute left-0 top-full mt-1 z-30 hidden group-hover:block">
-                            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl px-md py-sm shadow-lg max-w-sm">
-                              <p className="font-body-sm text-body-sm text-on-surface whitespace-pre-wrap">{video.description}</p>
-                            </div>
-                          </div>
-                        </div>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[180px] cursor-default" title={video.description}>{video.description}</p>
                       ) : (
                         <span className="font-body-sm text-body-sm text-on-surface-variant italic">Sin descripción</span>
                       )}
