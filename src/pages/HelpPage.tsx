@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface HelpVideo {
   id: string
@@ -327,6 +328,9 @@ export function HelpPage() {
     (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredVideos.length, 8)
+  const paginatedVideos = paginatedSlice(filteredVideos)
+
   const LikeButtons = ({ likes = 0, dislikes = 0, userVote = null, onLike, onDislike }: { likes?: number; dislikes?: number; userVote?: number | null; onLike: () => void; onDislike: () => void }) => (
     <div className="flex items-center gap-xs">
       <button onClick={onLike} className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-xs text-label-xs transition-colors ${userVote === 1 ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-secondary-container'}`}>
@@ -342,7 +346,7 @@ export function HelpPage() {
 
   if (loading) {
     return (
-      <div className="pb-20 md:pb-0">
+      <div className="pb-20 md:pb-xl">
         <header className="mb-xl">
           <div className="h-8 w-48 bg-surface-container animate-pulse rounded mb-sm" />
           <div className="h-4 w-96 bg-surface-container animate-pulse rounded" />
@@ -390,7 +394,7 @@ export function HelpPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
-          {filteredVideos.map(video => {
+          {paginatedVideos.map(video => {
             const vl = videoLikes[video.id] || { likes: 0, dislikes: 0, userVote: null }
             const isExpanded = expandedVideo === video.id
             return (
@@ -554,6 +558,16 @@ export function HelpPage() {
             )
           })}
         </div>
+      )}
+
+      {videos.length > 0 && filteredVideos.length > 0 && (
+        <Pagination
+          totalItems={filteredVideos.length}
+          page={page}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+        />
       )}
 
       {toast && (
