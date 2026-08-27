@@ -301,7 +301,40 @@ export function CourseMembersPage() {
     .filter(u => addRoleFilter === 'all' || u.role === addRoleFilter)
 
   if (loading) {
-    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
+    return (
+      <div>
+        <div className="mb-lg">
+          <div className="h-4 w-32 bg-surface-container animate-pulse rounded" />
+        </div>
+        <div className="mb-xl">
+          <div className="h-8 w-24 bg-surface-container animate-pulse rounded mb-sm" />
+          <div className="h-4 w-40 bg-surface-container animate-pulse rounded" />
+        </div>
+        <div className="flex gap-md mb-lg">
+          <div className="flex-1 h-10 bg-surface-container animate-pulse rounded-xl" />
+          <div className="h-10 w-10 bg-surface-container animate-pulse rounded-full" />
+          <div className="h-10 w-10 bg-surface-container animate-pulse rounded-full" />
+        </div>
+        <div className="space-y-sm">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex justify-between items-center bg-surface border border-outline-variant rounded-xl p-md">
+              <div className="flex items-center gap-md">
+                <div className="h-4 w-4 bg-surface-container animate-pulse rounded" />
+                <div className="h-10 w-10 bg-surface-container animate-pulse rounded-full" />
+                <div>
+                  <div className="flex items-center gap-sm mb-1">
+                    <div className="h-4 w-28 bg-surface-container animate-pulse rounded" />
+                    <div className="h-5 w-16 bg-surface-container animate-pulse rounded-full" />
+                  </div>
+                  <div className="h-3 w-40 bg-surface-container animate-pulse rounded" />
+                </div>
+              </div>
+              <div className="h-4 w-14 bg-surface-container animate-pulse rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
