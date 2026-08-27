@@ -72,6 +72,7 @@ export function StatisticsPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [ratings, setRatings] = useState<Rating[]>([])
   const [loading, setLoading] = useState(true)
+  const [coursesLoading, setCoursesLoading] = useState(true)
 
   const [dateStart, setDateStart] = useState(getDefaultDateStart)
   const [dateEnd, setDateEnd] = useState(getDefaultDateEnd)
@@ -109,6 +110,7 @@ export function StatisticsPage() {
   useEffect(() => {
     async function fetchCourses() {
       if (!profile) return
+      setCoursesLoading(true)
       if (profile.role === 'admin') {
         const { data } = await insforge.database
           .from('courses')
@@ -151,6 +153,7 @@ export function StatisticsPage() {
           if (data) setCourses(data as Course[])
         }
       }
+      setCoursesLoading(false)
     }
     fetchCourses()
   }, [profile])
@@ -161,7 +164,7 @@ export function StatisticsPage() {
       const { data } = await insforge.database
         .from('profiles')
         .select('id, user_id, name, role')
-        .in('role', ['Profesor', 'teacher'])
+        .eq('role', 'teacher')
         .order('name')
       if (data) setTeachers(data as Profile[])
     }
@@ -384,7 +387,7 @@ export function StatisticsPage() {
 
       {/* Filters */}
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
-        <div className={`grid grid-cols-1 md:grid-cols-${profile?.role === 'admin' && teachers.length > 0 ? '4' : '3'} gap-lg`}>
+        <div className={`grid grid-cols-1 gap-lg ${profile?.role === 'admin' && teachers.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           <div>
             <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Fecha inicio</label>
             <input
@@ -481,8 +484,63 @@ export function StatisticsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando estadísticas...</div>
+      {coursesLoading ? (
+        <div className="space-y-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+                <div className="h-8 w-16 bg-surface-container animate-pulse rounded mb-sm" />
+                <div className="h-4 w-32 bg-surface-container animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+          <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <div className="h-6 w-48 bg-surface-container animate-pulse rounded mb-lg" />
+            <div className="h-[300px] bg-surface-container animate-pulse rounded-xl" />
+          </div>
+        </div>
+      ) : courses.length === 0 ? (
+        <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {profile?.role === 'student' ? 'No estás inscrito en ningún curso.' : 'No hay cursos disponibles.'}
+          </p>
+        </div>
+      ) : loading ? (
+        <div className="space-y-lg">
+          {/* Skeleton Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+                <div className="h-8 w-16 bg-surface-container animate-pulse rounded mb-sm" />
+                <div className="h-4 w-32 bg-surface-container animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+          {/* Skeleton Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <div className="h-5 w-48 bg-surface-container animate-pulse rounded mb-lg" />
+              <div className="h-[300px] bg-surface-container animate-pulse rounded-xl" />
+            </div>
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+              <div className="h-5 w-48 bg-surface-container animate-pulse rounded mb-lg" />
+              <div className="h-[300px] bg-surface-container animate-pulse rounded-xl" />
+            </div>
+          </div>
+          {/* Skeleton Table */}
+          <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+            <div className="h-5 w-40 bg-surface-container animate-pulse rounded mb-lg" />
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex gap-lg py-sm border-b border-outline-variant last:border-0">
+                <div className="h-4 flex-1 bg-surface-container animate-pulse rounded" />
+                <div className="h-4 w-24 bg-surface-container animate-pulse rounded" />
+                <div className="h-4 w-16 bg-surface-container animate-pulse rounded" />
+                <div className="h-4 w-16 bg-surface-container animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <>
           {/* Summary Cards */}
