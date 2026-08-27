@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Avatar } from '../pages/ProfilePage'
@@ -9,7 +9,7 @@ const navItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/videos', icon: 'video_library', label: 'Ayuda' },
+  { to: '/videos', icon: 'help', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
@@ -23,7 +23,7 @@ const bottomNavItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/videos', icon: 'video_library', label: 'Ayuda' },
+  { to: '/videos', icon: 'help', label: 'Ayuda' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
@@ -31,6 +31,11 @@ export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
   const location = useLocation()
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
+  const [mobileAdminOpen, setMobileAdminOpen] = useState(false)
+
+  useEffect(() => {
+    setMobileAdminOpen(false)
+  }, [location.pathname])
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
@@ -150,26 +155,66 @@ export function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
+      {/* Admin submenu (Mobile) */}
+      {mobileAdminOpen && (
+        <div className="md:hidden fixed bottom-14 left-0 right-0 z-50">
+          <div className="mx-2 mb-2 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden">
+            {adminSubItems.map(sub => (
+              <Link
+                key={sub.to}
+                to={sub.to}
+                onClick={() => setMobileAdminOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 border-b border-outline-variant last:border-0 transition-colors ${
+                  (sub.to === '/admin' ? location.pathname === '/admin' : isActive(sub.to))
+                    ? 'bg-primary-container text-on-primary-container'
+                    : 'text-on-surface hover:bg-secondary-container'
+                }`}
+              >
+                <span className="material-symbols-outlined text-xl">{sub.icon}</span>
+                <span className="font-body-md text-body-md">{sub.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* BottomNavBar (Mobile) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface border-t border-outline-variant flex justify-around items-center px-2" style={{ zIndex: 9999 }}>
-        {filteredBottomNav.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className={`flex flex-col items-center justify-center px-3 py-1 ${
-              isActive(item.to)
-                ? 'text-primary'
-                : 'text-on-surface-variant'
-            }`}
-          >
-            <span
-              className="material-symbols-outlined text-[22px]"
-              style={item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined}
+        {filteredBottomNav.map((item) => {
+          if (item.to === '/admin') {
+            return (
+              <button
+                key={item.to}
+                onClick={() => setMobileAdminOpen(!mobileAdminOpen)}
+                className={`flex flex-col items-center justify-center px-3 py-1 ${
+                  isActive(item.to)
+                    ? 'text-primary'
+                    : 'text-on-surface-variant'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+              </button>
+            )
+          }
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex flex-col items-center justify-center px-3 py-1 ${
+                isActive(item.to)
+                  ? 'text-primary'
+                  : 'text-on-surface-variant'
+              }`}
             >
-              {item.icon}
-            </span>
-          </Link>
-        ))}
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              >
+                {item.icon}
+              </span>
+            </Link>
+          )
+        })}
       </nav>
     </div>
   )
