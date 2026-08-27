@@ -352,7 +352,7 @@ export function HelpAdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-20">Preview</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-20">Vista previa</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Título</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Descripción</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Fecha</th>
