@@ -157,7 +157,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Admin submenu (Mobile) */}
       {mobileAdminOpen && (
-        <div className="md:hidden fixed bottom-14 left-0 right-0 z-50">
+        <div className="md:hidden fixed bottom-14 left-0 right-0" style={{ zIndex: 10000 }}>
           <div className="mx-2 mb-2 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden">
             {adminSubItems.map(sub => (
               <Link
