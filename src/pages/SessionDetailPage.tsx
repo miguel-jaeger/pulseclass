@@ -46,6 +46,7 @@ export function SessionDetailPage() {
   const [editRatingText, setEditRatingText] = useState<{ comment: string; suggestion: string }>({ comment: '', suggestion: '' })
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
+  const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })

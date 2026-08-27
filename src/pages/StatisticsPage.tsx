@@ -55,6 +55,15 @@ interface RatedItem {
   createdAt: string
 }
 
+interface Reply {
+  id: string
+  rating_id: string
+  user_id: string
+  content: string
+  created_at: string
+  user_name: string
+}
+
 function getDefaultDateStart(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -91,6 +100,19 @@ export function StatisticsPage() {
   const [editingCommentText, setEditingCommentText] = useState('')
   const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null)
   const [editingSuggestionText, setEditingSuggestionText] = useState('')
+
+  const [repliesMap, setRepliesMap] = useState<Record<string, Reply[]>>({})
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [editingReply, setEditingReply] = useState<string | null>(null)
+  const [editReplyText, setEditReplyText] = useState('')
+
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
@@ -236,6 +258,39 @@ export function StatisticsPage() {
 
       const ratingIds = (ratingsData as Rating[] || []).map(r => r.id)
       fetchVotes(ratingIds)
+
+      if (ratingIds.length > 0) {
+        const { data: repliesData } = await insforge.database
+          .from('comment_replies')
+          .select('*')
+          .in('rating_id', ratingIds)
+
+        if (cancelled) return
+
+        const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
+        let userNames: Record<string, string> = {}
+        if (userIds.length > 0) {
+          const { data: profilesData } = await insforge.database
+            .from('profiles')
+            .select('user_id, name')
+            .in('user_id', userIds)
+          for (const p of (profilesData || []) as { user_id: string; name: string }[]) {
+            userNames[p.user_id] = p.name
+          }
+        }
+
+        const newRepliesMap: Record<string, Reply[]> = {}
+        for (const reply of repliesData || []) {
+          if (!newRepliesMap[reply.rating_id]) {
+            newRepliesMap[reply.rating_id] = []
+          }
+          newRepliesMap[reply.rating_id].push({
+            ...reply,
+            user_name: userNames[reply.user_id] || 'Usuario'
+          })
+        }
+        setRepliesMap(newRepliesMap)
+      }
     }
 
     fetchData()
@@ -383,6 +438,81 @@ export function StatisticsPage() {
 
     if (!error) {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: '' } : r))
+    }
+  }
+
+  const addReply = async (ratingId: string) => {
+    if (!profile || !replyText.trim()) return
+
+    const content = replyText.trim()
+    const tempId = `temp-${Date.now()}`
+    const userName = profile.name || 'Tú'
+
+    setRepliesMap(prev => ({
+      ...prev,
+      [ratingId]: [
+        ...(prev[ratingId] || []),
+        { id: tempId, rating_id: ratingId, user_id: profile.user_id, content, created_at: new Date().toISOString(), user_name: userName }
+      ]
+    }))
+    setReplyText('')
+    setReplyingTo(null)
+
+    const { data, error } = await insforge.database
+      .from('comment_replies')
+      .insert([{ rating_id: ratingId, user_id: profile.user_id, content }])
+      .select('id, created_at')
+      .single()
+
+    if (error) {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).filter(r => r.id !== tempId)
+      }))
+      showToast('No se pudo enviar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).map(r =>
+          r.id === tempId ? { ...r, id: data.id, created_at: data.created_at } : r
+        )
+      }))
+      showToast('Respuesta enviada')
+    }
+  }
+
+  const updateReply = async (replyId: string, ratingId: string) => {
+    const { error } = await insforge.database
+      .from('comment_replies')
+      .update({ content: editReplyText })
+      .eq('id', replyId)
+
+    if (error) {
+      showToast('No se pudo editar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).map(r => r.id === replyId ? { ...r, content: editReplyText } : r)
+      }))
+      setEditingReply(null)
+      showToast('Respuesta editada')
+    }
+  }
+
+  const deleteReply = async (replyId: string, ratingId: string) => {
+    const { error } = await insforge.database
+      .from('comment_replies')
+      .delete()
+      .eq('id', replyId)
+
+    if (error) {
+      showToast('No se pudo eliminar la respuesta', 'error')
+    } else {
+      setRepliesMap(prev => ({
+        ...prev,
+        [ratingId]: (prev[ratingId] || []).filter(r => r.id !== replyId)
+      }))
+      showToast('Respuesta eliminada')
     }
   }
 
@@ -851,6 +981,102 @@ export function StatisticsPage() {
                           <span>{voteCounts[item.id]?.dislikes || 0}</span>
                         </button>
                       </div>
+
+                      {(repliesMap[item.id]?.length || 0) > 0 && (
+                        <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
+                          {repliesMap[item.id]?.map(reply => (
+                            <div key={reply.id} className="flex gap-sm items-start">
+                              <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-xs">
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                                  <span className="font-body-xs text-body-xs text-on-surface-variant">
+                                    {new Date(reply.created_at).toLocaleDateString('es-ES')}
+                                  </span>
+                                  {canEdit(reply.user_id) && (
+                                    <>
+                                      <button
+                                        onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                      </button>
+                                      <button
+                                        onClick={() => deleteReply(reply.id, item.id)}
+                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                {editingReply === reply.id ? (
+                                  <div className="mt-xs flex flex-col gap-xs">
+                                    <textarea
+                                      value={editReplyText}
+                                      onChange={e => setEditReplyText(e.target.value)}
+                                      rows={2}
+                                      className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                                    />
+                                    <div className="flex gap-xs justify-end">
+                                      <button
+                                        onClick={() => updateReply(reply.id, item.id)}
+                                        className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                                      >
+                                        Guardar
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingReply(null)}
+                                        className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {replyingTo === item.id ? (
+                        <div className="mt-md flex flex-col gap-sm">
+                          <textarea
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                            placeholder="Escribe una respuesta..."
+                            rows={3}
+                            autoFocus
+                            className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                          />
+                          <div className="flex gap-sm justify-end">
+                            <button
+                              onClick={() => addReply(item.id)}
+                              disabled={!replyText.trim()}
+                              className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                            >
+                              Enviar
+                            </button>
+                            <button
+                              onClick={() => { setReplyingTo(null); setReplyText('') }}
+                              className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setReplyingTo(item.id)}
+                          className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                          Responder
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -946,6 +1172,102 @@ export function StatisticsPage() {
                           <span>{voteCounts[item.id]?.dislikes || 0}</span>
                         </button>
                       </div>
+
+                      {(repliesMap[item.id]?.length || 0) > 0 && (
+                        <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
+                          {repliesMap[item.id]?.map(reply => (
+                            <div key={reply.id} className="flex gap-sm items-start">
+                              <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-xs">
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                                  <span className="font-body-xs text-body-xs text-on-surface-variant">
+                                    {new Date(reply.created_at).toLocaleDateString('es-ES')}
+                                  </span>
+                                  {canEdit(reply.user_id) && (
+                                    <>
+                                      <button
+                                        onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">edit</span>
+                                      </button>
+                                      <button
+                                        onClick={() => deleteReply(reply.id, item.id)}
+                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                {editingReply === reply.id ? (
+                                  <div className="mt-xs flex flex-col gap-xs">
+                                    <textarea
+                                      value={editReplyText}
+                                      onChange={e => setEditReplyText(e.target.value)}
+                                      rows={2}
+                                      className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                                    />
+                                    <div className="flex gap-xs justify-end">
+                                      <button
+                                        onClick={() => updateReply(reply.id, item.id)}
+                                        className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                                      >
+                                        Guardar
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingReply(null)}
+                                        className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {replyingTo === item.id ? (
+                        <div className="mt-md flex flex-col gap-sm">
+                          <textarea
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                            placeholder="Escribe una respuesta..."
+                            rows={3}
+                            autoFocus
+                            className="w-full bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                          />
+                          <div className="flex gap-sm justify-end">
+                            <button
+                              onClick={() => addReply(item.id)}
+                              disabled={!replyText.trim()}
+                              className="px-md py-xs rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                            >
+                              Enviar
+                            </button>
+                            <button
+                              onClick={() => { setReplyingTo(null); setReplyText('') }}
+                              className="px-md py-xs rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setReplyingTo(item.id)}
+                          className="mt-md flex items-center gap-xs text-on-surface-variant hover:text-primary font-label-sm text-label-sm transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+                          Responder
+                        </button>
+                      )}
                     </div>
                   ))
                 )}
@@ -953,6 +1275,14 @@ export function StatisticsPage() {
             )}
           </div>
         </>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-lg left-1/2 -translate-x-1/2 px-lg py-sm rounded-full font-label-md text-label-md shadow-lg z-50 transition-all ${
+          toast.type === 'success' ? 'bg-success-container text-on-success-container' : 'bg-error-container text-on-error-container'
+        }`}>
+          {toast.message}
+        </div>
       )}
     </div>
   )
