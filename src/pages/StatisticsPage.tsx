@@ -397,10 +397,13 @@ export function StatisticsPage() {
       .update({ comment: editingCommentText })
       .eq('id', ratingId)
 
-    if (!error) {
+    if (error) {
+      showToast('No se pudo guardar el comentario', 'error')
+    } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: editingCommentText } : r))
       setEditingCommentId(null)
       setEditingCommentText('')
+      showToast('Comentario guardado')
     }
   }
 
@@ -411,8 +414,11 @@ export function StatisticsPage() {
       .update({ comment: '' })
       .eq('id', ratingId)
 
-    if (!error) {
+    if (error) {
+      showToast('No se pudo eliminar el comentario', 'error')
+    } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: '' } : r))
+      showToast('Comentario eliminado')
     }
   }
 
@@ -422,10 +428,13 @@ export function StatisticsPage() {
       .update({ suggestion: editingSuggestionText })
       .eq('id', ratingId)
 
-    if (!error) {
+    if (error) {
+      showToast('No se pudo guardar la sugerencia', 'error')
+    } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: editingSuggestionText } : r))
       setEditingSuggestionId(null)
       setEditingSuggestionText('')
+      showToast('Sugerencia guardada')
     }
   }
 
@@ -436,8 +445,11 @@ export function StatisticsPage() {
       .update({ suggestion: '' })
       .eq('id', ratingId)
 
-    if (!error) {
+    if (error) {
+      showToast('No se pudo eliminar la sugerencia', 'error')
+    } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: '' } : r))
+      showToast('Sugerencia eliminada')
     }
   }
 
