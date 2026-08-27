@@ -455,7 +455,7 @@ export function CoursesPage() {
                 onClick={createCourse}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
-                <span className="material-symbols-outlined text-lg">add</span>
+                <span className="material-symbols-outlined text-lg">menu_book</span>
                 Crear
               </button>
             </div>

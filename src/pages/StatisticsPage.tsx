@@ -530,14 +530,14 @@ export function StatisticsPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-20 md:pb-0 overflow-hidden">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Visualiza gráficos de calificaciones, comenta y responde a los comentarios de los estudiantes.</p>
       </header>
 
       {/* Filters */}
-      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+      <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
         <div className="flex flex-col md:flex-row gap-lg items-end">
           <div className="w-full md:w-auto">
             <label htmlFor="date-start" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Inicio</label>
@@ -626,7 +626,7 @@ export function StatisticsPage() {
                 search
               </span>
               {courseDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg overflow-visible">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   <button
                     onClick={() => { setSelectedCourse('all'); setCourseSearch(''); setCourseDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
@@ -790,9 +790,9 @@ export function StatisticsPage() {
 
           {/* Session Breakdown */}
           {sessionStats.length > 0 && (
-            <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Curso</h3>
-              <div className="space-y-sm md:space-y-0">
+              <div className="space-y-sm md:space-y-0 overflow-x-auto">
                 {/* Desktop table */}
                 <table className="w-full hidden md:table">
                   <thead>
