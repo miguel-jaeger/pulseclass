@@ -347,7 +347,7 @@ export function HelpPage() {
           <div className="h-8 w-48 bg-surface-container animate-pulse rounded mb-sm" />
           <div className="h-4 w-96 bg-surface-container animate-pulse rounded" />
         </header>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
               <div className="aspect-video bg-surface-container animate-pulse" />
@@ -389,7 +389,7 @@ export function HelpPage() {
           <p className="font-body-md text-body-md text-on-surface-variant">No se encontraron videos para "{searchQuery}".</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">
           {filteredVideos.map(video => {
             const vl = videoLikes[video.id] || { likes: 0, dislikes: 0, userVote: null }
             const isExpanded = expandedVideo === video.id

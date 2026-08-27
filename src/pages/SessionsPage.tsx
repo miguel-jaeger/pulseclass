@@ -414,7 +414,7 @@ export function SessionsPage() {
                 onClick={() => setShowCreateModal(true)}
                 className="bg-primary text-on-primary font-bold py-1 px-md md:px-lg rounded-full font-label-sm md:font-label-md text-label-sm md:text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
-                <span className="material-symbols-outlined text-base md:text-lg">add</span>
+                <span className="material-symbols-outlined text-base md:text-lg">event</span>
                 Crear
               </button>
             </div>
@@ -466,7 +466,7 @@ export function SessionsPage() {
                 onClick={createSession}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
               >
-                <span className="material-symbols-outlined text-lg">add</span>
+                <span className="material-symbols-outlined text-lg">event</span>
                 Crear
               </button>
             </div>
