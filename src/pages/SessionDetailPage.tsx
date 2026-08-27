@@ -276,6 +276,21 @@ export function SessionDetailPage() {
     }
   }
 
+  const deleteRating = async (ratingId: string) => {
+    if (!confirm('¿Eliminar esta evaluación completa? Esta acción no se puede deshacer.')) return
+    const { error } = await insforge.database
+      .from('ratings')
+      .delete()
+      .eq('id', ratingId)
+
+    if (error) {
+      showToast('No se pudo eliminar la evaluación', 'error')
+    } else {
+      setRatings(prev => prev.filter(r => r.id !== ratingId))
+      showToast('Evaluación eliminada')
+    }
+  }
+
   const updateReply = async (replyId: string, ratingId: string) => {
     const { error } = await insforge.database
       .from('comment_replies')
@@ -421,6 +436,15 @@ export function SessionDetailPage() {
                             <span className="material-symbols-outlined text-lg">delete</span>
                           </button>
                         </>
+                      )}
+                      {profile?.role === 'admin' && (
+                        <button
+                          onClick={() => deleteRating(rating.id)}
+                          title="Eliminar evaluación completa"
+                          className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg">remove_circle</span>
+                        </button>
                       )}
                       <button
                         onClick={() => toggleStar(rating.id, rating.has_starred || false)}
@@ -600,6 +624,15 @@ export function SessionDetailPage() {
                             <span className="material-symbols-outlined text-lg">delete</span>
                           </button>
                         </>
+                      )}
+                      {profile?.role === 'admin' && (
+                        <button
+                          onClick={() => deleteRating(rating.id)}
+                          title="Eliminar evaluación completa"
+                          className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg">remove_circle</span>
+                        </button>
                       )}
                       <button
                         onClick={() => toggleStar(rating.id, rating.has_starred || false)}
