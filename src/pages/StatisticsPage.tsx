@@ -530,7 +530,7 @@ export function StatisticsPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-20 md:pb-0 w-full max-w-full overflow-x-hidden">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Visualiza gráficos de calificaciones, comenta y responde a los comentarios de los estudiantes.</p>
@@ -562,7 +562,7 @@ export function StatisticsPage() {
             />
           </div>
           {profile?.role === 'admin' && teachers.length > 0 && (
-          <div className="w-full md:w-auto md:min-w-[200px]" ref={teacherRef}>
+          <div className="w-full md:w-auto" ref={teacherRef}>
             <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
             <div className="relative">
               <input
@@ -611,7 +611,7 @@ export function StatisticsPage() {
           </div>
           )}
           {courses.length > 1 && (
-          <div className="w-full md:w-auto md:min-w-[200px]" ref={courseRef}>
+          <div className="w-full md:w-auto" ref={courseRef}>
             <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
               <input
