@@ -81,6 +81,8 @@ export function StatisticsPage() {
   const [teacherSearch, setTeacherSearch] = useState('')
   const [teacherDropdownOpen, setTeacherDropdownOpen] = useState(false)
   const teacherRef = useRef<HTMLDivElement>(null)
+  const [courseDropdownOpen, setCourseDropdownOpen] = useState(false)
+  const courseRef = useRef<HTMLDivElement>(null)
 
   const [activeTab, setActiveTab] = useState<'overview' | 'comments' | 'suggestions'>('overview')
 
@@ -101,6 +103,9 @@ export function StatisticsPage() {
     function handleClickOutside(e: MouseEvent) {
       if (teacherRef.current && !teacherRef.current.contains(e.target as Node)) {
         setTeacherDropdownOpen(false)
+      }
+      if (courseRef.current && !courseRef.current.contains(e.target as Node)) {
+        setCourseDropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -431,7 +436,7 @@ export function StatisticsPage() {
                 <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   <button
                     onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
-                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${
+                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
                       selectedTeacher === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
@@ -443,7 +448,7 @@ export function StatisticsPage() {
                       <button
                         key={t.user_id}
                         onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(t.name); setTeacherDropdownOpen(false); setSelectedCourse('all') }}
-                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${
+                        className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
                           selectedTeacher === t.user_id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                         }`}
                       >
@@ -452,7 +457,7 @@ export function StatisticsPage() {
                     ))
                   }
                   {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
-                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron docentes</div>
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant whitespace-nowrap">No se encontraron docentes</div>
                   )}
                 </div>
               )}
@@ -460,24 +465,41 @@ export function StatisticsPage() {
           </div>
           )}
           {courses.length > 1 && (
-          <div>
-            <label htmlFor="course-filter" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
+          <div className="relative" ref={courseRef}>
+            <label className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Curso</label>
             <div className="relative">
-              <select
-                id="course-filter"
-                name="courseFilter"
-                value={selectedCourse}
-                onChange={e => setSelectedCourse(e.target.value)}
-                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
+              <button
+                onClick={() => setCourseDropdownOpen(!courseDropdownOpen)}
+                className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary text-left appearance-none pr-10"
               >
-                <option value="all">Todos los cursos</option>
-                {courses.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                {selectedCourse === 'all' ? 'Todos los cursos' : courses.find(c => c.id === selectedCourse)?.name || 'Todos los cursos'}
+              </button>
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
                 filter_list
               </span>
+              {courseDropdownOpen && (
+                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                  <button
+                    onClick={() => { setSelectedCourse('all'); setCourseDropdownOpen(false) }}
+                    className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                      selectedCourse === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
+                    }`}
+                  >
+                    Todos los cursos
+                  </button>
+                  {courses.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => { setSelectedCourse(c.id); setCourseDropdownOpen(false) }}
+                      className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors whitespace-nowrap ${
+                        selectedCourse === c.id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
+                      }`}
+                    >
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           )}
