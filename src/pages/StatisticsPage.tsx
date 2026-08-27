@@ -390,7 +390,7 @@ export function StatisticsPage() {
     <div className="pb-20 md:pb-0">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Análisis de satisfacción por rango de fechas</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Visualiza gráficos de calificaciones, comenta y responde a los comentarios de los estudiantes.</p>
       </header>
 
       {/* Filters */}
