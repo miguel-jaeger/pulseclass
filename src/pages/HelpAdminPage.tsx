@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface HelpVideo {
   id: string
@@ -116,6 +117,9 @@ export function HelpAdminPage() {
     (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
+  const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredVideos.length, 10)
+  const paginatedVideos = paginatedSlice(filteredVideos)
+
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar este video de ayuda?')) return
     const { error } = await insforge.database
@@ -204,9 +208,9 @@ export function HelpAdminPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
-      <header className="mb-xl flex justify-between items-end">
-        <div>
+    <div className="pb-20 md:pb-0 overflow-hidden">
+      <header className="mb-xl flex flex-col sm:flex-row sm:items-end sm:justify-between gap-md">
+        <div className="min-w-0">
           <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">
             <span className="material-symbols-outlined text-lg">arrow_back</span>
             Volver al admin
@@ -216,7 +220,7 @@ export function HelpAdminPage() {
         </div>
         <button
           onClick={openCreate}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0"
         >
           <span className="material-symbols-outlined text-lg">video_library</span>
           Crear
@@ -224,7 +228,7 @@ export function HelpAdminPage() {
       </header>
 
       {showForm && (
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
           <h2 className="font-headline-sm text-headline-sm text-on-surface mb-lg">
             {editingId ? 'Editar video' : 'Nuevo video'}
           </h2>
@@ -298,7 +302,7 @@ export function HelpAdminPage() {
       )}
 
       {videos.length > 0 && (
-        <div className="relative mb-lg">
+        <div className="relative mb-lg overflow-hidden">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
           <input
             type="text"
@@ -311,7 +315,7 @@ export function HelpAdminPage() {
       )}
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
-        Mostrando <span className="font-bold text-on-surface">{filteredVideos.length}</span> de <span className="font-bold text-on-surface">{videos.length}</span> videos
+        Mostrando <span className="font-bold text-on-surface">{paginatedVideos.length}</span> de <span className="font-bold text-on-surface">{filteredVideos.length}</span> videos
       </p>
 
       {videos.length === 0 ? (
@@ -336,7 +340,7 @@ export function HelpAdminPage() {
             </div>
           )}
           {/* Desktop table */}
-          <div className="hidden md:block">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -356,7 +360,7 @@ export function HelpAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredVideos.map(video => (
+                {paginatedVideos.map(video => (
                   <tr key={video.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
                     <td className="px-md py-3">
                       <input
@@ -422,7 +426,7 @@ export function HelpAdminPage() {
           </div>
           {/* Mobile cards */}
           <div className="md:hidden">
-            {filteredVideos.map(video => (
+            {paginatedVideos.map(video => (
               <div key={video.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
                 <div className="flex items-start justify-between gap-sm">
                   <div className="flex items-start gap-sm min-w-0 flex-1">
@@ -478,6 +482,14 @@ export function HelpAdminPage() {
           )}
         </div>
       )}
+
+      <Pagination
+        totalItems={filteredVideos.length}
+        page={page}
+        perPage={perPage}
+        onPageChange={setPage}
+        onPerPageChange={setPerPage}
+      />
 
       {toast && (
         <div className={`fixed bottom-lg left-1/2 -translate-x-1/2 z-50 px-lg py-sm rounded-xl shadow-lg font-body-sm text-body-sm font-medium transition-opacity ${
