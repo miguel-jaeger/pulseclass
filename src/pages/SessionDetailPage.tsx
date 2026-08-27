@@ -246,17 +246,33 @@ export function SessionDetailPage() {
     }
   }
 
-  const deleteRating = async (ratingId: string) => {
+  const deleteComment = async (ratingId: string) => {
+    if (!confirm('¿Eliminar este comentario?')) return
     const { error } = await insforge.database
       .from('ratings')
-      .delete()
+      .update({ comment: '' })
       .eq('id', ratingId)
 
     if (error) {
       showToast('No se pudo eliminar el comentario', 'error')
     } else {
-      setRatings(prev => prev.filter(r => r.id !== ratingId))
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: '' } : r))
       showToast('Comentario eliminado')
+    }
+  }
+
+  const deleteSuggestion = async (ratingId: string) => {
+    if (!confirm('¿Eliminar esta sugerencia?')) return
+    const { error } = await insforge.database
+      .from('ratings')
+      .update({ suggestion: '' })
+      .eq('id', ratingId)
+
+    if (error) {
+      showToast('No se pudo eliminar la sugerencia', 'error')
+    } else {
+      setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: '' } : r))
+      showToast('Sugerencia eliminada')
     }
   }
 
@@ -399,7 +415,7 @@ export function SessionDetailPage() {
                             <span className="material-symbols-outlined text-lg">edit</span>
                           </button>
                           <button
-                            onClick={() => deleteRating(rating.id)}
+                            onClick={() => deleteComment(rating.id)}
                             className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
                           >
                             <span className="material-symbols-outlined text-lg">delete</span>
@@ -578,7 +594,7 @@ export function SessionDetailPage() {
                             <span className="material-symbols-outlined text-lg">edit</span>
                           </button>
                           <button
-                            onClick={() => deleteRating(rating.id)}
+                            onClick={() => deleteSuggestion(rating.id)}
                             className="p-xs rounded-full text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
                           >
                             <span className="material-symbols-outlined text-lg">delete</span>
