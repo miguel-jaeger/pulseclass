@@ -113,12 +113,12 @@ function AppRoutes() {
           <SuggestionsPage />
         </ProtectedRoute>
       } />
-      <Route path="/help" element={
+      <Route path="/videos" element={
         <ProtectedRoute>
           <HelpPage />
         </ProtectedRoute>
       } />
-      <Route path="/admin/help" element={
+      <Route path="/admin/videos" element={
         <ProtectedRoute>
           <HelpAdminPage />
         </ProtectedRoute>

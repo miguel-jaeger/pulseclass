@@ -149,8 +149,8 @@ export function HelpAdminPage() {
             <span className="material-symbols-outlined text-lg">arrow_back</span>
             Volver al admin
           </Link>
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Videos de Ayuda</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona los videos tutoriales disponibles para los usuarios.</p>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Videos</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los videos tutoriales disponibles para los usuarios.</p>
         </div>
         <button
           onClick={openCreate}

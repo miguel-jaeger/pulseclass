@@ -25,6 +25,7 @@ export function HelpPage() {
   const { user, profile } = useAuth()
   const [videos, setVideos] = useState<HelpVideo[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedVideo, setExpandedVideo] = useState<string | null>(null)
   const [commentsMap, setCommentsMap] = useState<Record<string, HelpComment[]>>({})
   const [newComment, setNewComment] = useState<Record<string, string>>({})
   const [editingComment, setEditingComment] = useState<string | null>(null)
@@ -169,18 +170,22 @@ export function HelpPage() {
 
   if (loading) {
     return (
-      <div className="space-y-lg">
+      <div className="pb-20 md:pb-0">
         <header className="mb-xl">
           <div className="h-8 w-48 bg-surface-container animate-pulse rounded mb-sm" />
           <div className="h-4 w-96 bg-surface-container animate-pulse rounded" />
         </header>
-        {[1, 2].map(i => (
-          <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
-            <div className="h-6 w-64 bg-surface-container animate-pulse rounded mb-md" />
-            <div className="h-4 w-full bg-surface-container animate-pulse rounded mb-sm" />
-            <div className="aspect-video bg-surface-container animate-pulse rounded-xl" />
-          </div>
-        ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
+              <div className="aspect-video bg-surface-container animate-pulse" />
+              <div className="p-md">
+                <div className="h-5 w-3/4 bg-surface-container animate-pulse rounded mb-sm" />
+                <div className="h-3 w-1/2 bg-surface-container animate-pulse rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -188,120 +193,164 @@ export function HelpPage() {
   return (
     <div className="pb-20 md:pb-0">
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Ayuda</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Videos</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
       </header>
 
       {videos.length === 0 ? (
         <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
-          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">play_circle</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No hay videos de ayuda disponibles.</p>
+          <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">video_library</span>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay videos disponibles.</p>
         </div>
       ) : (
-        <div className="space-y-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
           {videos.map(video => (
-            <article key={video.id} className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-              <div className="p-lg">
-                <h2 className="font-headline-sm text-headline-sm text-on-surface mb-sm">{video.title}</h2>
-                {video.description && (
-                  <p className="font-body-md text-body-md text-on-surface-variant mb-md">{video.description}</p>
-                )}
-              </div>
-              <div className="aspect-video w-full">
-                <iframe
-                  src={`https://www.youtube.com/embed/${video.youtube_code}`}
-                  title={video.title}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-
-              {/* Comentarios */}
-              <div className="p-lg border-t border-outline-variant">
-                <h3 className="font-body-sm text-body-sm text-on-surface-variant mb-md flex items-center gap-xs">
-                  <span className="material-symbols-outlined text-lg">comment</span>
-                  Comentarios ({commentsMap[video.id]?.length || 0})
-                </h3>
-
-                {(commentsMap[video.id]?.length || 0) > 0 && (
-                  <div className="space-y-md mb-md">
-                    {commentsMap[video.id]?.map(comment => (
-                      <div key={comment.id} className="flex gap-sm items-start">
-                        <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">person</span>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-xs">
-                            <span className="font-label-sm text-label-sm text-on-surface font-semibold">{comment.user_name}</span>
-                            <span className="font-body-xs text-body-xs text-on-surface-variant">
-                              {new Date(comment.created_at).toLocaleDateString('es-ES')}
-                            </span>
-                            {canEditComment(comment) && (
-                              <>
-                                <button
-                                  onClick={() => { setEditingComment(comment.id); setEditCommentText(comment.content) }}
-                                  className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                                >
-                                  <span className="material-symbols-outlined text-sm">edit</span>
-                                </button>
-                                <button
-                                  onClick={() => deleteComment(comment.id, video.id)}
-                                  className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                                >
-                                  <span className="material-symbols-outlined text-sm">delete</span>
-                                </button>
-                              </>
-                            )}
-                          </div>
-                          {editingComment === comment.id ? (
-                            <div className="mt-xs flex flex-col gap-xs">
-                              <textarea
-                                value={editCommentText}
-                                onChange={e => setEditCommentText(e.target.value)}
-                                rows={2}
-                                className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
-                              />
-                              <div className="flex gap-xs justify-end">
-                                <button
-                                  onClick={() => updateComment(comment.id, video.id)}
-                                  className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
-                                >
-                                  Guardar
-                                </button>
-                                <button
-                                  onClick={() => setEditingComment(null)}
-                                  className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="font-body-sm text-body-sm text-on-surface">{comment.content}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+            <article
+              key={video.id}
+              className={`bg-surface border border-outline-variant rounded-xl overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${
+                expandedVideo === video.id ? 'sm:col-span-2 lg:col-span-4' : ''
+              }`}
+              onClick={() => setExpandedVideo(expandedVideo === video.id ? null : video.id)}
+            >
+              {expandedVideo === video.id ? (
+                <div className="p-lg">
+                  <div className="flex items-start justify-between mb-md">
+                    <div>
+                      <h2 className="font-headline-sm text-headline-sm text-on-surface mb-sm">{video.title}</h2>
+                      {video.description && (
+                        <p className="font-body-md text-body-md text-on-surface-variant">{video.description}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpandedVideo(null) }}
+                      className="p-xs rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors shrink-0 ml-md"
+                    >
+                      <span className="material-symbols-outlined text-lg">close</span>
+                    </button>
                   </div>
-                )}
+                  <div className="aspect-video w-full rounded-xl overflow-hidden mb-lg">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${video.youtube_code}`}
+                      title={video.title}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
 
-                <div className="flex gap-sm">
-                  <input
-                    type="text"
-                    value={newComment[video.id] || ''}
-                    onChange={e => setNewComment(prev => ({ ...prev, [video.id]: e.target.value }))}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addComment(video.id) } }}
-                    placeholder="Escribe un comentario..."
-                    className="flex-1 bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    onClick={() => addComment(video.id)}
-                    disabled={!newComment[video.id]?.trim()}
-                    className="px-md py-sm rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
-                  >
-                    Enviar
-                  </button>
+                  {/* Comentarios */}
+                  <div className="border-t border-outline-variant pt-md">
+                    <h3 className="font-body-sm text-body-sm text-on-surface-variant mb-md flex items-center gap-xs">
+                      <span className="material-symbols-outlined text-lg">comment</span>
+                      Comentarios ({commentsMap[video.id]?.length || 0})
+                    </h3>
+
+                    {(commentsMap[video.id]?.length || 0) > 0 && (
+                      <div className="space-y-md mb-md max-h-60 overflow-y-auto">
+                        {commentsMap[video.id]?.map(comment => (
+                          <div key={comment.id} className="flex gap-sm items-start">
+                            <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">person</span>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-xs">
+                                <span className="font-label-sm text-label-sm text-on-surface font-semibold">{comment.user_name}</span>
+                                <span className="font-body-xs text-body-xs text-on-surface-variant">
+                                  {new Date(comment.created_at).toLocaleDateString('es-ES')}
+                                </span>
+                                {canEditComment(comment) && (
+                                  <>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditingComment(comment.id); setEditCommentText(comment.content) }}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); deleteComment(comment.id, video.id) }}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              {editingComment === comment.id ? (
+                                <div className="mt-xs flex flex-col gap-xs">
+                                  <textarea
+                                    value={editCommentText}
+                                    onChange={e => setEditCommentText(e.target.value)}
+                                    rows={2}
+                                    onClick={e => e.stopPropagation()}
+                                    className="w-full bg-surface-container-low rounded-xl px-md py-xs font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary resize-none"
+                                  />
+                                  <div className="flex gap-xs justify-end">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); updateComment(comment.id, video.id) }}
+                                      className="px-sm py-[2px] rounded-full bg-primary text-on-primary font-label-xs text-label-xs"
+                                    >
+                                      Guardar
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setEditingComment(null) }}
+                                      className="px-sm py-[2px] rounded-full bg-surface-container text-on-surface-variant font-label-xs text-label-xs"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="font-body-sm text-body-sm text-on-surface">{comment.content}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-sm" onClick={e => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={newComment[video.id] || ''}
+                        onChange={e => setNewComment(prev => ({ ...prev, [video.id]: e.target.value }))}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addComment(video.id) } }}
+                        placeholder="Escribe un comentario..."
+                        className="flex-1 bg-surface-container-low rounded-xl px-md py-sm font-body-sm text-body-sm text-on-surface outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button
+                        onClick={() => addComment(video.id)}
+                        disabled={!newComment[video.id]?.trim()}
+                        className="px-md py-sm rounded-full bg-primary text-on-primary font-label-sm text-label-sm disabled:opacity-50"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="aspect-video w-full bg-surface-container relative">
+                    <img
+                      src={`https://img.youtube.com/vi/${video.youtube_code}/mqdefault.jpg`}
+                      alt={video.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white text-2xl">play_arrow</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-md">
+                    <h3 className="font-body-md text-body-md text-on-surface font-medium truncate">{video.title}</h3>
+                    {(commentsMap[video.id]?.length || 0) > 0 && (
+                      <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs flex items-center gap-xs">
+                        <span className="material-symbols-outlined text-xs">comment</span>
+                        {commentsMap[video.id]?.length} comentario{(commentsMap[video.id]?.length || 0) !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
             </article>
           ))}
         </div>

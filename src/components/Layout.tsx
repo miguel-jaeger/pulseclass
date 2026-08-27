@@ -8,8 +8,13 @@ const navItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/help', icon: 'help_circle', label: 'Ayuda' },
+  { to: '/videos', icon: 'video_library', label: 'Videos' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
+]
+
+const adminSubItems = [
+  { to: '/admin', icon: 'people', label: 'Usuarios' },
+  { to: '/admin/videos', icon: 'video_library', label: 'Videos' },
 ]
 
 const bottomNavItems = [
@@ -17,7 +22,7 @@ const bottomNavItems = [
   { to: '/courses', icon: 'menu_book', label: 'Cursos' },
   { to: '/statistics', icon: 'bar_chart', label: 'Estadísticas' },
   { to: '/suggestions', icon: 'feedback', label: 'Sugerencias' },
-  { to: '/help', icon: 'help_circle', label: 'Ayuda' },
+  { to: '/videos', icon: 'video_library', label: 'Videos' },
   { to: '/admin', icon: 'manage_accounts', label: 'Administrar', adminOnly: true },
 ]
 
@@ -51,18 +56,37 @@ export function Layout({ children }: { children: ReactNode }) {
 
         <div className="flex-1 space-y-xs">
           {filteredNavItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
-                isActive(item.to)
-                  ? 'bg-primary-container text-on-primary-container font-bold'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
-              }`}
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.to}>
+              <Link
+                to={item.to}
+                className={`flex items-center gap-md px-4 py-2 rounded-full font-label-md text-label-md transition-all ${
+                  (item.to === '/admin' ? location.pathname.startsWith('/admin') : isActive(item.to))
+                    ? 'bg-primary-container text-on-primary-container font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                }`}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+              {item.to === '/admin' && location.pathname.startsWith('/admin') && (
+                <div className="ml-6 mt-xs space-y-xs">
+                  {adminSubItems.map(sub => (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      className={`flex items-center gap-md px-4 py-1.5 rounded-full font-body-sm text-body-sm transition-all ${
+                        (sub.to === '/admin' ? location.pathname === '/admin' : isActive(sub.to))
+                          ? 'bg-secondary-container text-on-surface font-medium'
+                          : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-lg">{sub.icon}</span>
+                      <span>{sub.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
