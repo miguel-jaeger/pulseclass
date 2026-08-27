@@ -266,8 +266,8 @@ export function HelpAdminPage() {
       ) : (
         <div className="space-y-md">
           {filteredVideos.map(video => (
-            <div key={video.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
-              <div className="flex items-start gap-md">
+            <div key={video.id} className="bg-surface border border-outline-variant rounded-xl p-lg overflow-hidden">
+              <div className="flex items-start gap-md min-w-0">
                 <div className="w-40 aspect-video rounded-lg overflow-hidden bg-surface-container shrink-0 hidden sm:block">
                   <img
                     src={`https://img.youtube.com/vi/${video.youtube_code}/mqdefault.jpg`}
@@ -275,12 +275,12 @@ export function HelpAdminPage() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 overflow-hidden">
                   <h3 className="font-body-md text-body-md text-on-surface font-medium truncate">{video.title}</h3>
                   {video.description && (
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs line-clamp-2">{video.description}</p>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs break-words overflow-hidden line-clamp-2">{video.description}</p>
                   )}
-                  <p className="font-body-xs text-body-xs text-on-surface-variant mt-sm">
+                  <p className="font-body-xs text-body-xs text-on-surface-variant mt-sm truncate">
                     <span className="material-symbols-outlined text-xs align-middle mr-xs">calendar_today</span>
                     {new Date(video.created_at).toLocaleDateString('es-ES')}
                   </p>
