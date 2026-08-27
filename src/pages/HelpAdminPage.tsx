@@ -352,7 +352,7 @@ export function HelpAdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-20">Vista previa</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-16">Vista previa</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Título</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Descripción</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Fecha</th>
@@ -380,7 +380,7 @@ export function HelpAdminPage() {
                       </div>
                     </td>
                     <td className="px-md py-3">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[150px]">{video.title}</div>
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[150px] cursor-default" title={video.title}>{video.title}</div>
                     </td>
                     <td className="px-md py-3">
                       {video.description ? (
