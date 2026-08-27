@@ -476,7 +476,7 @@ export function StatisticsPage() {
                 value={courseSearch}
                 onChange={e => { setCourseSearch(e.target.value); setCourseDropdownOpen(true) }}
                 onFocus={() => setCourseDropdownOpen(true)}
-                placeholder={selectedCourse === 'all' ? 'Buscar curso...' : courses.find(c => c.id === selectedCourse)?.name || 'Buscar curso...'}
+                placeholder={selectedCourse === 'all' ? 'Buscar...' : courses.find(c => c.id === selectedCourse)?.name || 'Buscar...'}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10 truncate"
               />
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
