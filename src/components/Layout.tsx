@@ -32,10 +32,15 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation()
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
   const [mobileAdminOpen, setMobileAdminOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true')
 
   useEffect(() => {
     setMobileAdminOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', String(collapsed))
+  }, [collapsed])
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
@@ -48,22 +53,65 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-full">
       {/* SideNavBar (Desktop) */}
-      <nav className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 p-md bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40">
-        <div className="mb-lg">
-          <Link to="/" className="flex items-center gap-sm mb-xs group">
-            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center group-hover:scale-105 transition-transform">
+      <nav className={`hidden md:flex flex-col h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40 ${collapsed ? 'w-16 p-2' : 'w-64 p-md'}`}>
+        {/* Logo + Toggle */}
+        <div className={`mb-lg ${collapsed ? 'flex justify-center' : ''}`}>
+          <Link to="/" className={`group ${collapsed ? 'flex items-center justify-center' : 'flex items-center gap-sm mb-xs'}`}>
+            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <span className="material-symbols-outlined text-on-primary-container text-xl">school</span>
             </div>
-            <div>
-              <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
-              <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfacción Estudiantil</div>
-            </div>
+            {!collapsed && (
+              <div>
+                <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
+                <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfacción Estudiantil</div>
+              </div>
+            )}
           </Link>
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="mt-2 flex items-center gap-sm px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full font-label-sm text-label-sm transition-all w-full"
+              title="Colapsar menú"
+            >
+              <span className="material-symbols-outlined text-lg">menu_open</span>
+              <span>Colapsar</span>
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 space-y-xs">
+        {/* Expand button when collapsed */}
+        {collapsed && (
+          <button
+            onClick={() => setCollapsed(false)}
+            className="mb-sm flex items-center justify-center w-10 h-10 mx-auto text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
+            title="Expandir menú"
+          >
+            <span className="material-symbols-outlined text-lg">menu</span>
+          </button>
+        )}
+
+        {/* Navigation */}
+        <div className={`flex-1 space-y-xs ${collapsed ? 'flex flex-col items-center' : ''}`}>
           {filteredNavItems.map((item) => {
             const isLast = item.to === '/admin'
+
+            if (collapsed) {
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  title={item.label}
+                  className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
+                    isActive(item.to)
+                      ? 'bg-primary-container text-on-primary-container font-bold'
+                      : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                  }`}
+                >
+                  <span className="material-symbols-outlined">{item.icon}</span>
+                </Link>
+              )
+            }
+
             if (isLast) {
               return (
                 <div key={item.to}>
@@ -117,21 +165,28 @@ export function Layout({ children }: { children: ReactNode }) {
           })}
         </div>
 
-        <div className="mt-auto space-y-sm">
-          <div className="border-t border-outline-variant pt-sm space-y-sm">
+        {/* Bottom section: profile + logout */}
+        <div className={`mt-auto space-y-sm ${collapsed ? 'flex flex-col items-center' : ''}`}>
+          <div className={`border-t border-outline-variant pt-sm space-y-sm ${collapsed ? 'flex flex-col items-center border-t w-full' : ''}`}>
             <Link
               to="/profile"
-              className="flex items-center gap-md px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
+              title={profile?.name || 'Usuario'}
+              className={`flex items-center text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all ${
+                collapsed ? 'justify-center w-10 h-10' : 'gap-md px-4 py-2'
+              }`}
             >
               <Avatar url={profile?.avatar_url} name={profile?.name} size="sm" />
-              <span className="truncate">{profile?.name || 'Usuario'}</span>
+              {!collapsed && <span className="truncate">{profile?.name || 'Usuario'}</span>}
             </Link>
             <button
               onClick={signOut}
-              className="w-full flex items-center gap-md px-4 py-2 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full font-label-md text-label-md transition-all"
+              title="Cerrar sesión"
+              className={`w-full flex items-center text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full font-label-md text-label-md transition-all ${
+                collapsed ? 'justify-center w-10 h-10' : 'gap-md px-4 py-2'
+              }`}
             >
               <span className="material-symbols-outlined">logout</span>
-              <span>Cerrar sesión</span>
+              {!collapsed && <span>Cerrar sesión</span>}
             </button>
           </div>
         </div>
@@ -151,7 +206,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 ml-0 md:ml-64 pt-16 md:pt-xl pb-16 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen">
+      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-16 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
         {children}
       </main>
 
