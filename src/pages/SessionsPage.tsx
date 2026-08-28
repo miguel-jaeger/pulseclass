@@ -418,7 +418,7 @@ export function SessionsPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-28 md:pb-0">
       <div className="mb-lg">
         <Link to="/courses" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-md">
           <span className="material-symbols-outlined text-lg">arrow_back</span>

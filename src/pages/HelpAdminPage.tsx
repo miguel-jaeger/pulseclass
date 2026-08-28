@@ -208,7 +208,7 @@ export function HelpAdminPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-28 md:pb-0">
       <header className="mb-xl flex flex-col sm:flex-row sm:items-end sm:justify-between gap-md">
         <div className="min-w-0">
           <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">

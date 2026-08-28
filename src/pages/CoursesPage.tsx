@@ -190,7 +190,7 @@ export function CoursesPage() {
 
   if (loading) {
     return (
-      <div className="pb-20 md:pb-0">
+      <div className="pb-28 md:pb-0">
         <div className="mb-xl flex justify-between items-end">
           <div>
             <div className="h-8 w-32 bg-surface-container animate-pulse rounded mb-sm" />
@@ -238,7 +238,7 @@ export function CoursesPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-28 md:pb-0">
       <header className="mb-xl flex justify-between items-end">
         <div>
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Cursos</h1>

@@ -14,7 +14,7 @@ export function Pagination({ totalItems, page, perPage, onPageChange, onPerPageC
   const totalPages = perPage === 0 ? 1 : Math.ceil(totalItems / perPage)
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-md mt-lg pt-lg pb-20 md:pb-xl border-t border-outline-variant">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-md mt-lg pt-lg pb-28 md:pb-xl border-t border-outline-variant">
       <div className="flex items-center gap-sm">
         <span className="font-body-sm text-body-sm text-on-surface-variant">Mostrar</span>
         <select

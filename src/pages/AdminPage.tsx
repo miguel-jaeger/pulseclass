@@ -195,7 +195,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-28 md:pb-0">
       <header className="mb-xl flex justify-between items-end">
         <div>
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>

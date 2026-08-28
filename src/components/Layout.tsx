@@ -242,7 +242,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-24 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-32 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
         {children}
       </main>
 

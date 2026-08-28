@@ -368,7 +368,7 @@ export function HelpPage() {
   }
 
   return (
-    <div className="pb-20 md:pb-0">
+    <div className="pb-28 md:pb-0">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Ayuda</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
