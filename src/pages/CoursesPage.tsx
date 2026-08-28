@@ -61,11 +61,11 @@ export function CoursesPage() {
       const { data: owned } = await insforge.database
         .from('courses')
         .select('*')
-        .eq('created_by', profile.user_id)
+        .eq('created_by', profile?.user_id)
       const { data: memberRows } = await insforge.database
         .from('course_members')
         .select('course_id')
-        .eq('user_id', profile.user_id)
+        .eq('user_id', profile?.user_id)
       const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
       let memberCourses: Course[] = []
       if (memberIds.length > 0) {
