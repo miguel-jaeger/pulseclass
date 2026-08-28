@@ -374,18 +374,20 @@ export function SessionDetailPage() {
         </p>
       </header>
 
-      <div className="flex gap-md mb-lg">
+      <div className="mb-lg">
         {(isSessionToday(session?.date || '') || profile?.role === 'admin') ? (
           <Link
             to={`/sessions/${sessionId}/rate`}
-            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-xs bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
           >
+            <span className="material-symbols-outlined text-lg">rate_review</span>
             {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
           </Link>
         ) : (
-          <span className="bg-surface-container text-on-surface-variant/40 font-bold py-2 px-lg rounded-full font-label-md text-label-md cursor-not-allowed">
-            Solo se puede evaluar el mismo día de la sesión
-          </span>
+          <div className="inline-flex items-center gap-sm bg-tertiary-container text-on-tertiary-container py-2 px-lg rounded-xl font-body-sm text-body-sm">
+            <span className="material-symbols-outlined text-lg">info</span>
+            <span>Solo se puede evaluar la sesión el mismo día que corresponde a su fecha.</span>
+          </div>
         )}
       </div>
 

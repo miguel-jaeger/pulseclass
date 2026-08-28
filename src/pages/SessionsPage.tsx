@@ -87,11 +87,9 @@ function SessionRow({ session, index, profile, onEdit, onDelete }: {
                 <span className="material-symbols-outlined text-xl">rate_review</span>
               </Link>
             ) : (
-              <span
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant/40 cursor-not-allowed"
-                title="Solo se puede evaluar el mismo día de la sesión"
-              >
-                <span className="material-symbols-outlined text-xl">rate_review</span>
+              <span className="inline-flex items-center gap-xs px-sm py-1 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-label-sm cursor-not-allowed" title="Solo se puede evaluar el mismo día de la sesión">
+                <span className="material-symbols-outlined text-sm">info</span>
+                Hoy no
               </span>
             )}
             {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
@@ -158,11 +156,9 @@ function SessionCard({ session, index, profile, onEdit, onDelete }: {
             <span className="material-symbols-outlined text-xl">rate_review</span>
           </Link>
         ) : (
-          <span
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant/40 cursor-not-allowed"
-            title="Solo se puede evaluar el mismo día de la sesión"
-          >
-            <span className="material-symbols-outlined text-xl">rate_review</span>
+          <span className="inline-flex items-center gap-xs px-sm py-1 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-label-sm cursor-not-allowed" title="Solo se puede evaluar el mismo día de la sesión">
+            <span className="material-symbols-outlined text-sm">info</span>
+            Hoy no
           </span>
         )}
         {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (

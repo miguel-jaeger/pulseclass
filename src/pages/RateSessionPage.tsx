@@ -186,10 +186,14 @@ export function RateSessionPage() {
         <header className="mb-lg">
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
         </header>
-        <div className="bg-error-container border border-error rounded-xl p-lg">
-          <p className="font-body-md text-body-md text-on-error-container">
-            Solo puedes evaluar la sesión el mismo día que corresponde a la fecha de la sesión ({session?.title}).
-          </p>
+        <div className="flex items-start gap-sm bg-tertiary-container text-on-tertiary-container border border-tertiary rounded-xl p-lg">
+          <span className="material-symbols-outlined text-xl mt-[2px]">info</span>
+          <div>
+            <p className="font-body-md text-body-md font-semibold mb-xs">Evaluación no disponible</p>
+            <p className="font-body-sm text-body-sm">
+              Solo puedes evaluar la sesión el mismo día que corresponde a su fecha programada ({session?.title}). Vuelve el día indicado para dejar tu evaluación.
+            </p>
+          </div>
         </div>
       </div>
     )
