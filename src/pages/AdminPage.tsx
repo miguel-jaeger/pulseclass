@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface UserProfile {
@@ -14,6 +16,8 @@ interface UserProfile {
 
 export function AdminPage() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
+  const { startImpersonation } = useImpersonation()
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -201,13 +205,38 @@ export function AdminPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
-        <button
-          onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
-        >
-          <span className="material-symbols-outlined text-lg">person_add</span>
-          Crear
-        </button>
+        <div className="flex items-center gap-sm">
+          <div className="relative group">
+            <button className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs">
+              <span className="material-symbols-outlined text-lg">visibility</span>
+              Ver como
+              <span className="material-symbols-outlined text-lg">expand_more</span>
+            </button>
+            <div className="absolute right-0 top-full mt-1 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[180px] z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
+              <button
+                onClick={() => { startImpersonation('teacher'); navigate('/') }}
+                className="flex items-center gap-3 px-4 py-3 w-full border-b border-outline-variant last:border-0 text-on-surface hover:bg-secondary-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">school</span>
+                <span className="font-body-md text-body-md">Ver como Profesor</span>
+              </button>
+              <button
+                onClick={() => { startImpersonation('student'); navigate('/') }}
+                className="flex items-center gap-3 px-4 py-3 w-full text-on-surface hover:bg-secondary-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-xl">person</span>
+                <span className="font-body-md text-body-md">Ver como Estudiante</span>
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+            className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+          >
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            Crear
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-col md:flex-row gap-md mb-lg">
@@ -388,6 +417,15 @@ export function AdminPage() {
                     </td>
                     <td className="px-md py-3">
                       <div className="flex items-center gap-sm">
+                        {user.role !== 'admin' && (
+                          <button
+                            onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                            title={`Ver como ${roleLabel(user.role)}`}
+                          >
+                            <span className="material-symbols-outlined text-xl">visibility</span>
+                          </button>
+                        )}
                         <button
                           onClick={() => openEditModal(user)}
                           className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
@@ -438,6 +476,15 @@ export function AdminPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-sm shrink-0">
+                    {user.role !== 'admin' && (
+                      <button
+                        onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                        title={`Ver como ${roleLabel(user.role)}`}
+                      >
+                        <span className="material-symbols-outlined text-xl">visibility</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => openEditModal(user)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
