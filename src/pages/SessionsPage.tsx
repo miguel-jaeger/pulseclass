@@ -40,6 +40,14 @@ function categorizeSession(session: Session, now: Date): 'current' | 'past' | 'f
   return 'future'
 }
 
+function isSessionToday(session: Session): boolean {
+  const today = new Date()
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0')
+  return session.date === todayStr
+}
+
 function SessionRow({ session, index, profile, onEdit, onDelete }: {
   session: Session
   index: number
@@ -47,6 +55,7 @@ function SessionRow({ session, index, profile, onEdit, onDelete }: {
   onEdit: (s: Session) => void
   onDelete: (id: string) => void
 }) {
+  const canRate = isSessionToday(session) || profile?.role === 'admin'
   return (
     <>
       {/* Desktop */}
@@ -69,13 +78,22 @@ function SessionRow({ session, index, profile, onEdit, onDelete }: {
             >
               <span className="material-symbols-outlined text-xl">visibility</span>
             </Link>
-            <Link
-              to={`/sessions/${session.id}/rate`}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
-              title="Evaluar"
-            >
-              <span className="material-symbols-outlined text-xl">rate_review</span>
-            </Link>
+            {canRate ? (
+              <Link
+                to={`/sessions/${session.id}/rate`}
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+                title="Evaluar"
+              >
+                <span className="material-symbols-outlined text-xl">rate_review</span>
+              </Link>
+            ) : (
+              <span
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant/40 cursor-not-allowed"
+                title="Solo se puede evaluar el mismo día de la sesión"
+              >
+                <span className="material-symbols-outlined text-xl">rate_review</span>
+              </span>
+            )}
             {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
               <>
                 <button
@@ -108,6 +126,7 @@ function SessionCard({ session, index, profile, onEdit, onDelete }: {
   onEdit: (s: Session) => void
   onDelete: (id: string) => void
 }) {
+  const canRate = isSessionToday(session) || profile?.role === 'admin'
   return (
     <div className="bg-surface border border-outline-variant rounded-xl p-md flex items-center gap-md">
       <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-md text-label-md font-bold shrink-0">
@@ -130,13 +149,22 @@ function SessionCard({ session, index, profile, onEdit, onDelete }: {
         >
           <span className="material-symbols-outlined text-xl">visibility</span>
         </Link>
-        <Link
-          to={`/sessions/${session.id}/rate`}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
-          title="Evaluar"
-        >
-          <span className="material-symbols-outlined text-xl">rate_review</span>
-        </Link>
+        {canRate ? (
+          <Link
+            to={`/sessions/${session.id}/rate`}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-on-primary hover:opacity-90 transition-opacity"
+            title="Evaluar"
+          >
+            <span className="material-symbols-outlined text-xl">rate_review</span>
+          </Link>
+        ) : (
+          <span
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant/40 cursor-not-allowed"
+            title="Solo se puede evaluar el mismo día de la sesión"
+          >
+            <span className="material-symbols-outlined text-xl">rate_review</span>
+          </span>
+        )}
         {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
           <>
             <button

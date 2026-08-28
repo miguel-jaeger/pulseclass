@@ -29,6 +29,7 @@ export function RateSessionPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isMember, setIsMember] = useState(false)
+  const [isToday, setIsToday] = useState(true)
   const [rating, setRating] = useState({
     score: 7,
     comment: '',
@@ -40,6 +41,7 @@ export function RateSessionPage() {
       fetchSession()
       fetchExistingRating()
       checkMembership()
+      checkSessionDate()
     }
   }, [sessionId, user])
 
@@ -52,6 +54,27 @@ export function RateSessionPage() {
 
     if (!error && data) {
       setSession(data as Session)
+    }
+  }
+
+  const checkSessionDate = async () => {
+    if (profile?.role === 'admin') {
+      setIsToday(true)
+      return
+    }
+
+    const { data } = await insforge.database
+      .from('sessions')
+      .select('date')
+      .eq('id', sessionId)
+      .single()
+
+    if (data) {
+      const today = new Date()
+      const todayStr = today.getFullYear() + '-' +
+        String(today.getMonth() + 1).padStart(2, '0') + '-' +
+        String(today.getDate()).padStart(2, '0')
+      setIsToday(data.date === todayStr)
     }
   }
 
@@ -151,6 +174,21 @@ export function RateSessionPage() {
         <div className="bg-error-container border border-error rounded-xl p-lg">
           <p className="font-body-md text-body-md text-on-error-container">
             No puedes evaluar esta sesión porque no eres miembro del curso.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isToday) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <header className="mb-lg">
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+        </header>
+        <div className="bg-error-container border border-error rounded-xl p-lg">
+          <p className="font-body-md text-body-md text-on-error-container">
+            Solo puedes evaluar la sesión el mismo día que corresponde a la fecha de la sesión ({session?.title}).
           </p>
         </div>
       </div>

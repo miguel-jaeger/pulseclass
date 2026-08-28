@@ -31,6 +31,14 @@ interface Reply {
   user_name?: string
 }
 
+function isSessionToday(sessionDate: string): boolean {
+  const today = new Date()
+  const todayStr = today.getFullYear() + '-' +
+    String(today.getMonth() + 1).padStart(2, '0') + '-' +
+    String(today.getDate()).padStart(2, '0')
+  return sessionDate === todayStr
+}
+
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { user, profile } = useAuth()
@@ -367,12 +375,18 @@ export function SessionDetailPage() {
       </header>
 
       <div className="flex gap-md mb-lg">
-        <Link
-          to={`/sessions/${sessionId}/rate`}
-          className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
-        >
-          {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
-        </Link>
+        {(isSessionToday(session?.date || '') || profile?.role === 'admin') ? (
+          <Link
+            to={`/sessions/${sessionId}/rate`}
+            className="bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
+          >
+            {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
+          </Link>
+        ) : (
+          <span className="bg-surface-container text-on-surface-variant/40 font-bold py-2 px-lg rounded-full font-label-md text-label-md cursor-not-allowed">
+            Solo se puede evaluar el mismo día de la sesión
+          </span>
+        )}
       </div>
 
       <div className="flex gap-sm mb-lg flex-wrap justify-center">
