@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
@@ -85,6 +86,8 @@ async function suggestAction(action: string, id?: string, data?: Record<string, 
 
 export function SuggestionsPage() {
   const { profile, user } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -105,8 +108,8 @@ export function SuggestionsPage() {
   const [detailImageIndex, setDetailImageIndex] = useState(0)
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
-  const isAdmin = profile?.role === 'admin'
-  const isTeacher = profile?.role === 'teacher'
+  const isAdmin = effectiveRole === 'admin'
+  const isTeacher = effectiveRole === 'teacher'
   const [teacherStudentIds, setTeacherStudentIds] = useState<Set<string>>(new Set())
 
   const canEditSuggestion = (suggestionUserId: string) => {

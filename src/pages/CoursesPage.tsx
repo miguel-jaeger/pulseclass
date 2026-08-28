@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
@@ -20,6 +21,8 @@ interface Teacher {
 
 export function CoursesPage() {
   const { profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -38,7 +41,7 @@ export function CoursesPage() {
 
   useEffect(() => {
     fetchCourses()
-    if (profile?.role === 'admin') fetchTeachers()
+    if (effectiveRole === 'admin') fetchTeachers()
   }, [])
 
   useEffect(() => {
@@ -48,13 +51,13 @@ export function CoursesPage() {
   }, [courses])
 
   const fetchCourses = async () => {
-    if (profile?.role === 'admin') {
+    if (effectiveRole === 'admin') {
       const { data, error } = await insforge.database
         .from('courses')
         .select('*')
         .order('created_at', { ascending: false })
       if (!error && data) setCourses(data as Course[])
-    } else if (profile?.role === 'teacher') {
+    } else if (effectiveRole === 'teacher') {
       const { data: owned } = await insforge.database
         .from('courses')
         .select('*')
@@ -244,7 +247,7 @@ export function CoursesPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Cursos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tus cursos y estudiantes.</p>
         </div>
-        {(profile?.role === 'admin' || profile?.role === 'teacher') && (
+        {(effectiveRole === 'admin' || effectiveRole === 'teacher') && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
@@ -266,7 +269,7 @@ export function CoursesPage() {
             className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
           />
         </div>
-        {profile?.role === 'admin' && teachers.length > 0 && (
+        {effectiveRole === 'admin' && teachers.length > 0 && (
           <div className="relative" ref={teacherRef}>
             <div className="relative">
               <input
@@ -394,7 +397,7 @@ export function CoursesPage() {
                   </span>
                 )}
               </Link>
-              {(profile?.role === 'admin' || course.created_by === profile?.user_id) && (
+              {(effectiveRole === 'admin' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
                   className="w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"

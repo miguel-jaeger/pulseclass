@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
@@ -187,6 +188,8 @@ function SessionCard({ session, index, profile, onEdit, onDelete }: {
 export function SessionsPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [course, setCourse] = useState<Course | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
@@ -205,6 +208,8 @@ export function SessionsPage() {
     setToast({ message, type })
     setTimeout(() => setToast(null), 4000)
   }
+
+  const effectiveProfile = profile ? { ...profile, role: effectiveRole || profile.role } : null
 
   const now = new Date()
 
@@ -363,14 +368,14 @@ export function SessionsPage() {
                 <tbody>
                   {sectionSessions.map((session, index) => {
                     return (
-                      <SessionRow
-                        key={session.id}
-                        session={session}
-                        index={index}
-                        profile={profile}
-                        onEdit={openEditModal}
-                        onDelete={deleteSession}
-                      />
+                       <SessionRow
+                         key={session.id}
+                         session={session}
+                         index={index}
+                         profile={effectiveProfile}
+                         onEdit={openEditModal}
+                         onDelete={deleteSession}
+                       />
                     )
                   })}
                 </tbody>
@@ -380,14 +385,14 @@ export function SessionsPage() {
             <div className="md:hidden space-y-sm">
               {sectionSessions.map((session, index) => {
                 return (
-                  <SessionCard
-                    key={session.id}
-                    session={session}
-                    index={index}
-                    profile={profile}
-                    onEdit={openEditModal}
-                    onDelete={deleteSession}
-                  />
+                   <SessionCard
+                     key={session.id}
+                     session={session}
+                     index={index}
+                     profile={effectiveProfile}
+                     onEdit={openEditModal}
+                     onDelete={deleteSession}
+                   />
                 )
               })}
             </div>
@@ -432,7 +437,7 @@ export function SessionsPage() {
             <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface truncate">{course?.name}</h1>
             <p className="font-body-sm md:font-body-md text-body-sm md:text-body-md text-on-surface-variant mt-xs line-clamp-2">Gestiona las sesiones de calificación de este curso.</p>
           </div>
-          {(profile?.role === 'admin' || profile?.role === 'teacher') && (
+          {(effectiveRole === 'admin' || effectiveRole === 'teacher') && (
             <div className="flex gap-sm flex-shrink-0">
               <button
                 onClick={() => setShowCreateModal(true)}

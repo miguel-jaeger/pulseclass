@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
@@ -34,6 +35,8 @@ interface CourseSummary {
 
 export function DashboardPage() {
   const { profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [summaries, setSummaries] = useState<CourseSummary[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -46,14 +49,14 @@ export function DashboardPage() {
       try {
         let courses: Course[] = []
 
-        if (profile!.role === 'admin') {
+        if (effectiveRole === 'admin') {
           const { data, error } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
             .eq('is_active', true)
             .order('created_at', { ascending: false })
           if (!error && data) courses = data as Course[]
-        } else if (profile!.role === 'teacher') {
+        } else if (effectiveRole === 'teacher') {
           const { data: owned, error: ownedError } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')
@@ -179,7 +182,7 @@ export function DashboardPage() {
 
     fetchDashboard()
     return () => { cancelled = true }
-  }, [profile])
+  }, [profile, effectiveRole])
 
   const totalSessions = summaries.reduce((sum, s) => sum + s.sessionCount, 0)
   const totalRatings = summaries.reduce((sum, s) => sum + s.ratingCount, 0)

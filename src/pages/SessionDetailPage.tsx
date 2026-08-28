@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface Session {
@@ -43,6 +44,8 @@ function isSessionToday(sessionDate: string): boolean {
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { user, profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [session, setSession] = useState<Session | null>(null)
   const [ratings, setRatings] = useState<Rating[]>([])
   const [loading, setLoading] = useState(true)
@@ -243,7 +246,7 @@ export function SessionDetailPage() {
     }
   }
 
-  const canEdit = (ownerId: string) => user?.id === ownerId || profile?.role === 'admin' || profile?.role === 'teacher'
+  const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin' || effectiveRole === 'teacher'
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
@@ -383,13 +386,13 @@ export function SessionDetailPage() {
       </header>
 
       <div className="mb-lg">
-        {(isSessionToday(session?.date || '') || profile?.role === 'admin') ? (
+        {(isSessionToday(session?.date || '') || effectiveRole === 'admin') ? (
           <Link
             to={`/sessions/${sessionId}/rate`}
             className="inline-flex items-center gap-xs bg-primary text-on-primary font-bold py-2 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity"
           >
             <span className="material-symbols-outlined text-lg">rate_review</span>
-            {profile?.role === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
+            {effectiveRole === 'student' ? 'Evaluar esta sesión' : 'Ver mi evaluación'}
           </Link>
         ) : (
           <div className="inline-flex items-center gap-sm bg-tertiary-container text-on-tertiary-container py-2 px-lg rounded-xl font-body-sm text-body-sm">
@@ -461,7 +464,7 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
-                      {profile?.role === 'admin' && (
+                      {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
                           title="Eliminar evaluación completa"
@@ -658,7 +661,7 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
-                      {profile?.role === 'admin' && (
+                      {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
                           title="Eliminar evaluación completa"

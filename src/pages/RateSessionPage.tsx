@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 
 interface Session {
   id: string
@@ -22,6 +23,8 @@ interface Rating {
 export function RateSessionPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { user, profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const navigate = useNavigate()
   const [session, setSession] = useState<Session | null>(null)
   const [existingRating, setExistingRating] = useState<Rating | null>(null)
@@ -58,7 +61,7 @@ export function RateSessionPage() {
   }
 
   const checkSessionDate = async () => {
-    if (profile?.role === 'admin') {
+    if (effectiveRole === 'admin') {
       setIsToday(true)
       return
     }
@@ -79,7 +82,7 @@ export function RateSessionPage() {
   }
 
   const checkMembership = async () => {
-    if (profile?.role === 'admin') {
+    if (effectiveRole === 'admin') {
       setIsMember(true)
       return
     }

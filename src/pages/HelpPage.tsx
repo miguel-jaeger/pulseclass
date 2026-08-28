@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface HelpVideo {
@@ -46,6 +47,8 @@ interface VideoLike {
 
 export function HelpPage() {
   const { user, profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [videos, setVideos] = useState<HelpVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedVideo, setExpandedVideo] = useState<string | null>(null)
@@ -246,7 +249,7 @@ export function HelpPage() {
     }
   }
 
-  const canEdit = (ownerId: string) => user?.id === ownerId || profile?.role === 'admin'
+  const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin'
 
   const addComment = async (videoId: string) => {
     if (!user || !newComment[videoId]?.trim()) return

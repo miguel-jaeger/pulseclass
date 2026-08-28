@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Avatar } from '../pages/ProfilePage'
 import type { ReactNode } from 'react'
 
@@ -29,6 +30,7 @@ const bottomNavItems = [
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
+  const { isImpersonating } = useImpersonation()
   const location = useLocation()
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
   const [mobileAdminOpen, setMobileAdminOpen] = useState(false)
@@ -48,8 +50,14 @@ export function Layout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(path)
   }
 
-  const filteredNavItems = navItems.filter(item => !item.adminOnly || profile?.role === 'admin')
-  const filteredBottomNav = bottomNavItems.filter(item => !item.adminOnly || profile?.role === 'admin')
+  const filteredNavItems = navItems.filter(item => {
+    if (isImpersonating) return !item.adminOnly
+    return !item.adminOnly || profile?.role === 'admin'
+  })
+  const filteredBottomNav = bottomNavItems.filter(item => {
+    if (isImpersonating) return !item.adminOnly
+    return !item.adminOnly || profile?.role === 'admin'
+  })
 
   return (
     <div className="flex h-full">

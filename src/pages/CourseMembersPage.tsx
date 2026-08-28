@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface Course {
@@ -37,6 +38,8 @@ interface ImportResult {
 export function CourseMembersPage() {
   const { courseId } = useParams<{ courseId: string }>()
   const { profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
 
   const roleLabel = (r: string) => r === 'admin' ? 'Administrador' : r === 'teacher' ? 'Profesor' : 'Estudiante'
 
@@ -55,7 +58,7 @@ export function CourseMembersPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const canManage = profile?.role === 'admin' || profile?.role === 'teacher'
+  const canManage = effectiveRole === 'admin' || effectiveRole === 'teacher'
 
   useEffect(() => {
     if (courseId) loadAll()

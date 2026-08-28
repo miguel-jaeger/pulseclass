@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { useRatingVotes } from '../hooks/useRatingVotes'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
@@ -76,6 +77,8 @@ function getDefaultDateEnd(): string {
 
 export function StatisticsPage() {
   const { profile } = useAuth()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [courses, setCourses] = useState<Course[]>([])
   const [teachers, setTeachers] = useState<Profile[]>([])
   const [sessions, setSessions] = useState<Session[]>([])
@@ -117,7 +120,7 @@ export function StatisticsPage() {
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
   useEffect(() => {
-    if (profile?.role === 'student' && courses.length === 1) {
+    if (effectiveRole === 'student' && courses.length === 1) {
       setSelectedCourse(courses[0].id)
     }
   }, [courses, profile])
@@ -225,7 +228,7 @@ export function StatisticsPage() {
         sessionQuery = sessionQuery.eq('course_id', selectedCourse)
       } else if (courseIds && courseIds.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courseIds)
-      } else if (profile?.role !== 'admin' && courses.length > 0) {
+      } else if (effectiveRole !== 'admin' && courses.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courses.map(c => c.id))
       }
 
@@ -387,8 +390,8 @@ export function StatisticsPage() {
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
 
   const canEdit = (studentId: string) => {
-    if (profile?.role === 'admin') return true
-    if (profile?.role === 'teacher') return true
+    if (effectiveRole === 'admin') return true
+    if (effectiveRole === 'teacher') return true
     return profile?.user_id === studentId
   }
 
@@ -561,7 +564,7 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
-          {profile?.role === 'admin' && teachers.length > 0 && (
+          {effectiveRole === 'admin' && teachers.length > 0 && (
           <div className="w-full md:w-auto" ref={teacherRef}>
             <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
             <div className="relative">
@@ -679,7 +682,7 @@ export function StatisticsPage() {
         <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {profile?.role === 'student' ? 'No estás inscrito en ningún curso.' : 'No hay cursos disponibles.'}
+            {effectiveRole === 'student' ? 'No estás inscrito en ningún curso.' : 'No hay cursos disponibles.'}
           </p>
         </div>
       ) : loading ? (
