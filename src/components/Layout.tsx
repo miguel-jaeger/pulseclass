@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Avatar } from '../pages/ProfilePage'
+import { ImpersonationBanner } from './ImpersonationBanner'
 import type { ReactNode } from 'react'
 
 const navItems = [
@@ -61,6 +62,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full">
+      <ImpersonationBanner />
       {/* SideNavBar (Desktop) */}
       <nav className={`hidden md:flex flex-col h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40 ${collapsed ? 'w-16 p-2' : 'w-64 p-md'}`}>
         {/* Logo + Toggle */}
@@ -250,7 +252,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-32 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-32 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'} ${isImpersonating ? 'mt-10' : ''}`}>
         {children}
       </main>
 
