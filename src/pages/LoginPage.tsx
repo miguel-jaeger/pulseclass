@@ -8,12 +8,17 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [error, setError] = useState('')
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setToast(null)
     setLoading(true)
     try {
       if (isSignUp) {
@@ -26,8 +31,8 @@ export function LoginPage() {
       const message = raw.includes('Invalid login credentials') ? 'Correo o contraseña incorrectos'
         : raw.includes('Email not confirmed') ? 'Correo no verificado. Revisa tu bandeja de entrada.'
         : raw.includes('rate') ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
-        : raw || 'Error al autenticarse'
-      setError(message)
+        : 'Error al autenticarse'
+      showToast(message)
     } finally {
       setLoading(false)
     }
@@ -96,10 +101,6 @@ export function LoginPage() {
             />
           </div>
 
-          {error && (
-            <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl">{error}</p>
-          )}
-
           <button
             type="submit"
             disabled={loading}
@@ -112,7 +113,7 @@ export function LoginPage() {
 
         <div className="text-center">
           <button
-            onClick={() => { setIsSignUp(!isSignUp); setError('') }}
+            onClick={() => { setIsSignUp(!isSignUp); setToast(null) }}
             className="font-body-sm text-body-sm text-primary hover:underline"
           >
             {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
@@ -153,6 +154,14 @@ export function LoginPage() {
           </button>
         </div>
       </div>
+
+      {toast && (
+        <div className={`fixed bottom-20 md:bottom-lg left-1/2 -translate-x-1/2 z-50 max-w-[calc(100vw-2rem)] px-lg py-sm rounded-xl border shadow-lg font-body-sm text-body-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all ${
+          toast.type === 'success' ? 'bg-success-container text-on-success-container border-success' : 'bg-error-container text-on-error-container border-error'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   )
 }
