@@ -36,6 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMobileAdminOpen(false)
+    setAdminOpen(false)
   }, [location.pathname])
 
   useEffect(() => {
@@ -95,6 +96,42 @@ export function Layout({ children }: { children: ReactNode }) {
             const isLast = item.to === '/admin'
 
             if (collapsed) {
+              if (isLast) {
+                return (
+                  <div key={item.to} className="relative">
+                    <button
+                      onClick={() => setAdminOpen(!adminOpen)}
+                      title={item.label}
+                      className={`flex items-center justify-center w-10 h-10 rounded-full transition-all ${
+                        location.pathname.startsWith('/admin')
+                          ? 'bg-primary-container text-on-primary-container font-bold'
+                          : 'text-on-surface-variant hover:text-on-surface hover:bg-secondary-container'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined">{item.icon}</span>
+                    </button>
+                    {adminOpen && (
+                      <div className="absolute left-full top-0 ml-2 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[160px] z-50">
+                        {adminSubItems.map(sub => (
+                          <Link
+                            key={sub.to}
+                            to={sub.to}
+                            onClick={() => setAdminOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-3 border-b border-outline-variant last:border-0 transition-colors ${
+                              (sub.to === '/admin' ? location.pathname === '/admin' : isActive(sub.to))
+                                ? 'bg-primary-container text-on-primary-container'
+                                : 'text-on-surface hover:bg-secondary-container'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-xl">{sub.icon}</span>
+                            <span className="font-body-md text-body-md">{sub.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
               return (
                 <Link
                   key={item.to}
