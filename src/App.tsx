@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import { ImpersonationProvider } from './hooks/useImpersonation'
 import { ThemeProvider } from './hooks/useTheme'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
@@ -131,7 +132,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ThemeWrapper />
+        <ImpersonationProvider>
+          <ThemeWrapper />
+        </ImpersonationProvider>
       </AuthProvider>
     </BrowserRouter>
   )
