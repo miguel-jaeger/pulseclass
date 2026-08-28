@@ -217,14 +217,14 @@ export function AdminPage() {
                 className="flex items-center gap-3 px-4 py-3 w-full border-b border-outline-variant last:border-0 text-on-surface hover:bg-secondary-container transition-colors"
               >
                 <span className="material-symbols-outlined text-xl">school</span>
-                <span className="font-body-md text-body-md">Ver como Profesor</span>
+                <span className="font-body-md text-body-md">Profesor</span>
               </button>
               <button
                 onClick={() => { startImpersonation('student'); navigate('/') }}
                 className="flex items-center gap-3 px-4 py-3 w-full text-on-surface hover:bg-secondary-container transition-colors"
               >
                 <span className="material-symbols-outlined text-xl">person</span>
-                <span className="font-body-md text-body-md">Ver como Estudiante</span>
+                <span className="font-body-md text-body-md">Estudiante</span>
               </button>
             </div>
           </div>
