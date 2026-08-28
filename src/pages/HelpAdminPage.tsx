@@ -209,7 +209,7 @@ export function HelpAdminPage() {
 
   return (
     <div className="pb-28 md:pb-0">
-      <header className="mb-xl flex flex-col md:flex-row md:items-end md:justify-between gap-md">
+      <header className="mb-xl flex flex-col items-start md:flex-row md:items-end md:justify-between gap-md">
         <div className="min-w-0">
           <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">
             <span className="material-symbols-outlined text-lg">arrow_back</span>
