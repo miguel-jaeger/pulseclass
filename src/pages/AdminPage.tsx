@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
@@ -31,6 +31,8 @@ export function AdminPage() {
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showVerComo, setShowVerComo] = useState(false)
+  const verComoRef = useRef<HTMLDivElement>(null)
 
   const roleLabel = (role: string) => {
     if (role === 'admin') return 'Administrador'
@@ -45,6 +47,16 @@ export function AdminPage() {
 
   useEffect(() => {
     fetchUsers()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (verComoRef.current && !verComoRef.current.contains(e.target as Node)) {
+        setShowVerComo(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const fetchUsers = async () => {
@@ -206,27 +218,32 @@ export function AdminPage() {
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
         <div className="flex items-center gap-sm">
-          <div className="relative group">
-            <button className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs whitespace-nowrap">
+          <div className="relative" ref={verComoRef}>
+            <button
+              onClick={() => setShowVerComo(!showVerComo)}
+              className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs whitespace-nowrap"
+            >
               <span className="material-symbols-outlined text-lg">visibility</span>
               Ver como<span className="material-symbols-outlined text-lg">expand_more</span>
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[180px] z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
-              <button
-                onClick={() => { startImpersonation('teacher'); navigate('/') }}
-                className="flex items-center gap-3 px-4 py-3 w-full border-b border-outline-variant last:border-0 text-on-surface hover:bg-secondary-container transition-colors"
-              >
-                <span className="material-symbols-outlined text-xl">school</span>
-                <span className="font-body-md text-body-md">Profesor</span>
-              </button>
-              <button
-                onClick={() => { startImpersonation('student'); navigate('/') }}
-                className="flex items-center gap-3 px-4 py-3 w-full text-on-surface hover:bg-secondary-container transition-colors"
-              >
-                <span className="material-symbols-outlined text-xl">person</span>
-                <span className="font-body-md text-body-md">Estudiante</span>
-              </button>
-            </div>
+            {showVerComo && (
+              <div className="absolute right-0 top-full mt-1 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[180px] z-50">
+                <button
+                  onClick={() => { startImpersonation('teacher'); navigate('/'); setShowVerComo(false) }}
+                  className="flex items-center gap-3 px-4 py-3 w-full border-b border-outline-variant last:border-0 text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-xl">school</span>
+                  <span className="font-body-md text-body-md">Profesor</span>
+                </button>
+                <button
+                  onClick={() => { startImpersonation('student'); navigate('/'); setShowVerComo(false) }}
+                  className="flex items-center gap-3 px-4 py-3 w-full text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-xl">person</span>
+                  <span className="font-body-md text-body-md">Estudiante</span>
+                </button>
+              </div>
+            )}
           </div>
           <button
             onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
