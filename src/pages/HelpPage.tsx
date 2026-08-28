@@ -61,6 +61,8 @@ export function HelpPage() {
   const [editReplyText, setEditReplyText] = useState('')
   const [videoLikes, setVideoLikes] = useState<Record<string, { likes: number; dislikes: number; userVote: number | null }>>({})
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [expandedCommentPage, setExpandedCommentPage] = useState(1)
+  const commentsPerPage = 5
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -399,7 +401,7 @@ export function HelpPage() {
             const isExpanded = expandedVideo === video.id
             return (
               <article key={video.id} className={`bg-surface border border-outline-variant rounded-xl overflow-hidden transition-all hover:shadow-lg ${isExpanded ? 'sm:col-span-2 lg:col-span-4' : 'cursor-pointer'}`}
-                onClick={() => !isExpanded && setExpandedVideo(video.id)}>
+                onClick={() => { if (!isExpanded) { setExpandedVideo(video.id); setExpandedCommentPage(1) } }}>
                 {isExpanded ? (
                   <div className="p-lg">
                     <div className="flex items-start justify-between mb-md">
@@ -424,8 +426,15 @@ export function HelpPage() {
                       </span>
                     </div>
 
-                    <div className="space-y-md mb-lg max-h-80 overflow-y-auto">
-                      {(commentsMap[video.id] || []).map(comment => (
+                    <div className="space-y-md mb-lg">
+                      {(() => {
+                        const allComments = commentsMap[video.id] || []
+                        const totalCommentPages = Math.ceil(allComments.length / commentsPerPage)
+                        const startIdx = (expandedCommentPage - 1) * commentsPerPage
+                        const paginatedComments = allComments.slice(startIdx, startIdx + commentsPerPage)
+                        return (
+                          <>
+                            {paginatedComments.map(comment => (
                         <div key={comment.id} className="border-l-2 border-outline-variant pl-md">
                           <div className="flex items-center gap-xs mb-xs">
                             <span className="font-label-sm text-label-sm text-on-surface font-semibold">{comment.user_name}</span>
@@ -515,6 +524,30 @@ export function HelpPage() {
                           )}
                         </div>
                       ))}
+                            {totalCommentPages > 1 && (
+                              <div className="flex items-center justify-center gap-sm mt-md pt-md border-t border-outline-variant">
+                                <button
+                                  onClick={() => setExpandedCommentPage(p => Math.max(1, p - 1))}
+                                  disabled={expandedCommentPage <= 1}
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <span className="material-symbols-outlined text-lg">chevron_left</span>
+                                </button>
+                                <span className="font-body-sm text-body-sm text-on-surface min-w-[60px] text-center">
+                                  {expandedCommentPage} / {totalCommentPages}
+                                </span>
+                                <button
+                                  onClick={() => setExpandedCommentPage(p => Math.min(totalCommentPages, p + 1))}
+                                  disabled={expandedCommentPage >= totalCommentPages}
+                                  className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <span className="material-symbols-outlined text-lg">chevron_right</span>
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
                     </div>
 
                     <div className="flex gap-sm" onClick={e => e.stopPropagation()}>

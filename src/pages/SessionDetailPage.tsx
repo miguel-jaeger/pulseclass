@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { Pagination, usePagination } from '../components/Pagination'
 
 interface Session {
   id: string
@@ -55,6 +56,13 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
+
+  const commentsList = ratings.filter(r => r.comment)
+  const suggestionsList = ratings.filter(r => r.suggestion)
+  const { page: commentsPage, perPage: commentsPerPage, setPage: setCommentsPage, setPerPage: setCommentsPerPage, paginatedSlice: commentsPaginate } = usePagination(commentsList.length, 5)
+  const { page: suggestionsPage, perPage: suggestionsPerPage, setPage: setSuggestionsPage, setPerPage: setSuggestionsPerPage, paginatedSlice: suggestionsPaginate } = usePagination(suggestionsList.length, 5)
+  const paginatedComments = commentsPaginate(commentsList)
+  const paginatedSuggestions = suggestionsPaginate(suggestionsList)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -420,14 +428,14 @@ export function SessionDetailPage() {
 
       {activeTab === 'comments' && (
         <>
-          {ratings.filter(r => r.comment).length === 0 ? (
+          {commentsList.length === 0 ? (
             <div className="text-center py-lg">
               <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">chat_bubble_outline</span>
               <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios aún.</p>
             </div>
           ) : (
             <div className="space-y-md">
-              {ratings.filter(r => r.comment).map((rating) => (
+              {paginatedComments.map((rating) => (
                 <article key={rating.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
                   <div className="flex justify-between items-start mb-md">
                     <div className="flex items-center gap-sm">
@@ -603,19 +611,28 @@ export function SessionDetailPage() {
               ))}
             </div>
           )}
+          {commentsList.length > 0 && (
+            <Pagination
+              totalItems={commentsList.length}
+              page={commentsPage}
+              perPage={commentsPerPage}
+              onPageChange={setCommentsPage}
+              onPerPageChange={setCommentsPerPage}
+            />
+          )}
         </>
       )}
 
       {activeTab === 'suggestions' && (
         <>
-          {ratings.filter(r => r.suggestion).length === 0 ? (
+          {suggestionsList.length === 0 ? (
             <div className="text-center py-lg">
               <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">lightbulb</span>
               <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias aún.</p>
             </div>
           ) : (
             <div className="space-y-md">
-              {ratings.filter(r => r.suggestion).map((rating) => (
+              {paginatedSuggestions.map((rating) => (
                 <article key={rating.id} className="bg-surface border border-outline-variant rounded-xl p-lg">
                   <div className="flex justify-between items-start mb-md">
                     <div className="flex items-center gap-sm">
@@ -790,6 +807,15 @@ export function SessionDetailPage() {
                 </article>
               ))}
             </div>
+          )}
+          {suggestionsList.length > 0 && (
+            <Pagination
+              totalItems={suggestionsList.length}
+              page={suggestionsPage}
+              perPage={suggestionsPerPage}
+              onPageChange={setSuggestionsPage}
+              onPerPageChange={setSuggestionsPerPage}
+            />
           )}
         </>
       )}
