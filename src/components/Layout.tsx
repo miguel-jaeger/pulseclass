@@ -73,7 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
               className="absolute top-4 -right-3 flex items-center justify-center w-6 h-6 bg-surface-container-low border border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all shadow-sm z-50"
               title="Colapsar menú"
             >
-              <span className="material-symbols-outlined text-sm">dock_left</span>
+              <span className="material-symbols-outlined text-sm">view_sidebar</span>
             </button>
           )}
         </div>
@@ -85,7 +85,7 @@ export function Layout({ children }: { children: ReactNode }) {
             className="mb-sm flex items-center justify-center w-10 h-10 mx-auto text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
             title="Expandir menú"
           >
-            <span className="material-symbols-outlined text-lg">dock_left</span>
+            <span className="material-symbols-outlined text-lg">view_sidebar</span>
           </button>
         )}
 
