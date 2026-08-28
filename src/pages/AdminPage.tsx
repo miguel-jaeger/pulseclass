@@ -207,10 +207,9 @@ export function AdminPage() {
         </div>
         <div className="flex items-center gap-sm">
           <div className="relative group">
-            <button className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs">
+            <button className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs whitespace-nowrap">
               <span className="material-symbols-outlined text-lg">visibility</span>
-              Ver como
-              <span className="material-symbols-outlined text-lg">expand_more</span>
+              Ver como<span className="material-symbols-outlined text-lg">expand_more</span>
             </button>
             <div className="absolute right-0 top-full mt-1 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[180px] z-50 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity">
               <button
