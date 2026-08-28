@@ -70,11 +70,10 @@ export function Layout({ children }: { children: ReactNode }) {
           {!collapsed && (
             <button
               onClick={() => setCollapsed(true)}
-              className="mt-2 flex items-center gap-sm px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full font-label-sm text-label-sm transition-all w-full"
+              className="absolute top-4 -right-3 flex items-center justify-center w-6 h-6 bg-surface-container-low border border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all shadow-sm z-50"
               title="Colapsar menú"
             >
-              <span className="material-symbols-outlined text-lg">menu_open</span>
-              <span>Colapsar</span>
+              <span className="material-symbols-outlined text-sm">dock_left</span>
             </button>
           )}
         </div>
@@ -86,7 +85,7 @@ export function Layout({ children }: { children: ReactNode }) {
             className="mb-sm flex items-center justify-center w-10 h-10 mx-auto text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
             title="Expandir menú"
           >
-            <span className="material-symbols-outlined text-lg">menu</span>
+            <span className="material-symbols-outlined text-lg">dock_left</span>
           </button>
         )}
 
