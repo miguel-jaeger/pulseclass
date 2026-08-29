@@ -134,9 +134,23 @@ Archivos con toast: `SuggestionsPage`, `AdminPage`, `StatisticsPage`, `SessionsP
 - **Hook:** `useImpersonation()` en `src/hooks/useImpersonation.tsx`
 - **Estados:** `impersonatedRole`, `startImpersonation(role)`, `stopImpersonation()`, `isImpersonating`
 - **Cada página calcula:** `const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role`
-- **UI dropdown:** En `AdminPage.tsx` — botón "Ver como" con dropdown click-based (state `showVerComo`)
-- **Banner:** `ImpersonationBanner.tsx` se muestra al impersonar, oculta nav items de admin
+- **UI dropdown:** En `AdminPage.tsx` — botón "Ver como" con dropdown click-based (`showVerComo` + `useRef` + `mousedown` outside), NO `group-hover` (roto en mobile)
+- **Banner:** `ImpersonationBanner.tsx` — `flex-col md:flex-row` (apilado en mobile, fila en desktop), oculta nav items admin
 - **Provider:** `ImpersonationProvider` envuelve las rutas en `App.tsx`
+
+### Patrón de Header responsivo (todas las páginas con botón Crear)
+
+- **Clase:** `flex flex-col items-start md:flex-row md:justify-between md:items-end gap-md`
+- **Mobile:** título+descripción ocupan todo el ancho (`min-w-0`), botones debajo con tamaño natural (`shrink-0`, sin `w-full`), alineados a la izquierda por `items-start`
+- **Desktop (`md:`):** título a la izquierda, botones a la derecha alineados al fondo
+- **Páginas afectadas:** `AdminPage`, `SuggestionsPage`, `CoursesPage`, `SessionsPage`, `HelpAdminPage`
+- **Nota:** Usar `items-start` en mobile evita que el botón se estire a todo el ancho en `flex-col`
+
+### Patrón de Navegación (Layout)
+
+- **Desktop Sidebar:** `isActive(path)` — `'/'` exacto, `'/courses'` incluye `'/sessions/*'`, resto `startsWith`
+- **Mobile BottomNav:** sin labels, solo iconos con pill `bg-primary-container text-on-primary-container` cuando activo + `FILL 1`, inactivo `text-on-surface-variant`
+- **Admin submenu mobile:** `mobileAdminOpen` + `adminSubItems` (`/admin`, `/admin/videos`)
 
 ### Patrón de permisos
 
