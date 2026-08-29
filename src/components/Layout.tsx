@@ -290,12 +290,11 @@ export function Layout({ children }: { children: ReactNode }) {
               <button
                 key={item.to}
                 onClick={() => setMobileAdminOpen(!mobileAdminOpen)}
-                className="flex flex-col items-center justify-center gap-xs min-w-[56px]"
+                className="flex items-center justify-center min-w-[56px]"
               >
                 <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
                   <span className="material-symbols-outlined text-[22px]" style={iconFill}>{item.icon}</span>
                 </span>
-                <span className={`font-label-sm text-label-sm leading-none ${active ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>{item.label}</span>
               </button>
             )
           }
@@ -303,7 +302,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link
               key={item.to}
               to={item.to}
-              className="flex flex-col items-center justify-center gap-xs min-w-[56px]"
+              className="flex items-center justify-center min-w-[56px]"
             >
               <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
                 <span
@@ -313,7 +312,6 @@ export function Layout({ children }: { children: ReactNode }) {
                   {item.icon}
                 </span>
               </span>
-              <span className={`font-label-sm text-label-sm leading-none ${active ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>{item.label}</span>
             </Link>
           )
         })}
