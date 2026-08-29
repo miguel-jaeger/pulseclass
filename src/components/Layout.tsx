@@ -48,6 +48,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/'
+    if (path === '/courses') return location.pathname.startsWith('/courses') || location.pathname.startsWith('/sessions')
     return location.pathname.startsWith(path)
   }
 
@@ -282,18 +283,19 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* BottomNavBar (Mobile) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-surface border-t border-outline-variant flex justify-around items-center px-2" style={{ zIndex: 9999 }}>
         {filteredBottomNav.map((item) => {
+          const active = isActive(item.to)
+          const iconFill = active || item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined
           if (item.to === '/admin') {
             return (
               <button
                 key={item.to}
                 onClick={() => setMobileAdminOpen(!mobileAdminOpen)}
-                className={`flex flex-col items-center justify-center px-3 py-1 ${
-                  isActive(item.to)
-                    ? 'text-primary'
-                    : 'text-on-surface-variant'
-                }`}
+                className="flex flex-col items-center justify-center gap-xs min-w-[56px]"
               >
-                <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+                <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+                  <span className="material-symbols-outlined text-[22px]" style={iconFill}>{item.icon}</span>
+                </span>
+                <span className={`font-label-sm text-label-sm leading-none ${active ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>{item.label}</span>
               </button>
             )
           }
@@ -301,18 +303,17 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center px-3 py-1 ${
-                isActive(item.to)
-                  ? 'text-primary'
-                  : 'text-on-surface-variant'
-              }`}
+              className="flex flex-col items-center justify-center gap-xs min-w-[56px]"
             >
-              <span
-                className="material-symbols-outlined text-[22px]"
-                style={item.fill ? { fontVariationSettings: "'FILL' 1" } : undefined}
-              >
-                {item.icon}
+              <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+                <span
+                  className="material-symbols-outlined text-[22px]"
+                  style={iconFill}
+                >
+                  {item.icon}
+                </span>
               </span>
+              <span className={`font-label-sm text-label-sm leading-none ${active ? 'text-on-surface font-bold' : 'text-on-surface-variant'}`}>{item.label}</span>
             </Link>
           )
         })}
