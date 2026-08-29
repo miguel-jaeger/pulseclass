@@ -215,7 +215,7 @@ export function HelpAdminPage() {
             <span className="material-symbols-outlined text-lg">arrow_back</span>
             Volver al admin
           </Link>
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Videos</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Gestión de Videos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los videos tutoriales disponibles para los usuarios.</p>
         </div>
         <button
@@ -315,7 +315,7 @@ export function HelpAdminPage() {
       )}
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
-        Mostrando <span className="font-bold text-on-surface">{paginatedVideos.length}</span> de <span className="font-bold text-on-surface">{filteredVideos.length}</span> videos
+        Mostrando <span className="font-bold text-primary font-bold">{paginatedVideos.length}</span> de <span className="font-bold text-primary font-bold">{filteredVideos.length}</span> videos
       </p>
 
       {videos.length === 0 ? (

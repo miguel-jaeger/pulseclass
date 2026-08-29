@@ -535,7 +535,7 @@ export function StatisticsPage() {
   return (
     <div className="pb-20 md:pb-xl w-full max-w-full overflow-x-hidden">
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Estadísticas</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Estadísticas</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Visualiza gráficos de calificaciones, comenta y responde a los comentarios de los estudiantes.</p>
       </header>
 
@@ -825,7 +825,7 @@ export function StatisticsPage() {
                       <div className="space-y-sm">
                         <div className="flex justify-between items-center px-sm">
                           <span className="font-body-sm text-body-sm text-on-surface-variant">Período</span>
-                          <span className="font-body-sm text-sm text-on-surface">{s.dateRange}</span>
+                          <span className="font-body-sm text-sm text-primary font-bold">{s.dateRange}</span>
                         </div>
                         <div className="flex justify-between items-center px-sm">
                           <span className="font-body-sm text-body-sm text-on-surface-variant">Evaluaciones</span>
@@ -1050,7 +1050,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
                                 )}
                               </div>
                             </div>
@@ -1241,7 +1241,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-on-surface">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
                                 )}
                               </div>
                             </div>

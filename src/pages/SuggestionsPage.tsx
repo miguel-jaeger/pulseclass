@@ -328,7 +328,7 @@ export function SuggestionsPage() {
     <div className="pb-28 md:pb-0">
       <header className="mb-xl flex flex-col md:flex-row md:justify-between md:items-end gap-md">
         <div className="min-w-0">
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Sugerencias</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Sugerencias</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras, reporta problemas o sugiere nuevas funcionalidades para la plataforma.</p>
         </div>
         <button

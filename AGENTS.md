@@ -141,10 +141,11 @@ Archivos con toast: `SuggestionsPage`, `AdminPage`, `StatisticsPage`, `SessionsP
 ### Patrón de Header responsivo (todas las páginas con botón Crear)
 
 - **Clase header:** `flex flex-col md:flex-row md:justify-between md:items-end gap-md`
-- **Título+descripción:** `min-w-0` (ocupa todo el ancho en mobile por `stretch` por defecto)
+- **Título:** `text-primary font-bold` (rojo/negrita para identificar sección) + `font-headline-lg-mobile md:font-headline-lg`
+- **Descripción:** `min-w-0` (ocupa todo el ancho en mobile por `stretch` por defecto) + `text-on-surface-variant`
 - **Botones:** `self-end md:self-auto shrink-0` — alineados a la derecha en mobile, tamaño natural (no `w-full`)
 - **Desktop (`md:`):** título a la izquierda, botones a la derecha alineados al fondo
-- **Páginas afectadas:** `AdminPage`, `SuggestionsPage`, `CoursesPage`, `SessionsPage`, `HelpAdminPage`
+- **Páginas afectadas:** `AdminPage`, `SuggestionsPage`, `CoursesPage`, `SessionsPage`, `HelpAdminPage` + todos los `h1` de sección son `text-primary font-bold`
 
 ### Patrón de Navegación (Layout)
 

@@ -375,7 +375,7 @@ export function HelpPage() {
   return (
     <div className="pb-28 md:pb-0">
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Ayuda</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Ayuda</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
       </header>
 
@@ -503,7 +503,7 @@ export function HelpPage() {
                                       </div>
                                     </div>
                                   ) : (
-                                    <p className="font-body-xs text-body-xs text-on-surface">{reply.content}</p>
+                                    <p className="font-body-xs text-body-xs text-primary font-bold">{reply.content}</p>
                                   )}
                                   <div className="mt-xs">
                                     <LikeButtons likes={reply.likes} dislikes={reply.dislikes} userVote={reply.userVote}

@@ -172,7 +172,7 @@ export function RateSessionPage() {
     return (
       <div className="max-w-2xl mx-auto">
       <header className="mb-lg">
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Evaluar Sesión</h1>
         </header>
         <div className="bg-error-container border border-error rounded-xl p-lg">
           <p className="font-body-md text-body-md text-on-error-container">
@@ -187,7 +187,7 @@ export function RateSessionPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <header className="mb-lg">
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Evaluar Sesión</h1>
         </header>
         <div className="flex items-start gap-sm bg-tertiary-container text-on-tertiary-container border border-tertiary rounded-xl p-lg">
           <span className="material-symbols-outlined text-xl mt-[2px]">info</span>
@@ -205,7 +205,7 @@ export function RateSessionPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Evaluar Sesión</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Evaluar Sesión</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">{session?.title}</p>
       </header>
 

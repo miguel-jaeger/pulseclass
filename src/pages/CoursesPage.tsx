@@ -244,7 +244,7 @@ export function CoursesPage() {
     <div className="pb-28 md:pb-0">
       <header className="mb-xl flex flex-col md:flex-row md:justify-between md:items-end gap-md">
         <div className="min-w-0">
-          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Cursos</h1>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Cursos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tus cursos y estudiantes.</p>
         </div>
         {(effectiveRole === 'admin' || effectiveRole === 'teacher') && (
@@ -348,7 +348,7 @@ export function CoursesPage() {
       </div>
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
-        Mostrando <span className="font-bold text-on-surface">{paginatedCourses.length}</span> de <span className="font-bold text-on-surface">{filteredCourses.length}</span> cursos
+        Mostrando <span className="font-bold text-primary font-bold">{paginatedCourses.length}</span> de <span className="font-bold text-primary font-bold">{filteredCourses.length}</span> cursos
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
@@ -491,7 +491,7 @@ export function CoursesPage() {
 
             <div className="flex items-center justify-between bg-surface-container rounded-xl px-md py-3 mb-lg">
               <div>
-                <div className="font-body-md text-body-md text-on-surface">Estado del curso</div>
+                <div className="font-body-md text-body-md text-primary font-bold">Estado del curso</div>
                 <div className="font-body-sm text-body-sm text-on-surface-variant">
                   {editForm.is_active ? 'Visible para los estudiantes' : 'Oculto para los estudiantes'}
                 </div>

@@ -140,7 +140,7 @@ export function ProfilePage() {
       </div>
 
       <header className="mb-xl">
-        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Mi Perfil</h1>
+        <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Mi Perfil</h1>
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tu información personal.</p>
       </header>
 
@@ -192,7 +192,7 @@ export function ProfilePage() {
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className="flex justify-between items-center mb-lg">
-          <h2 className="font-headline-sm text-headline-sm text-on-surface">Datos personales</h2>
+          <h2 className="font-headline-sm text-headline-sm text-primary font-bold">Datos personales</h2>
           {!editing && (
             <button
               onClick={() => { setEditing(true); setName(profile?.name || ''); setEmail(user?.email || ''); setError(''); setSuccess('') }}
@@ -275,7 +275,7 @@ export function ProfilePage() {
 
       <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
         <div className="flex justify-between items-center mb-lg">
-          <h2 className="font-headline-sm text-headline-sm text-on-surface">Contraseña</h2>
+          <h2 className="font-headline-sm text-headline-sm text-primary font-bold">Contraseña</h2>
           {!changingPassword && (
             <button
               onClick={() => { setChangingPassword(true); setError(''); setSuccess('') }}
