@@ -326,14 +326,14 @@ export function SuggestionsPage() {
 
   return (
     <div className="pb-28 md:pb-0">
-      <header className="mb-xl flex flex-col items-start md:flex-row md:justify-between md:items-end gap-md">
+      <header className="mb-xl flex flex-col md:flex-row md:justify-between md:items-end gap-md">
         <div className="min-w-0">
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Sugerencias</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras, reporta problemas o sugiere nuevas funcionalidades para la plataforma.</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0"
+          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0 self-end md:self-auto"
         >
           <span className="material-symbols-outlined text-lg">feedback</span>
           Crear

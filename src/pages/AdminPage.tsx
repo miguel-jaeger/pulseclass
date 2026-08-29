@@ -212,12 +212,12 @@ export function AdminPage() {
 
   return (
     <div className="pb-28 md:pb-0">
-      <header className="mb-xl flex flex-col items-start md:flex-row md:justify-between md:items-end gap-md">
+      <header className="mb-xl flex flex-col md:flex-row md:justify-between md:items-end gap-md">
         <div className="min-w-0">
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Gestión de Usuarios</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
-        <div className="flex items-center gap-sm flex-shrink-0">
+        <div className="flex items-center gap-sm flex-shrink-0 self-end md:self-auto">
           <div className="relative" ref={verComoRef}>
             <button
               onClick={() => setShowVerComo(!showVerComo)}

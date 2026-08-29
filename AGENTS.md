@@ -140,11 +140,11 @@ Archivos con toast: `SuggestionsPage`, `AdminPage`, `StatisticsPage`, `SessionsP
 
 ### Patrón de Header responsivo (todas las páginas con botón Crear)
 
-- **Clase:** `flex flex-col items-start md:flex-row md:justify-between md:items-end gap-md`
-- **Mobile:** título+descripción ocupan todo el ancho (`min-w-0`), botones debajo con tamaño natural (`shrink-0`, sin `w-full`), alineados a la izquierda por `items-start`
+- **Clase header:** `flex flex-col md:flex-row md:justify-between md:items-end gap-md`
+- **Título+descripción:** `min-w-0` (ocupa todo el ancho en mobile por `stretch` por defecto)
+- **Botones:** `self-end md:self-auto shrink-0` — alineados a la derecha en mobile, tamaño natural (no `w-full`)
 - **Desktop (`md:`):** título a la izquierda, botones a la derecha alineados al fondo
 - **Páginas afectadas:** `AdminPage`, `SuggestionsPage`, `CoursesPage`, `SessionsPage`, `HelpAdminPage`
-- **Nota:** Usar `items-start` en mobile evita que el botón se estire a todo el ancho en `flex-col`
 
 ### Patrón de Navegación (Layout)
 

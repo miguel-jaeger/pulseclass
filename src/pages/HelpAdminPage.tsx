@@ -209,7 +209,7 @@ export function HelpAdminPage() {
 
   return (
     <div className="pb-28 md:pb-0">
-      <header className="mb-xl flex flex-col items-start md:flex-row md:items-end md:justify-between gap-md">
+      <header className="mb-xl flex flex-col md:flex-row md:items-end md:justify-between gap-md">
         <div className="min-w-0">
           <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">
             <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -220,7 +220,7 @@ export function HelpAdminPage() {
         </div>
         <button
           onClick={openCreate}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0"
+          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0 self-end md:self-auto"
         >
           <span className="material-symbols-outlined text-lg">video_library</span>
           Crear
