@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { Pagination, usePagination } from '../components/Pagination'
@@ -211,10 +210,6 @@ export function HelpAdminPage() {
     <div className="pb-28 md:pb-0">
       <header className="mb-xl flex flex-col md:flex-row md:items-end md:justify-between gap-md">
         <div className="min-w-0">
-          <Link to="/admin" className="flex items-center gap-xs text-primary font-body-sm text-body-sm hover:underline mb-sm">
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-            Volver al admin
-          </Link>
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Gestión de Videos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los videos tutoriales disponibles para los usuarios.</p>
         </div>
