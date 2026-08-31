@@ -1,7 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { insforge } from '../lib/insforge'
-import { AuthChangeEvent } from '@insforge/sdk'
 
 interface User {
   id: string
@@ -34,162 +33,120 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 const SESSION_KEY = 'pulseclass_session'
 
-function saveSessionToStorage(user: User, accessToken: string, refreshToken?: string) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken, refreshToken }))
+function saveSession(user: User, accessToken: string) {
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken })) } catch {}
 }
 
-function loadSessionFromStorage(): { user: User; accessToken: string; refreshToken?: string } | null {
+function loadSession(): { user: User; accessToken: string } | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (parsed?.user?.id && parsed?.accessToken) {
-      return { user: parsed.user, accessToken: parsed.accessToken, refreshToken: parsed.refreshToken }
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
-function clearSessionStorage() {
-  localStorage.removeItem(SESSION_KEY)
-}
-
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return Date.now() >= (payload.exp || 0) * 1000
-  } catch {
-    return true
-  }
-}
-
-async function manualRefresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
-  try {
-    const res = await fetch(`${import.meta.env.VITE_INSFORGE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_INSFORGE_ANON_KEY },
-      body: JSON.stringify({ refreshToken })
-    })
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.accessToken) return { accessToken: data.accessToken, refreshToken: data.refreshToken || refreshToken }
-    }
+    const p = JSON.parse(raw)
+    if (p?.user?.id && p?.accessToken) return { user: p.user, accessToken: p.accessToken }
   } catch {}
   return null
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY) } catch {}
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const hydrating = useRef(true)
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data: profileData } = await insforge.database
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
-
-      if (!profileData) return null
-
-      const rawRole = profileData.role || 'student'
-      const normalizedRole =
-        rawRole === 'Administrador' || rawRole === 'admin' ? 'admin'
-        : rawRole === 'Profesor' || rawRole === 'teacher' ? 'teacher'
-        : 'student'
-
-      return {
-        ...profileData,
-        role: normalizedRole
-      } as Profile
-    } catch {
-      return null
-    }
+      const { data, error } = await insforge.database
+        .from('profiles').select('*').eq('user_id', userId).single()
+      if (error || !data) return null
+      const r = data.role || 'student'
+      const normalized = r === 'Administrador' || r === 'admin' ? 'admin'
+        : r === 'Profesor' || r === 'teacher' ? 'teacher' : 'student'
+      return { ...data, role: normalized } as Profile
+    } catch { return null }
   }
 
   const refreshProfile = async () => {
     if (!user) return
-    const profileData = await fetchProfile(user.id)
-    setProfile(profileData)
+    setProfile(await fetchProfile(user.id))
   }
 
   useEffect(() => {
     let cancelled = false
 
-    async function hydrateAuth() {
-      const saved = loadSessionFromStorage()
+    async function init() {
+      // 1. Try SDK (same-tab session)
+      try {
+        const { data, error } = await insforge.auth.getCurrentUser()
+        if (!cancelled && !error && data?.user) {
+          setUser(data.user as User)
+          const saved = loadSession()
+          saveSession(data.user as User, saved?.accessToken || '')
+          const p = await fetchProfile(data.user.id)
+          if (!cancelled) setProfile(p)
+          if (!cancelled) setLoading(false)
+          hydrating.current = false
+          return
+        }
+      } catch {}
 
-      // 1. If we have a valid (non-expired) access token, use SDK directly
-      if (saved?.accessToken && !isTokenExpired(saved.accessToken)) {
+      if (cancelled) return
+
+      // 2. Try localStorage (persisted session)
+      const saved = loadSession()
+      if (saved) {
         try {
-          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+          insforge.setAccessToken(saved.accessToken)
+        } catch {}
+        try {
           const { data, error } = await insforge.auth.getCurrentUser()
-          if (cancelled) return
-          if (!error && data?.user) {
+          if (!cancelled && !error && data?.user) {
             setUser(data.user as User)
-            const profileData = await fetchProfile(data.user.id)
-            if (!cancelled) setProfile(profileData)
+            saveSession(data.user as User, saved.accessToken)
+            const p = await fetchProfile(data.user.id)
+            if (!cancelled) setProfile(p)
             if (!cancelled) setLoading(false)
+            hydrating.current = false
             return
           }
         } catch {}
       }
 
-      if (cancelled) return
-
-      // 2. Access token expired or missing — try manual refresh
-      if (saved?.refreshToken) {
-        const refreshed = await manualRefresh(saved.refreshToken)
-        if (refreshed) {
-          insforge.setAccessToken(refreshed.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-          saveSessionToStorage(saved.user, refreshed.accessToken, refreshed.refreshToken)
-          try {
-            const { data, error } = await insforge.auth.getCurrentUser()
-            if (!error && data?.user) {
-              setUser(data.user as User)
-              const profileData = await fetchProfile(data.user.id)
-              if (!cancelled) setProfile(profileData)
-              if (!cancelled) setLoading(false)
-              return
-            }
-          } catch {}
-        }
+      // 3. No session
+      if (!cancelled) {
+        setUser(null)
+        setProfile(null)
+        setLoading(false)
       }
-
-      if (cancelled) return
-
-      // 3. No valid session
-      setUser(null)
-      setProfile(null)
-      if (!cancelled) setLoading(false)
+      hydrating.current = false
     }
 
-    void hydrateAuth()
+    init()
     return () => { cancelled = true }
   }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
-    if (data?.user && data?.accessToken) {
+    if (data?.user) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
-      const profileData = await fetchProfile(data.user.id)
-      setProfile(profileData)
+      saveSession(data.user as User, data.accessToken || '')
+      const p = await fetchProfile(data.user.id)
+      setProfile(p)
     }
   }
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
-    if (data?.user && data?.accessToken) {
+    if (data?.user) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
-      const profileData = await fetchProfile(data.user.id)
-      setProfile(profileData)
+      saveSession(data.user as User, data.accessToken || '')
+      const p = await fetchProfile(data.user.id)
+      setProfile(p)
     }
   }
 
@@ -201,10 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await insforge.auth.signOut()
-    if (error) throw error
-    clearSessionStorage()
-    try { insforge.setAccessToken(null) } catch { /* ignore */ }
+    try { await insforge.auth.signOut() } catch {}
+    clearSession()
+    try { insforge.setAccessToken(null as any) } catch {}
     setUser(null)
     setProfile(null)
   }
