@@ -243,7 +243,7 @@ export function CourseMembersPage() {
     try {
       const rawText = await file.text()
       const text = rawText.replace(/^\uFEFF/, '')
-      const lines = text.split(/\r?\n/).filter(l => l.trim())
+      const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim())
       if (lines.length < 2) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
         return
