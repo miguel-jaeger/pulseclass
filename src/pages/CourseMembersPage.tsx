@@ -261,9 +261,36 @@ export function CourseMembersPage() {
 
       const parsedUsers: { name: string; email: string }[] = []
       for (let i = 1; i < lines.length; i++) {
-        const cols = parseCsvLine(lines[i])
-        const name = (cols[nameIdx] || '').replace(/"/g, '').trim()
-        const email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
+        let cols = parseCsvLine(lines[i])
+        let name = ''
+        let email = ''
+        if (cols.length >= 2 && nameIdx < cols.length && emailIdx < cols.length) {
+          name = (cols[nameIdx] || '').replace(/"/g, '').trim()
+          email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
+          if (name.includes('@') && !email.includes('@') && email) {
+            const tmp = name; name = email; email = tmp.toLowerCase()
+          } else if (name.toLowerCase() === email && name.includes('@')) {
+            const m = lines[i].match(/^(.*?)\s*([\w.+-]+@[\w.-]+\.\w+)\s*$/)
+            if (m) { name = m[1].replace(/"/g, '').trim(); email = m[2].toLowerCase() }
+          } else if (name.includes('@') && email.includes('@') && name !== email) {
+            if (!name.toLowerCase().includes('@utp.edu.pe') && email.toLowerCase().includes('@utp.edu.pe')) {
+            } else if (name.toLowerCase().includes('@utp.edu.pe') && !email.toLowerCase().includes('@')) {
+              const tmp = name; name = email; email = tmp.toLowerCase()
+            }
+          }
+          if (!name || !email || name.includes('@')) {
+            const m = lines[i].match(/^(.*?)\s*([\w.+-]+@[\w.-]+\.\w+)\s*$/)
+            if (m) { const candName = m[1].replace(/"/g, '').trim(); const candEmail = m[2].toLowerCase(); if (candName && candEmail && !candName.includes('@')) { name = candName; email = candEmail } }
+          }
+        } else if (cols.length === 1) {
+          const raw = cols[0]
+          const m = raw.match(/([\w.+-]+@[\w.-]+\.\w+)/)
+          if (m) { email = m[1].toLowerCase(); name = raw.replace(m[1], '').replace(/"/g, '').trim() }
+          else { name = raw.replace(/"/g, '').trim() }
+        } else {
+          name = (cols[0] || '').replace(/"/g, '').trim()
+          email = (cols[cols.length - 1] || '').replace(/"/g, '').trim().toLowerCase()
+        }
         if (name || email) {
           parsedUsers.push({ name, email })
         }
