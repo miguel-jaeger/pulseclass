@@ -242,19 +242,17 @@ export function CourseMembersPage() {
     setImportLoading(true)
     setImportResult(null)
     try {
-      const text = await file.text()
+      const rawText = await file.text()
+      const text = rawText.replace(/^\uFEFF/, '')
       const lines = text.split(/\r?\n/).filter(l => l.trim())
       if (lines.length < 2) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
         return
       }
 
-      const headerLine = lines[0].toLowerCase()
-      const separator = headerLine.includes(';') ? ';' : ','
-      const headers = lines[0].split(separator).map(h => h.trim().toLowerCase().replace(/"/g, ''))
-
-      const nameIdx = headers.findIndex(h => h === 'nombre' || h === 'name' || h === 'nombre completo' || h === 'alumnos')
-      const emailIdx = headers.findIndex(h => h === 'correo' || h === 'email' || h === 'correo electrónico' || h === 'e-mail' || h === 'correo electronico')
+      const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase().replace(/^\uFEFF/, '').replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim())
+      const nameIdx = headers.findIndex(h => h.includes('nombre') || h === 'name' || h.includes('alumno') || h.includes('estudiante'))
+      const emailIdx = headers.findIndex(h => h.includes('correo') || h.includes('email') || h.includes('e-mail'))
 
       if (nameIdx === -1 || emailIdx === -1) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
