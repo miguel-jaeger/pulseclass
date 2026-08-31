@@ -26,7 +26,6 @@ interface AuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
-  signInWithGithub: () => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -100,9 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // 1. Try SDK first (session in memory from same tab)
       try {
         const { data, error } = await insforge.auth.getCurrentUser()
-
         if (cancelled) return
-
         if (!error && data?.user) {
           setUser(data.user as User)
           const profileData = await fetchProfile(data.user.id)
@@ -110,30 +107,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!cancelled) setLoading(false)
           return
         }
-      } catch {
-        // SDK threw — continue to fallback
+      } catch {}
+
+      if (cancelled) return
+
+      // 2. SDK failed — try restoring from localStorage and refreshing
+      const saved = loadSessionFromStorage()
+      if (saved?.refreshToken) {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_INSFORGE_URL}/auth/v1/token?grant_type=refresh_token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': import.meta.env.VITE_INSFORGE_ANON_KEY
+            },
+            body: JSON.stringify({ refreshToken: saved.refreshToken })
+          })
+          if (res.ok) {
+            const tokens = await res.json()
+            if (tokens?.accessToken) {
+              insforge.setAccessToken(tokens.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+              saveSessionToStorage(saved.user, tokens.accessToken, tokens.refreshToken || saved.refreshToken)
+              const { data, error } = await insforge.auth.getCurrentUser()
+              if (!error && data?.user) {
+                setUser(data.user as User)
+                const profileData = await fetchProfile(data.user.id)
+                if (!cancelled) setProfile(profileData)
+                if (!cancelled) setLoading(false)
+                return
+              }
+            }
+          }
+        } catch {}
       }
 
       if (cancelled) return
 
-      // 2. SDK failed — try restoring from localStorage
-      const saved = loadSessionFromStorage()
-      if (saved) {
+      // 3. Try setting saved access token directly (might still be valid)
+      if (saved?.accessToken) {
         try {
           insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-          if (saved.refreshToken) {
-            try { (insforge as any).http.setRefreshToken(saved.refreshToken) } catch {}
+          const { data, error } = await insforge.auth.getCurrentUser()
+          if (!error && data?.user) {
+            setUser(data.user as User)
+            const profileData = await fetchProfile(data.user.id)
+            if (!cancelled) setProfile(profileData)
+            if (!cancelled) setLoading(false)
+            return
           }
-        } catch {
-        }
-        setUser(saved.user)
-        const profileData = await fetchProfile(saved.user.id)
-        if (!cancelled) setProfile(profileData)
-        if (!cancelled) setLoading(false)
-        return
+        } catch {}
       }
 
-      // 3. No saved session
+      // 4. No valid session
       setUser(null)
       setProfile(null)
       if (!cancelled) setLoading(false)
@@ -172,13 +197,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
-  const signInWithGithub = async () => {
-    const { error } = await insforge.auth.signInWithOAuth('github', {
-      redirectTo: window.location.origin
-    })
-    if (error) throw error
-  }
-
   const signOut = async () => {
     const { error } = await insforge.auth.signOut()
     if (error) throw error
@@ -189,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, signInWithGithub, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithEmail, signUpWithEmail, signInWithGoogle, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
