@@ -226,7 +226,7 @@ export function CourseMembersPage() {
       } else {
         if (ch === '"') {
           inQuotes = true
-        } else if (ch === ',' || ch === ';') {
+        } else if (ch === ',' || ch === ';' || ch === '\t') {
           result.push(current.trim())
           current = ''
         } else {
