@@ -93,13 +93,19 @@ export function CourseMembersPage() {
     const userIds = rows.map((r: CourseMemberRow) => r.user_id)
     const uniqueIds = [...new Set(userIds)]
 
-    const { data: profiles } = await insforge.database
-      .from('profiles')
-      .select('user_id, name, email, role')
-      .in('user_id', uniqueIds)
+    const BATCH = 30
+    const allProfilesBatch: MemberProfile[] = []
+    for (let i = 0; i < uniqueIds.length; i += BATCH) {
+      const chunk = uniqueIds.slice(i, i + BATCH)
+      const { data: profiles } = await insforge.database
+        .from('profiles')
+        .select('user_id, name, email, role')
+        .in('user_id', chunk)
+      if (profiles) allProfilesBatch.push(...(profiles as MemberProfile[]))
+    }
 
     const profileMap = new Map(
-      (profiles as MemberProfile[] || []).map((p) => [p.user_id, p])
+      allProfilesBatch.map((p) => [p.user_id, p])
     )
 
     const merged = rows.map((r: CourseMemberRow) => ({
@@ -265,19 +271,25 @@ export function CourseMembersPage() {
         }
       }
 
-      const { data, error } = await insforge.functions.invoke('csv-import-users', {
-        method: 'POST',
-        body: { courseId, users: parsedUsers }
-      })
-
-      if (error) {
-        console.error('Import function error:', error)
-        setImportResult({ imported: 0, skipped: parsedUsers })
-        return
+      const CHUNK_SIZE = 15
+      let totalImported = 0
+      const allSkipped: { name: string; email: string }[] = []
+      for (let i = 0; i < parsedUsers.length; i += CHUNK_SIZE) {
+        const chunk = parsedUsers.slice(i, i + CHUNK_SIZE)
+        const { data, error } = await insforge.functions.invoke('csv-import-users', {
+          method: 'POST',
+          body: { courseId, users: chunk }
+        })
+        if (error) {
+          console.error('Import function error:', error)
+          allSkipped.push(...chunk)
+          continue
+        }
+        totalImported += data.imported || 0
+        if (data.skipped) allSkipped.push(...data.skipped)
       }
-
-      setImportResult({ imported: data.imported, skipped: data.skipped })
-      if (data.imported > 0) {
+      setImportResult({ imported: totalImported, skipped: allSkipped })
+      if (totalImported > 0) {
         await loadAll()
       }
     } catch {
