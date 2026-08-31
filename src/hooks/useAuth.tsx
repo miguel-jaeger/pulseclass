@@ -96,7 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function hydrateAuth() {
-      // 1. Try SDK first (session in memory from same tab)
+      // 1. Restore tokens from localStorage FIRST
+      const saved = loadSessionFromStorage()
+
+      if (saved?.accessToken) {
+        try { insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED) } catch {}
+      }
+      if (saved?.refreshToken) {
+        try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
+      }
+
+      // 2. Try getCurrentUser with restored tokens
       try {
         const { data, error } = await insforge.auth.getCurrentUser()
         if (cancelled) return
@@ -111,8 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return
 
-      // 2. SDK failed — try restoring from localStorage and refreshing
-      const saved = loadSessionFromStorage()
+      // 3. getCurrentUser failed — try manual refresh via API
       if (saved?.refreshToken) {
         try {
           const res = await fetch(`${import.meta.env.VITE_INSFORGE_URL}/auth/v1/token?grant_type=refresh_token`, {
@@ -127,6 +136,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const tokens = await res.json()
             if (tokens?.accessToken) {
               insforge.setAccessToken(tokens.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+              if (tokens.refreshToken) {
+                try { (insforge as any).http?.setRefreshToken(tokens.refreshToken) } catch {}
+              }
               saveSessionToStorage(saved.user, tokens.accessToken, tokens.refreshToken || saved.refreshToken)
               const { data, error } = await insforge.auth.getCurrentUser()
               if (!error && data?.user) {
@@ -142,21 +154,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (cancelled) return
-
-      // 3. Try setting saved access token directly (might still be valid)
-      if (saved?.accessToken) {
-        try {
-          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-          const { data, error } = await insforge.auth.getCurrentUser()
-          if (!error && data?.user) {
-            setUser(data.user as User)
-            const profileData = await fetchProfile(data.user.id)
-            if (!cancelled) setProfile(profileData)
-            if (!cancelled) setLoading(false)
-            return
-          }
-        } catch {}
-      }
 
       // 4. No valid session
       setUser(null)
