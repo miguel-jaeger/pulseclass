@@ -244,17 +244,14 @@ export function CourseMembersPage() {
       const rawText = await file.text()
       const text = rawText.replace(/^\uFEFF/, '')
       const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim())
-      console.log('CSV raw length:', rawText.length, 'lines:', lines.length, 'first5:', lines.slice(0, 5), 'charCodes first line:', Array.from(lines[0] || '').slice(0, 20).map(c => c.charCodeAt(0)))
       if (lines.length < 2) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
         return
       }
 
       const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase().replace(/^\uFEFF/, '').replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim())
-      console.log('CSV headers parsed:', headers)
       const nameIdx = headers.findIndex(h => h === 'alumnos' || h === 'nombre' || h === 'name')
       const emailIdx = headers.findIndex(h => h === 'correo' || h === 'email' || h === 'e-mail')
-      console.log('CSV nameIdx:', nameIdx, 'emailIdx:', emailIdx)
 
       if (nameIdx === -1 || emailIdx === -1) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
@@ -266,7 +263,6 @@ export function CourseMembersPage() {
         const cols = parseCsvLine(lines[i]).map(c => c.replace(/"/g, '').trim())
         let name = (cols[nameIdx] || '').trim()
         let email = (cols[emailIdx] || '').trim().toLowerCase()
-        if (i <= 3) console.log('CSV row', i, 'cols:', cols, '-> name:', name, 'email:', email)
         if (name.includes('@') && email.includes('@')) {
           const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
           if (m) {
@@ -282,7 +278,6 @@ export function CourseMembersPage() {
         if (name || email) parsedUsers.push({ name, email })
       }
 
-      console.log('CSV parsed users:', parsedUsers.length, 'first3:', parsedUsers.slice(0, 3).map(u => `${u.name} | ${u.email}`))
       const CHUNK_SIZE = 15
       let totalImported = 0
       const allSkipped: { name: string; email: string }[] = []
