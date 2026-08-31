@@ -250,8 +250,8 @@ export function CourseMembersPage() {
       }
 
       const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase().replace(/^\uFEFF/, '').replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim())
-      const nameIdx = headers.findIndex(h => h.includes('nombre') || h === 'name' || h.includes('alumno') || h.includes('estudiante'))
-      const emailIdx = headers.findIndex(h => h.includes('correo') || h.includes('email') || h.includes('e-mail'))
+      const nameIdx = headers.findIndex(h => h === 'alumnos' || h === 'nombre' || h === 'name')
+      const emailIdx = headers.findIndex(h => h === 'correo' || h === 'email' || h === 'e-mail')
 
       if (nameIdx === -1 || emailIdx === -1) {
         setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
@@ -261,45 +261,20 @@ export function CourseMembersPage() {
       const parsedUsers: { name: string; email: string }[] = []
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCsvLine(lines[i]).map(c => c.replace(/"/g, '').trim())
-        let name = ''
-        let email = ''
-        if (cols.length >= 2 && nameIdx < cols.length && emailIdx < cols.length) {
-          name = (cols[nameIdx] || '').replace(/"/g, '').trim()
-          email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
-        }
-        if (!email || email.includes(',')) {
+        let name = (cols[nameIdx] || '').trim()
+        let email = (cols[emailIdx] || '').trim().toLowerCase()
+        if (name.includes('@') && email.includes('@')) {
           const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
-          if (m) email = m[0].toLowerCase()
-        }
-        if (name.includes('@') || name === email) {
-          for (const c of cols) {
-            const clean = c.trim().toLowerCase()
-            if (clean.includes('@') && clean !== name.toLowerCase()) { email = clean; break }
+          if (m) {
+            email = m[0].toLowerCase()
+            const rest = lines[i].replace(m[0], '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
+            if (rest && !rest.includes('@')) name = rest
           }
-          if (name.toLowerCase() === email) name = ''
-          for (const c of cols) {
-            const clean = c.trim()
-            if (clean && !clean.includes('@') && clean.toLowerCase() !== email) { name = clean; break }
-          }
-          if (!name) {
-            const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
-            if (m) {
-              email = m[0].toLowerCase()
-              const rest = lines[i].replace(m[0], '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
-              if (rest && !rest.includes('@')) name = rest
-            }
-          }
-        }
-        if (!email) {
-          const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
-          if (m) email = m[0].toLowerCase()
         }
         if (!name && email) {
-          const rest = lines[i].replace(/[\w.+-]+@[\w.-]+\.\w+/, '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
+          const rest = lines[i].replace(email, '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
           if (rest && !rest.includes('@')) name = rest
         }
-        if (!name && cols.length >= 2 && nameIdx < cols.length) name = (cols[nameIdx] || '').trim()
-        if (!email && cols.length >= 2 && emailIdx < cols.length) email = (cols[emailIdx] || '').trim().toLowerCase()
         if (name || email) parsedUsers.push({ name, email })
       }
 
