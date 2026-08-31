@@ -266,6 +266,7 @@ export function CourseMembersPage() {
         const cols = parseCsvLine(lines[i]).map(c => c.replace(/"/g, '').trim())
         let name = (cols[nameIdx] || '').trim()
         let email = (cols[emailIdx] || '').trim().toLowerCase()
+        if (i <= 3) console.log('CSV row', i, 'cols:', cols, '-> name:', name, 'email:', email)
         if (name.includes('@') && email.includes('@')) {
           const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
           if (m) {
@@ -281,7 +282,7 @@ export function CourseMembersPage() {
         if (name || email) parsedUsers.push({ name, email })
       }
 
-      console.log('CSV parsed users:', parsedUsers.length, 'first3:', parsedUsers.slice(0, 3))
+      console.log('CSV parsed users:', parsedUsers.length, 'first3:', parsedUsers.slice(0, 3).map(u => `${u.name} | ${u.email}`))
       const CHUNK_SIZE = 15
       let totalImported = 0
       const allSkipped: { name: string; email: string }[] = []
