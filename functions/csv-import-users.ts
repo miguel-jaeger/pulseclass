@@ -123,6 +123,14 @@ export default async function(req: Request): Promise<Response> {
       let userId = emailToUserId.get(email)
 
       if (userId) {
+        try {
+          await adminClient.database
+            .from('profiles')
+            .update({ name: cleanName })
+            .eq('user_id', userId)
+        } catch (e) {
+          console.error('profile update error:', e)
+        }
         if (!memberUserIds.has(userId)) {
           const { error: insertErr } = await adminClient.database
             .from('course_members')
