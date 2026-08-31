@@ -180,15 +180,14 @@ export function CourseMembersPage() {
 
   const removeSelectedMembers = async () => {
     if (selectedMembers.size === 0) return
-    const { error } = await insforge.database
-      .from('course_members')
-      .delete()
-      .in('id', Array.from(selectedMembers))
-
-    if (!error) {
-      await loadAll()
-      setSelectedMembers(new Set())
+    const ids = Array.from(selectedMembers)
+    const BATCH = 50
+    for (let i = 0; i < ids.length; i += BATCH) {
+      const chunk = ids.slice(i, i + BATCH)
+      await insforge.database.from('course_members').delete().in('id', chunk)
     }
+    await loadAll()
+    setSelectedMembers(new Set())
   }
 
   const toggleSelectMember = (memberId: string) => {
@@ -261,27 +260,46 @@ export function CourseMembersPage() {
 
       const parsedUsers: { name: string; email: string }[] = []
       for (let i = 1; i < lines.length; i++) {
-        const raw = lines[i]
-        const emailMatch = raw.match(/[\w.+-]+@[\w.-]+\.\w+/)
-        if (emailMatch) {
-          const email = emailMatch[0].trim().toLowerCase()
-          let name = raw.replace(emailMatch[0], '').trim()
-          name = parseCsvLine(name)[0]?.replace(/"/g, '').trim() || name.replace(/[,;\t]+/g, '').replace(/"/g, '').trim()
-          name = name.replace(/^[,;\t]+|[,;\t]+$/g, '').trim()
-          if (name.includes('@')) {
-            const cols = parseCsvLine(raw)
-            if (cols.length >= 2 && nameIdx < cols.length && emailIdx < cols.length) {
-              const candName = (cols[nameIdx] || '').replace(/"/g, '').trim()
-              const candEmail = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
-              if (candName && !candName.includes('@') && candEmail.includes('@')) { name = candName }
+        const cols = parseCsvLine(lines[i]).map(c => c.replace(/"/g, '').trim())
+        let name = ''
+        let email = ''
+        if (cols.length >= 2 && nameIdx < cols.length && emailIdx < cols.length) {
+          name = (cols[nameIdx] || '').replace(/"/g, '').trim()
+          email = (cols[emailIdx] || '').replace(/"/g, '').trim().toLowerCase()
+        }
+        if (!email || email.includes(',')) {
+          const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
+          if (m) email = m[0].toLowerCase()
+        }
+        if (name.includes('@') || name === email) {
+          for (const c of cols) {
+            const clean = c.trim().toLowerCase()
+            if (clean.includes('@') && clean !== name.toLowerCase()) { email = clean; break }
+          }
+          if (name.toLowerCase() === email) name = ''
+          for (const c of cols) {
+            const clean = c.trim()
+            if (clean && !clean.includes('@') && clean.toLowerCase() !== email) { name = clean; break }
+          }
+          if (!name) {
+            const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
+            if (m) {
+              email = m[0].toLowerCase()
+              const rest = lines[i].replace(m[0], '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
+              if (rest && !rest.includes('@')) name = rest
             }
           }
-          if (name || email) parsedUsers.push({ name, email })
-          continue
         }
-        const cols = parseCsvLine(raw)
-        const name = (cols[nameIdx] || cols[0] || '').replace(/"/g, '').trim()
-        const email = (cols[emailIdx] || cols[cols.length - 1] || '').replace(/"/g, '').trim().toLowerCase()
+        if (!email) {
+          const m = lines[i].match(/[\w.+-]+@[\w.-]+\.\w+/)
+          if (m) email = m[0].toLowerCase()
+        }
+        if (!name && email) {
+          const rest = lines[i].replace(/[\w.+-]+@[\w.-]+\.\w+/, '').replace(/[,;\t]+/g, ' ').replace(/"/g, '').trim()
+          if (rest && !rest.includes('@')) name = rest
+        }
+        if (!name && cols.length >= 2 && nameIdx < cols.length) name = (cols[nameIdx] || '').trim()
+        if (!email && cols.length >= 2 && emailIdx < cols.length) email = (cols[emailIdx] || '').trim().toLowerCase()
         if (name || email) parsedUsers.push({ name, email })
       }
 
