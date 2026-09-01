@@ -60,6 +60,15 @@ function getSdkRefreshToken(): string | undefined {
   try { return (insforge as any).http?.refreshToken || undefined } catch { return undefined }
 }
 
+function isAccessTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return Date.now() >= (payload.exp || 0) * 1000
+  } catch {
+    return true
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -111,19 +120,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {}
       }
 
-      try {
-        const { data, error } = await insforge.auth.getCurrentUser()
+      const tokenValid = saved?.accessToken && !isAccessTokenExpired(saved.accessToken)
+      const canRefresh = Boolean(saved?.refreshToken)
 
-        if (cancelled) return
-
-        if (!error && data?.user) {
-          setUser(data.user as User)
-          const profileData = await fetchProfile(data.user.id)
-          if (!cancelled) setProfile(profileData)
-          if (!cancelled) setLoading(false)
-          return
-        }
-      } catch {
+      if (tokenValid) {
+        try {
+          const { data, error } = await insforge.auth.getCurrentUser()
+          if (cancelled) return
+          if (!error && data?.user) {
+            setUser(data.user as User)
+            const profileData = await fetchProfile(data.user.id)
+            if (!cancelled) setProfile(profileData)
+            if (!cancelled) setLoading(false)
+            return
+          }
+        } catch {}
+      } else if (canRefresh) {
+        try {
+          const { data, error } = await insforge.auth.getCurrentUser()
+          if (cancelled) return
+          if (!error && data?.user) {
+            setUser(data.user as User)
+            const profileData = await fetchProfile(data.user.id)
+            if (!cancelled) setProfile(profileData)
+            if (!cancelled) setLoading(false)
+            return
+          }
+        } catch {}
       }
 
       if (cancelled) return
