@@ -937,6 +937,11 @@ export function StatisticsPage() {
                         <div className="min-w-0 flex-1">
                           <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
                           <span className="font-body-xs text-body-xs text-on-surface-variant block">{item.sessionTitle}</span>
+                          {item.date && (
+                            <span className="font-body-xs text-body-xs text-on-surface-variant">
+                              {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </span>
+                          )}
                         </div>
                         {canEdit(item.studentId) && (
                           <div className="ml-auto flex gap-sm shrink-0">
