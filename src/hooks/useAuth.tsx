@@ -72,25 +72,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
-    // Restore session from sessionStorage (survives F5, cleared on tab close)
     const saved = loadSession()
-    if (saved) {
+    if (saved?.user && saved?.accessToken) {
+      setUser(saved.user)
       try { insforge.setAccessToken(saved.accessToken) } catch {}
       if (saved.refreshToken) {
         try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
       }
+      fetchProfile(saved.user.id).then(p => { if (!cancelled) setProfile(p) })
     }
-
-    insforge.auth.getCurrentUser().then(({ data, error }) => {
-      if (cancelled) return
-      if (!error && data?.user) {
-        setUser(data.user as User)
-        fetchProfile(data.user.id).then(p => { if (!cancelled) setProfile(p) })
-      }
-      if (!cancelled) setLoading(false)
-    }).catch(() => {
-      if (!cancelled) setLoading(false)
-    })
+    if (!cancelled) setLoading(false)
 
     return () => { cancelled = true }
   }, [])
