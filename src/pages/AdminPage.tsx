@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS, ROLE_OPTIONS } from '../lib/roles'
 
 interface UserProfile {
   id: string
@@ -26,19 +27,13 @@ export function AdminPage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
   const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
-  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'Estudiante' as string, password: '' })
+  const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showVerComo, setShowVerComo] = useState(false)
   const verComoRef = useRef<HTMLDivElement>(null)
-
-  const roleLabel = (role: string) => {
-    if (role === 'admin') return 'Administrador'
-    if (role === 'teacher') return 'Profesor'
-    return 'Estudiante'
-  }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -66,7 +61,7 @@ export function AdminPage() {
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setUsers(data as UserProfile[])
+      setUsers((data as UserProfile[]).map(u => ({ ...u, role: normalizeRole(u.role) })))
     }
     setLoading(false)
   }
@@ -104,7 +99,7 @@ export function AdminPage() {
 
   const openEditModal = (user: UserProfile) => {
     setEditingUser(user)
-    setEditForm({ name: user.name, email: user.email, role: user.role, password: '' })
+    setEditForm({ name: user.name, email: user.email, role: normalizeRole(user.role), password: '' })
     setFormError('')
     setShowEditModal(true)
   }
@@ -275,10 +270,9 @@ export function AdminPage() {
           onChange={(e) => setRoleFilter(e.target.value)}
           className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
         >
-          <option value="all">Todos los roles</option>
-          <option value="admin">Administradores</option>
-          <option value="teacher">Profesores</option>
-          <option value="student">Estudiantes</option>
+          {ROLE_FILTER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
 
@@ -589,10 +583,10 @@ export function AdminPage() {
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Profesor</option>
-                  <option value="admin">Administrador</option>
-                </select>
+{ROLE_OPTIONS.map(opt => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
               </div>
             </div>
             {formError && (
@@ -656,10 +650,10 @@ export function AdminPage() {
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-                  <option value="student">Estudiante</option>
-                  <option value="teacher">Profesor</option>
-                  <option value="admin">Administrador</option>
-                </select>
+{ROLE_OPTIONS.map(opt => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
               </div>
               <div className="border-t border-outline-variant pt-md mt-md">
                 <label htmlFor="edit-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña (opcional)</label>
