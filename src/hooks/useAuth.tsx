@@ -56,6 +56,10 @@ function clearSessionStorage() {
   localStorage.removeItem(SESSION_KEY)
 }
 
+function getSdkRefreshToken(): string | undefined {
+  try { return (insforge as any).http?.refreshToken || undefined } catch { return undefined }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -102,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
           if (saved.refreshToken) {
-            try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
+            try { insforge.getHttpClient().setRefreshToken(saved.refreshToken) } catch {}
           }
         } catch {}
       }
@@ -146,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
+      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken || getSdkRefreshToken())
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
@@ -157,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
+      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken || getSdkRefreshToken())
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
