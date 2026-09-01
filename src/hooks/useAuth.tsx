@@ -47,6 +47,11 @@ function loadSession() {
   return null
 }
 
+function clearSdkState() {
+  try { insforge.setAccessToken(null as any) } catch {}
+  try { (insforge as any).http?.setRefreshToken(null) } catch {}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -83,6 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
+    clearSdkState()
+    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
     if (data?.user) {
@@ -94,6 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
+    clearSdkState()
+    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
     if (data?.user) {
@@ -112,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    try { await insforge.auth.signOut() } catch {}
+    clearSdkState()
     try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     setUser(null)
     setProfile(null)
