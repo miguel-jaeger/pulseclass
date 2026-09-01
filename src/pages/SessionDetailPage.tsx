@@ -377,10 +377,10 @@ export function SessionDetailPage() {
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">
           <span className="material-symbols-outlined text-sm align-middle mr-xs">calendar_today</span>
           {new Date((session?.date || '') + 'T12:00:00').toLocaleDateString('es-ES', {
-            weekday: 'long',
+            weekday: 'short',
             year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            month: 'short',
+            day: '2-digit'
           })}
         </p>
       </header>
