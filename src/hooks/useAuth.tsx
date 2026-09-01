@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { insforge } from '../lib/insforge'
 
@@ -31,31 +31,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const SESSION_KEY = 'pulseclass_session'
-
-function saveSession(user: User, accessToken: string) {
-  try { localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken })) } catch {}
-}
-
-function loadSession(): { user: User; accessToken: string } | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    const p = JSON.parse(raw)
-    if (p?.user?.id && p?.accessToken) return { user: p.user, accessToken: p.accessToken }
-  } catch {}
-  return null
-}
-
-function clearSession() {
-  try { localStorage.removeItem(SESSION_KEY) } catch {}
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const hydrating = useRef(true)
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -77,54 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
 
-    async function init() {
-      // 1. Try SDK (same-tab session)
-      try {
-        const { data, error } = await insforge.auth.getCurrentUser()
-        if (!cancelled && !error && data?.user) {
-          setUser(data.user as User)
-          const saved = loadSession()
-          saveSession(data.user as User, saved?.accessToken || '')
-          const p = await fetchProfile(data.user.id)
-          if (!cancelled) setProfile(p)
-          if (!cancelled) setLoading(false)
-          hydrating.current = false
-          return
-        }
-      } catch {}
-
+    insforge.auth.getCurrentUser().then(({ data, error }) => {
       if (cancelled) return
-
-      // 2. Try localStorage (persisted session)
-      const saved = loadSession()
-      if (saved) {
-        try {
-          insforge.setAccessToken(saved.accessToken)
-        } catch {}
-        try {
-          const { data, error } = await insforge.auth.getCurrentUser()
-          if (!cancelled && !error && data?.user) {
-            setUser(data.user as User)
-            saveSession(data.user as User, saved.accessToken)
-            const p = await fetchProfile(data.user.id)
-            if (!cancelled) setProfile(p)
-            if (!cancelled) setLoading(false)
-            hydrating.current = false
-            return
-          }
-        } catch {}
+      if (!error && data?.user) {
+        setUser(data.user as User)
+        fetchProfile(data.user.id).then(p => { if (!cancelled) setProfile(p) })
       }
+      if (!cancelled) setLoading(false)
+    }).catch(() => {
+      if (!cancelled) setLoading(false)
+    })
 
-      // 3. No session
-      if (!cancelled) {
-        setUser(null)
-        setProfile(null)
-        setLoading(false)
-      }
-      hydrating.current = false
-    }
-
-    init()
     return () => { cancelled = true }
   }, [])
 
@@ -133,7 +75,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '')
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
@@ -144,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '')
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
@@ -159,8 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try { await insforge.auth.signOut() } catch {}
-    clearSession()
-    try { insforge.setAccessToken(null as any) } catch {}
     setUser(null)
     setProfile(null)
   }
