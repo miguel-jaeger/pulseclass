@@ -936,7 +936,6 @@ export function StatisticsPage() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
-                          <span className="font-body-xs text-body-xs text-on-surface-variant block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1133,9 +1132,8 @@ export function StatisticsPage() {
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-<div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1">
                           <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
-                          <span className="font-body-xs text-body-xs text-on-surface-variant block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
