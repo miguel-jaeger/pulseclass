@@ -86,6 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    if (!user) return
+    insforge.auth.getCurrentUser().catch(() => {})
+  }, [user])
+
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
