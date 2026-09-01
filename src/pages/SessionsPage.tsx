@@ -134,9 +134,9 @@ function SessionCard({ session, index, profile, onEdit, onDelete }: {
       <div className="min-w-0 flex-1">
         <p className="font-body-xs text-body-xs text-on-surface-variant">
           {new Date(session.date + 'T12:00:00').toLocaleDateString('es-ES', {
-            weekday: 'short',
-            day: 'numeric',
-            month: 'short'
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
           })}
         </p>
       </div>
