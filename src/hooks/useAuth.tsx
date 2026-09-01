@@ -33,16 +33,16 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 const SESSION_KEY = 'pulseclass_session'
 
-function saveSession(user: User, accessToken: string) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken })) } catch {}
+function saveSession(user: User, accessToken: string, refreshToken?: string) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken, refreshToken })) } catch {}
 }
 
-function loadSession(): { user: User; accessToken: string } | null {
+function loadSession(): { user: User; accessToken: string; refreshToken?: string } | null {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const p = JSON.parse(raw)
-    if (p?.user?.id && p?.accessToken) return { user: p.user, accessToken: p.accessToken }
+    if (p?.user?.id && p?.accessToken) return { user: p.user, accessToken: p.accessToken, refreshToken: p.refreshToken }
   } catch {}
   return null
 }
@@ -76,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = loadSession()
     if (saved) {
       try { insforge.setAccessToken(saved.accessToken) } catch {}
+      if (saved.refreshToken) {
+        try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
+      }
     }
 
     insforge.auth.getCurrentUser().then(({ data, error }) => {
@@ -97,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '')
+      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
@@ -108,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '')
+      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
