@@ -49,6 +49,7 @@ interface SessionStat {
 interface RatedItem {
   id: string
   studentId: string
+  courseName: string
   sessionTitle: string
   date: string
   score: number
@@ -353,9 +354,11 @@ export function StatisticsPage() {
       .filter(r => r.comment)
       .map(r => {
         const s = sessions.find(sess => sess.id === r.session_id)
+        const course = courses.find(c => c.id === s?.course_id)
         return {
           id: r.id,
           studentId: r.student_id,
+          courseName: course?.name ?? 'Sin curso',
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -364,16 +367,18 @@ export function StatisticsPage() {
         }
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [ratings, sessions])
+  }, [ratings, sessions, courses])
 
   const suggestionsWithSession = useMemo<RatedItem[]>(() => {
     return ratings
       .filter(r => r.suggestion)
       .map(r => {
         const s = sessions.find(sess => sess.id === r.session_id)
+        const course = courses.find(c => c.id === s?.course_id)
         return {
           id: r.id,
           studentId: r.student_id,
+          courseName: course?.name ?? 'Sin curso',
           sessionTitle: s?.title ?? 'Sin sesión',
           date: s?.date ?? '',
           score: r.score,
@@ -382,7 +387,7 @@ export function StatisticsPage() {
         }
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [ratings, sessions])
+  }, [ratings, sessions, courses])
 
   const totalEvaluaciones = ratings.length
 
@@ -929,8 +934,9 @@ export function StatisticsPage() {
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <div className="min-w-0">
-                          <span className="font-body-sm text-body-sm text-on-surface font-medium truncate block">{item.sessionTitle}</span>
+<div className="min-w-0 flex-1">
+                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
+                          <span className="font-body-xs text-body-xs text-on-surface-variant block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -1127,8 +1133,9 @@ export function StatisticsPage() {
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <div className="min-w-0">
-                          <span className="font-body-sm text-body-sm text-on-surface font-medium truncate block">{item.sessionTitle}</span>
+<div className="min-w-0 flex-1">
+                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
+                          <span className="font-body-xs text-body-xs text-on-surface-variant block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
