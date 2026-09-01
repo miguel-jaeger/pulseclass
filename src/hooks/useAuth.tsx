@@ -24,9 +24,9 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
-  signInWithEmail: (email: string, password: string) => Promise<void>
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>
-  signInWithGoogle: () => Promise<void>
+  signInWithEmail: (email: string, password: string, remember?: boolean) => Promise<void>
+  signUpWithEmail: (email: string, password: string, name: string, remember?: boolean) => Promise<void>
+  signInWithGoogle: (remember?: boolean) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -34,18 +34,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 const SESSION_KEY = 'pulseclass_session'
+const REMEMBER_KEY = 'pulseclass_remember'
 
-function saveSessionToStorage(user: User, accessToken: string) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken }))
+type StorageKind = 'local' | 'session'
+
+interface SavedSession {
+  user: User
+  accessToken: string
+  refreshToken?: string
 }
 
-function loadSessionFromStorage(): { user: User; accessToken: string } | null {
+function getStorage(kind: StorageKind): Storage {
+  return kind === 'local' ? window.localStorage : window.sessionStorage
+}
+
+function saveSession(session: SavedSession, kind: StorageKind) {
+  try { getStorage(kind).setItem(SESSION_KEY, JSON.stringify(session)) } catch {}
+}
+
+function loadSession(kind: StorageKind): SavedSession | null {
   try {
-    const raw = localStorage.getItem(SESSION_KEY)
+    const raw = getStorage(kind).getItem(SESSION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (parsed?.user?.id && parsed?.accessToken) {
-      return { user: parsed.user, accessToken: parsed.accessToken }
+      return { user: parsed.user, accessToken: parsed.accessToken, refreshToken: parsed.refreshToken }
     }
     return null
   } catch {
@@ -53,8 +66,32 @@ function loadSessionFromStorage(): { user: User; accessToken: string } | null {
   }
 }
 
-function clearSessionStorage() {
-  localStorage.removeItem(SESSION_KEY)
+function loadAnySession(): SavedSession | null {
+  return loadSession('local') || loadSession('session')
+}
+
+function clearAllSessions() {
+  try { getStorage('local').removeItem(SESSION_KEY) } catch {}
+  try { getStorage('session').removeItem(SESSION_KEY) } catch {}
+  try { getStorage('local').removeItem(REMEMBER_KEY) } catch {}
+  try { getStorage('session').removeItem(REMEMBER_KEY) } catch {}
+}
+
+function getStorageKindForRemember(remember: boolean): StorageKind {
+  return remember ? 'local' : 'session'
+}
+
+function getSdkRefreshToken(): string | undefined {
+  try { return (insforge as any).http?.refreshToken || undefined } catch { return undefined }
+}
+
+function persistCurrentSession(user: User, kind: StorageKind) {
+  try {
+    const accessToken = (insforge as any).http?.userToken || ''
+    if (accessToken) {
+      saveSession({ user, accessToken, refreshToken: getSdkRefreshToken() }, kind)
+    }
+  } catch {}
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -91,15 +128,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function hydrateAuth() {
+      const saved = loadAnySession()
+
+      if (saved?.accessToken) {
+        try {
+          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+          if (saved.refreshToken) {
+            try { insforge.getHttpClient().setRefreshToken(saved.refreshToken) } catch {}
+          }
+        } catch {}
+      }
+
       try {
         const { data, error } = await insforge.auth.getCurrentUser()
 
         if (cancelled) return
 
         if (!error && data?.user) {
-          setUser(data.user as User)
-          const profileData = await fetchProfile(data.user.id)
+          const freshUser = data.user as User
+          setUser(freshUser)
+          const profileData = await fetchProfile(freshUser.id)
           if (!cancelled) setProfile(profileData)
+
+          const pendingRemember = getStorage('local').getItem(REMEMBER_KEY)
+          const kind: StorageKind = pendingRemember === 'session' ? 'session' : 'local'
+          persistCurrentSession(freshUser, kind)
+          try { getStorage('session').removeItem(REMEMBER_KEY) } catch {}
+
           if (!cancelled) setLoading(false)
           return
         }
@@ -108,19 +163,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return
 
-      const saved = loadSessionFromStorage()
-      if (saved) {
-        try {
-          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-        } catch {
-        }
-        setUser(saved.user)
-        const profileData = await fetchProfile(saved.user.id)
-        if (!cancelled) setProfile(profileData)
-        if (!cancelled) setLoading(false)
-        return
-      }
-
+      // No session or expired/invalid => clean sign-out
+      clearAllSessions()
+      try { insforge.setAccessToken(null as any) } catch {}
       setUser(null)
       setProfile(null)
       if (!cancelled) setLoading(false)
@@ -130,29 +175,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string, password: string, remember = true) => {
+    const kind = getStorageKindForRemember(remember)
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken)
+      saveSession(
+        { user: data.user as User, accessToken: data.accessToken, refreshToken: data.refreshToken || getSdkRefreshToken() },
+        kind
+      )
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
   }
 
-  const signUpWithEmail = async (email: string, password: string, name: string) => {
+  const signUpWithEmail = async (email: string, password: string, name: string, remember = true) => {
+    const kind = getStorageKindForRemember(remember)
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken)
+      saveSession(
+        { user: data.user as User, accessToken: data.accessToken, refreshToken: data.refreshToken || getSdkRefreshToken() },
+        kind
+      )
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (remember = true) => {
+    try { getStorage('local').setItem(REMEMBER_KEY, remember ? 'local' : 'session') } catch {}
     const { error } = await insforge.auth.signInWithOAuth('google', {
       redirectTo: window.location.origin
     })
@@ -160,9 +214,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    const { error } = await insforge.auth.signOut()
-    if (error) throw error
-    clearSessionStorage()
+    try { await insforge.auth.signOut() } catch {}
+    clearAllSessions()
     try { insforge.setAccessToken(null as any) } catch {}
     setUser(null)
     setProfile(null)
