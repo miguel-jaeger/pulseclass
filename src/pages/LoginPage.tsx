@@ -8,6 +8,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -22,9 +23,9 @@ export function LoginPage() {
     setLoading(true)
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password, name)
+        await signUpWithEmail(email, password, name, rememberMe)
       } else {
-        await signInWithEmail(email, password)
+        await signInWithEmail(email, password, rememberMe)
       }
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
@@ -101,6 +102,16 @@ export function LoginPage() {
             />
           </div>
 
+          <label className="flex items-center gap-sm cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-primary rounded"
+            />
+            <span className="font-body-sm text-body-sm text-on-surface-variant">Mantener sesión iniciada</span>
+          </label>
+
           <button
             type="submit"
             disabled={loading}
@@ -131,7 +142,7 @@ export function LoginPage() {
 
         <div className="space-y-sm">
           <button
-            onClick={signInWithGoogle}
+            onClick={() => signInWithGoogle(rememberMe)}
             className="w-full flex items-center justify-center gap-md px-md py-3 border border-outline-variant rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md hover:bg-surface-container-low transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

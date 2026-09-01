@@ -454,9 +454,9 @@ export function SuggestionsPage() {
 
       {/* Create Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear sugerencia</h3>
+        <div className="fixed inset-0 bg-scrim/60 flex overflow-y-auto z-50 p-margin-mobile">
+          <div className="m-auto bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant max-h-[calc(100vh-2rem)] overflow-y-auto">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg sticky top-0 bg-surface-container-lowest">Crear sugerencia</h3>
 
             <label htmlFor="create-type" className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
@@ -540,9 +540,9 @@ export function SuggestionsPage() {
 
       {/* Edit Modal */}
       {editingId && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant my-lg">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Editar sugerencia</h3>
+        <div className="fixed inset-0 bg-scrim/60 flex overflow-y-auto z-50 p-margin-mobile">
+          <div className="m-auto bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant max-h-[calc(100vh-2rem)] overflow-y-auto">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg sticky top-0 bg-surface-container-lowest">Editar sugerencia</h3>
 
             <label htmlFor="edit-type" className="block font-label-md text-label-md text-on-surface mb-xs">Tipo de sugerencia</label>
             <select
@@ -637,9 +637,9 @@ export function SuggestionsPage() {
 
       {/* Detail Modal */}
       {detailSuggestion && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant my-lg">
-            <div className="flex items-start justify-between mb-lg">
+        <div className="fixed inset-0 bg-scrim/60 flex overflow-y-auto z-50 p-margin-mobile">
+          <div className="m-auto bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant max-h-[calc(100vh-2rem)] overflow-y-auto">
+            <div className="flex items-start justify-between mb-lg sticky top-0 bg-surface-container-lowest">
               <div className="flex flex-wrap items-center gap-sm">
                 <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${typeStyles[detailSuggestion.type]}`}>
                   {typeLabels[detailSuggestion.type]}
