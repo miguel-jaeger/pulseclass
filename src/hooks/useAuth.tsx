@@ -34,17 +34,17 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 const SESSION_KEY = 'pulseclass_session'
 
-function saveSessionToStorage(user: User, accessToken: string) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken }))
+function saveSessionToStorage(user: User, accessToken: string, refreshToken?: string) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken, refreshToken }))
 }
 
-function loadSessionFromStorage(): { user: User; accessToken: string } | null {
+function loadSessionFromStorage(): { user: User; accessToken: string; refreshToken?: string } | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (parsed?.user?.id && parsed?.accessToken) {
-      return { user: parsed.user, accessToken: parsed.accessToken }
+      return { user: parsed.user, accessToken: parsed.accessToken, refreshToken: parsed.refreshToken }
     }
     return null
   } catch {
@@ -96,6 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function hydrateAuth() {
+      const saved = loadSessionFromStorage()
+
+      if (saved?.accessToken) {
+        try {
+          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+          if (saved.refreshToken) {
+            try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
+          }
+        } catch {}
+      }
+
       try {
         const { data, error } = await insforge.auth.getCurrentUser()
 
@@ -113,12 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (cancelled) return
 
-      const saved = loadSessionFromStorage()
-      if (saved) {
-        try {
-          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-        } catch {
-        }
+      if (saved?.user) {
         setUser(saved.user)
         const profileData = await fetchProfile(saved.user.id)
         if (!cancelled) setProfile(profileData)
@@ -140,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken)
+      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
@@ -151,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSessionToStorage(data.user as User, data.accessToken)
+      saveSessionToStorage(data.user as User, data.accessToken, data.refreshToken)
       const profileData = await fetchProfile(data.user.id)
       setProfile(profileData)
     }
