@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { insforge } from '../lib/insforge'
+import { AuthChangeEvent } from '@insforge/sdk'
 
 interface User {
   id: string
@@ -33,23 +34,26 @@ const AuthContext = createContext<AuthContextType | null>(null)
 
 const SESSION_KEY = 'pulseclass_session'
 
-function saveSession(user: User, accessToken: string, refreshToken?: string) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken, refreshToken })) } catch {}
+function saveSessionToStorage(user: User, accessToken: string) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken }))
 }
 
-function loadSession() {
+function loadSessionFromStorage(): { user: User; accessToken: string } | null {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
+    const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
-    const p = JSON.parse(raw)
-    if (p?.user?.id && p?.accessToken) return p
-  } catch {}
-  return null
+    const parsed = JSON.parse(raw)
+    if (parsed?.user?.id && parsed?.accessToken) {
+      return { user: parsed.user, accessToken: parsed.accessToken }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
-function clearSdkState() {
-  try { insforge.setAccessToken(null as any) } catch {}
-  try { (insforge as any).http?.setRefreshToken(null) } catch {}
+function clearSessionStorage() {
+  localStorage.removeItem(SESSION_KEY)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -59,57 +63,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await insforge.database
-        .from('profiles').select('*').eq('user_id', userId).single()
-      if (error || !data) return null
-      const r = data.role || 'student'
-      const normalized = r === 'Administrador' || r === 'admin' ? 'admin'
-        : r === 'Profesor' || r === 'teacher' ? 'teacher' : 'student'
-      return { ...data, role: normalized } as Profile
-    } catch { return null }
+      const { data } = await insforge.database
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (!data) return null
+
+      const rawRole = data.role || 'student'
+      const normalizedRole =
+        rawRole === 'Administrador' || rawRole === 'admin' ? 'admin'
+        : rawRole === 'Profesor' || rawRole === 'teacher' ? 'teacher'
+        : 'student'
+
+      return {
+        ...data,
+        role: normalizedRole
+      } as Profile
+    } catch {
+      return null
+    }
   }
 
   const refreshProfile = async () => {
     if (!user) return
-    setProfile(await fetchProfile(user.id))
+    const profileData = await fetchProfile(user.id)
+    setProfile(profileData)
   }
 
   useEffect(() => {
-    const saved = loadSession()
-    if (saved?.user) {
-      setUser(saved.user)
+    let cancelled = false
+
+    async function hydrateAuth() {
       try {
-        insforge.setAccessToken(saved.accessToken)
-        if (saved.refreshToken) (insforge as any).http?.setRefreshToken(saved.refreshToken)
-      } catch {}
-      fetchProfile(saved.user.id).then(p => setProfile(p))
+        const { data, error } = await insforge.auth.getCurrentUser()
+
+        if (cancelled) return
+
+        if (!error && data?.user) {
+          setUser(data.user as User)
+          const profileData = await fetchProfile(data.user.id)
+          if (!cancelled) setProfile(profileData)
+          if (!cancelled) setLoading(false)
+          return
+        }
+      } catch {
+      }
+
+      if (cancelled) return
+
+      const saved = loadSessionFromStorage()
+      if (saved) {
+        try {
+          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+        } catch {
+        }
+        setUser(saved.user)
+        const profileData = await fetchProfile(saved.user.id)
+        if (!cancelled) setProfile(profileData)
+        if (!cancelled) setLoading(false)
+        return
+      }
+
+      setUser(null)
+      setProfile(null)
+      if (!cancelled) setLoading(false)
     }
-    setLoading(false)
+
+    void hydrateAuth()
+    return () => { cancelled = true }
   }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
-    clearSdkState()
-    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
-    if (data?.user) {
+    if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
-      const p = await fetchProfile(data.user.id)
-      setProfile(p)
+      saveSessionToStorage(data.user as User, data.accessToken)
+      const profileData = await fetchProfile(data.user.id)
+      setProfile(profileData)
     }
   }
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    clearSdkState()
-    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
-    if (data?.user) {
+    if (data?.user && data?.accessToken) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
-      const p = await fetchProfile(data.user.id)
-      setProfile(p)
+      saveSessionToStorage(data.user as User, data.accessToken)
+      const profileData = await fetchProfile(data.user.id)
+      setProfile(profileData)
     }
   }
 
@@ -121,8 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
-    clearSdkState()
-    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
+    const { error } = await insforge.auth.signOut()
+    if (error) throw error
+    clearSessionStorage()
+    try { insforge.setAccessToken(null as any) } catch {}
     setUser(null)
     setProfile(null)
   }
