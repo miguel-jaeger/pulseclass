@@ -929,7 +929,14 @@ export function StatisticsPage() {
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        <div className="min-w-0">
+                          <span className="font-body-sm text-body-sm text-on-surface font-medium truncate block">{item.sessionTitle}</span>
+                          {item.date && (
+                            <span className="font-body-xs text-body-xs text-on-surface-variant">
+                              {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
                         {canEdit(item.studentId) && (
                           <div className="ml-auto flex gap-sm shrink-0">
                             {editingCommentId === item.id ? (
@@ -1120,7 +1127,14 @@ export function StatisticsPage() {
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
                           {item.score}
                         </span>
-                        <span className="font-body-sm text-body-sm text-on-surface font-medium truncate">{item.sessionTitle}</span>
+                        <div className="min-w-0">
+                          <span className="font-body-sm text-body-sm text-on-surface font-medium truncate block">{item.sessionTitle}</span>
+                          {item.date && (
+                            <span className="font-body-xs text-body-xs text-on-surface-variant">
+                              {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                          )}
+                        </div>
                         {canEdit(item.studentId) && (
                           <div className="ml-auto flex gap-sm shrink-0">
                             {editingSuggestionId === item.id ? (
