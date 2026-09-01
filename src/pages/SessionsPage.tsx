@@ -218,15 +218,15 @@ export function SessionsPage() {
     const catA = order[categorizeSession(a, now)]
     const catB = order[categorizeSession(b, now)]
     if (catA !== catB) return catA - catB
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
+    return new Date(a.date).getTime() - new Date(b.date).getTime()
   })
 
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(sortedSessions.length, 10)
   const paginatedSessions = paginatedSlice(sortedSessions)
-  const byDateDesc = (a: Session, b: Session) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  const currentSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'current').sort(byDateDesc)
-  const futureSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'future').sort(byDateDesc)
-  const pastSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'past').sort(byDateDesc)
+  const byDateAsc = (a: Session, b: Session) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  const currentSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'current').sort(byDateAsc)
+  const futureSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'future').sort(byDateAsc)
+  const pastSessions = paginatedSessions.filter(s => categorizeSession(s, now) === 'past').sort(byDateAsc)
 
   useEffect(() => {
     if (courseId) {
