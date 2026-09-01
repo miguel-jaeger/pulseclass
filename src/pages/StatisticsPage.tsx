@@ -85,6 +85,7 @@ export function StatisticsPage() {
   const [ratings, setRatings] = useState<Rating[]>([])
   const [loading, setLoading] = useState(true)
   const [coursesLoading, setCoursesLoading] = useState(true)
+  const [statisticsCounts, setStatisticsCounts] = useState<{ total_comments: number; total_suggestions: number } | null>(null)
 
   const [dateStart, setDateStart] = useState(getDefaultDateStart)
   const [dateEnd, setDateEnd] = useState(getDefaultDateEnd)
@@ -118,6 +119,27 @@ export function StatisticsPage() {
   }
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
+
+  const fetchStatisticsCounts = async () => {
+    const { data, error } = await insforge.database
+      .from('statistics_counts')
+      .select('total_comments, total_suggestions')
+      .limit(1)
+      .single()
+
+    if (error || !data) {
+      await insforge.functions.invoke('init-statistics-counts', { method: 'POST' })
+      const { data: retryData } = await insforge.database
+        .from('statistics_counts')
+        .select('total_comments, total_suggestions')
+        .limit(1)
+        .single()
+      if (retryData) setStatisticsCounts(retryData as { total_comments: number; total_suggestions: number })
+      return
+    }
+
+    setStatisticsCounts(data as { total_comments: number; total_suggestions: number })
+  }
 
   useEffect(() => {
     if (effectiveRole === 'student' && courses.length === 1) {
@@ -187,6 +209,7 @@ export function StatisticsPage() {
         }
       }
       setCoursesLoading(false)
+      fetchStatisticsCounts()
     }
     fetchCourses()
   }, [profile])
@@ -408,6 +431,7 @@ export function StatisticsPage() {
       setEditingCommentId(null)
       setEditingCommentText('')
       showToast('Comentario guardado')
+      fetchStatisticsCounts()
     }
   }
 
@@ -423,6 +447,7 @@ export function StatisticsPage() {
     } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, comment: '' } : r))
       showToast('Comentario eliminado')
+      fetchStatisticsCounts()
     }
   }
 
@@ -439,6 +464,7 @@ export function StatisticsPage() {
       setEditingSuggestionId(null)
       setEditingSuggestionText('')
       showToast('Sugerencia guardada')
+      fetchStatisticsCounts()
     }
   }
 
@@ -454,6 +480,7 @@ export function StatisticsPage() {
     } else {
       setRatings(prev => prev.map(r => r.id === ratingId ? { ...r, suggestion: '' } : r))
       showToast('Sugerencia eliminada')
+      fetchStatisticsCounts()
     }
   }
 
@@ -861,7 +888,7 @@ export function StatisticsPage() {
               <button
                 title="Comentarios"
                 onClick={() => setActiveTab('comments')}
-                className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+                className={`relative flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
                   activeTab === 'comments'
                     ? 'bg-primary-container text-on-primary-container font-bold'
                     : 'text-on-surface-variant hover:bg-secondary-container'
@@ -869,11 +896,16 @@ export function StatisticsPage() {
               >
                 <span className="material-symbols-outlined text-lg">comment</span>
                 <span className="hidden sm:inline">Comentarios</span>
+                {statisticsCounts && statisticsCounts.total_comments > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-on-primary text-[10px] font-bold rounded-full px-1">
+                    {statisticsCounts.total_comments}
+                  </span>
+                )}
               </button>
               <button
                 title="Sugerencias"
                 onClick={() => setActiveTab('suggestions')}
-                className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+                className={`relative flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
                   activeTab === 'suggestions'
                     ? 'bg-primary-container text-on-primary-container font-bold'
                     : 'text-on-surface-variant hover:bg-secondary-container'
@@ -881,6 +913,11 @@ export function StatisticsPage() {
               >
                 <span className="material-symbols-outlined text-lg">lightbulb</span>
                 <span className="hidden sm:inline">Sugerencias</span>
+                {statisticsCounts && statisticsCounts.total_suggestions > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-on-primary text-[10px] font-bold rounded-full px-1">
+                    {statisticsCounts.total_suggestions}
+                  </span>
+                )}
               </button>
             </div>
 
