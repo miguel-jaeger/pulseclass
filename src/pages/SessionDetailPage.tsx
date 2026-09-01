@@ -444,7 +444,7 @@ export function SessionDetailPage() {
                     <div className="flex items-center gap-sm">
                       <span className="font-headline-sm text-headline-sm text-primary font-bold">{rating.score}/10</span>
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        {new Date(rating.created_at).toLocaleDateString('es-ES')}
+                        {new Date(rating.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </span>
                     </div>
                     <div className="flex items-center gap-xs">
@@ -641,7 +641,7 @@ export function SessionDetailPage() {
                     <div className="flex items-center gap-sm">
                       <span className="font-headline-sm text-headline-sm text-primary font-bold">{rating.score}/10</span>
                       <span className="font-body-sm text-body-sm text-on-surface-variant">
-                        {new Date(rating.created_at).toLocaleDateString('es-ES')}
+                        {new Date(rating.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                       </span>
                     </div>
                     <div className="flex items-center gap-xs">
