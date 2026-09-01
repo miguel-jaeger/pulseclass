@@ -83,7 +83,7 @@ export default async function(req: Request): Promise<Response> {
       .eq('user_id', userData.user.id)
       .single()
 
-    if (!profileData || !['admin', 'Administrador', 'teacher', 'Profesor'].includes((profileData as { role: string }).role)) {
+    if (!profileData || !['admin', 'teacher'].includes((profileData as { role: string }).role)) {
       return new Response(JSON.stringify({ error: 'No tienes permisos para importar usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -206,7 +206,7 @@ export default async function(req: Request): Promise<Response> {
       emailToUserId.set(email, newUserId)
 
       try {
-        await adminClient.database.from('profiles').update({ role: 'Estudiante', name: cleanName }).eq('user_id', newUserId)
+        await adminClient.database.from('profiles').update({ role: 'student', name: cleanName }).eq('user_id', newUserId)
       } catch (e) {
         console.error('profile update error:', e)
       }

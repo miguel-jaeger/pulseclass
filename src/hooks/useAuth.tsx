@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { insforge } from '../lib/insforge'
+import { normalizeRole } from '../lib/roles'
 import { AuthChangeEvent } from '@insforge/sdk'
 
 interface User {
@@ -71,15 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data) return null
 
-      const rawRole = data.role || 'student'
-      const normalizedRole =
-        rawRole === 'Administrador' || rawRole === 'admin' ? 'admin'
-        : rawRole === 'Profesor' || rawRole === 'teacher' ? 'teacher'
-        : 'student'
-
       return {
         ...data,
-        role: normalizedRole
+        role: normalizeRole(data.role)
       } as Profile
     } catch {
       return null

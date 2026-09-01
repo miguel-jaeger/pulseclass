@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
+import { roleLabel } from '../lib/roles'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -127,7 +128,6 @@ export function ProfilePage() {
     }
   }
 
-  const roleLabel = profile?.role === 'admin' ? 'Administrador' : profile?.role === 'teacher' ? 'Profesor' : 'Estudiante'
   const roleIcon = profile?.role === 'admin' ? 'admin_panel_settings' : profile?.role === 'teacher' ? 'school' : 'person'
 
   return (
@@ -266,7 +266,7 @@ export function ProfilePage() {
               <span className="material-symbols-outlined text-on-surface-variant">{roleIcon}</span>
               <div>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">Rol</p>
-                <p className="font-body-md text-body-md text-on-surface font-medium">{roleLabel}</p>
+                <p className="font-body-md text-body-md text-on-surface font-medium">{roleLabel(profile?.role)}</p>
               </div>
             </div>
           </div>

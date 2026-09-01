@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS } from '../lib/roles'
 
 interface Course {
   id: string
@@ -40,8 +41,6 @@ export function CourseMembersPage() {
   const { profile } = useAuth()
   const { impersonatedRole, isImpersonating } = useImpersonation()
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
-
-  const roleLabel = (r: string) => r === 'admin' ? 'Administrador' : r === 'teacher' ? 'Profesor' : 'Estudiante'
 
   const [course, setCourse] = useState<Course | null>(null)
   const [members, setMembers] = useState<CourseMember[]>([])
@@ -112,7 +111,7 @@ export function CourseMembersPage() {
       ...r,
       name: profileMap.get(r.user_id)?.name || '',
       email: profileMap.get(r.user_id)?.email || '',
-      role: (profileMap.get(r.user_id)?.role || 'student') as 'admin' | 'teacher' | 'student',
+      role: normalizeRole(profileMap.get(r.user_id)?.role),
     }))
 
     setMembers(merged)
@@ -124,7 +123,9 @@ export function CourseMembersPage() {
       .select('user_id, name, email, role')
       .order('name')
 
-    if (!error && data) setAllProfiles(data as MemberProfile[])
+    if (!error && data) {
+      setAllProfiles((data as MemberProfile[]).map(p => ({ ...p, role: normalizeRole(p.role) })))
+    }
   }
 
   const addMember = async (userId: string) => {
@@ -431,10 +432,9 @@ export function CourseMembersPage() {
               onChange={(e) => setAddRoleFilter(e.target.value)}
               className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
             >
-              <option value="all">Todos los roles</option>
-              <option value="student">Estudiantes</option>
-              <option value="teacher">Profesores</option>
-              <option value="admin">Administradores</option>
+              {ROLE_FILTER_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
 
