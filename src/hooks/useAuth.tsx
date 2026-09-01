@@ -31,22 +31,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-const SESSION_KEY = 'pulseclass_session'
-
-function saveSession(user: User, accessToken: string, refreshToken?: string) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, accessToken, refreshToken })) } catch {}
-}
-
-function loadSession(): { user: User; accessToken: string; refreshToken?: string } | null {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    const p = JSON.parse(raw)
-    if (p?.user?.id && p?.accessToken) return { user: p.user, accessToken: p.accessToken, refreshToken: p.refreshToken }
-  } catch {}
-  return null
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -71,32 +55,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
-
-    const saved = loadSession()
-    if (saved?.user && saved?.accessToken) {
-      setUser(saved.user)
-      try { insforge.setAccessToken(saved.accessToken) } catch {}
-      if (saved.refreshToken) {
-        try { (insforge as any).http?.setRefreshToken(saved.refreshToken) } catch {}
+    insforge.auth.getCurrentUser().then(({ data, error }) => {
+      if (cancelled) return
+      if (!error && data?.user) {
+        setUser(data.user as User)
+        fetchProfile(data.user.id).then(p => { if (!cancelled) setProfile(p) })
       }
-      fetchProfile(saved.user.id).then(p => { if (!cancelled) setProfile(p) })
-    }
-    if (!cancelled) setLoading(false)
-
+      if (!cancelled) setLoading(false)
+    }).catch(() => {
+      if (!cancelled) setLoading(false)
+    })
     return () => { cancelled = true }
   }, [])
-
-  useEffect(() => {
-    if (!user) return
-    insforge.auth.getCurrentUser().catch(() => {})
-  }, [user])
 
   const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
@@ -107,7 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
     if (data?.user) {
       setUser(data.user as User)
-      saveSession(data.user as User, data.accessToken || '', data.refreshToken)
       const p = await fetchProfile(data.user.id)
       setProfile(p)
     }
@@ -122,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try { await insforge.auth.signOut() } catch {}
-    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
     setUser(null)
     setProfile(null)
   }
