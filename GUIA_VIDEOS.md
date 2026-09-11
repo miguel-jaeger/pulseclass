@@ -15,7 +15,7 @@ Cada sección del sistema corresponde a un video independiente.
 6. Indicar que el rol lo asigna un administrador
 
 ### Narración
-"Bienvenido a PulseClass. Para crear una cuenta, haz clic en 'Registrarse' y completa tus datos. También puedes iniciar sesión con Google o GitHub. Si olvidaste tu contraseña, usa la opción '¿Olvidaste tu contraseña?' para recuperarla con un código de verificación."
+"Bienvenido a PulseClass. Para crear una cuenta, haz clic en 'Registrarse' y completa tus datos. También puedes iniciar sesión con Google. Si olvidaste tu contraseña, usa la opción '¿Olvidaste tu contraseña?' para recuperarla con un código de verificación."
 
 ---
 

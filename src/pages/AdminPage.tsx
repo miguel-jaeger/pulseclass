@@ -140,6 +140,21 @@ export function AdminPage() {
     }
   }
 
+  const resetPassword = async (userId: string) => {
+    if (!confirm('¿Restablecer la contraseña de este usuario a 12345678?')) return
+
+    const { error } = await insforge.functions.invoke('admin-change-password', {
+      method: 'POST',
+      body: { userId, newPassword: '12345678' }
+    })
+
+    if (!error) {
+      showToast('Contraseña restablecida a 12345678')
+    } else {
+      showToast('Error al restablecer la contraseña', 'error')
+    }
+  }
+
   const deleteUser = async (userId: string) => {
     if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return
 
@@ -444,6 +459,13 @@ export function AdminPage() {
                           <span className="material-symbols-outlined text-xl">edit</span>
                         </button>
                         <button
+                          onClick={() => resetPassword(user.user_id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                          title="Restablecer contraseña"
+                        >
+                          <span className="material-symbols-outlined text-xl">key</span>
+                        </button>
+                        <button
                           onClick={() => deleteUser(user.user_id)}
                           className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
                           title="Eliminar usuario"
@@ -501,6 +523,13 @@ export function AdminPage() {
                       title="Editar"
                     >
                       <span className="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button
+                      onClick={() => resetPassword(user.user_id)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                      title="Restablecer contraseña"
+                    >
+                      <span className="material-symbols-outlined text-xl">key</span>
                     </button>
                     <button
                       onClick={() => deleteUser(user.user_id)}
