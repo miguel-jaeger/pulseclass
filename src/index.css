@@ -103,8 +103,8 @@
   --color-on-green-container: #c8e6c9;
   --color-success: #81c784;
   --color-on-success: #1b5e20;
-  --color-success-container: #1b5e20;
-  --color-on-success-container: #c8e6c9;
+  --color-success-container: #4caf50;
+  --color-on-success-container: #1b5e20;
   --color-secondary-container: #474746;
   --color-primary-fixed-dim: #ffb3b1;
   --color-on-primary-fixed-variant: #ffb3b1;
@@ -154,4 +154,17 @@ body {
     'wght' 400,
     'GRAD' 0,
     'opsz' 24;
+}
+
+input[type="date"] {
+  color-scheme: light;
+}
+
+.dark input[type="date"] {
+  color-scheme: dark;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
