@@ -3,6 +3,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { useRatingVotes } from '../hooks/useRatingVotes'
+import { Pagination, usePagination } from '../components/Pagination'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
 interface Course {
@@ -388,6 +389,9 @@ export function StatisticsPage() {
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }, [ratings, sessions, courses])
+
+  const { page: commentsPage, perPage: commentsPerPage, setPage: setCommentsPage, setPerPage: setCommentsPerPage, paginatedSlice: paginateComments } = usePagination(commentsWithSession.length, 10)
+  const { page: suggestionsPage, perPage: suggestionsPerPage, setPage: setSuggestionsPage, setPerPage: setSuggestionsPerPage, paginatedSlice: paginateSuggestions } = usePagination(suggestionsWithSession.length, 10)
 
   const totalEvaluaciones = ratings.length
 
@@ -924,11 +928,12 @@ export function StatisticsPage() {
             )}
 
             {activeTab === 'comments' && (
-              <div className="space-y-md">
-                {commentsWithSession.length === 0 ? (
+              <>
+                <div className="space-y-md">
+                  {commentsWithSession.length === 0 ? (
                   <p className="font-body-md text-body-md text-on-surface-variant">No hay comentarios disponibles.</p>
                 ) : (
-                  commentsWithSession.map(item => (
+                  paginateComments(commentsWithSession).map(item => (
                     <div key={item.id} className="border-l-[3px] border-primary pl-md py-sm overflow-hidden">
                       <div className="flex items-center gap-sm mb-xs flex-wrap">
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
@@ -1119,14 +1124,25 @@ export function StatisticsPage() {
                   ))
                 )}
               </div>
+              {commentsWithSession.length > 0 && (
+                <Pagination
+                    totalItems={commentsWithSession.length}
+                    page={commentsPage}
+                    perPage={commentsPerPage}
+                    onPageChange={setCommentsPage}
+                    onPerPageChange={setCommentsPerPage}
+                  />
+                )}
+              </>
             )}
 
             {activeTab === 'suggestions' && (
-              <div className="space-y-md">
-                {suggestionsWithSession.length === 0 ? (
+              <>
+                <div className="space-y-md">
+                  {suggestionsWithSession.length === 0 ? (
                   <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias disponibles.</p>
                 ) : (
-                  suggestionsWithSession.map(item => (
+                  paginateSuggestions(suggestionsWithSession).map(item => (
                     <div key={item.id} className="border-l-[3px] border-tertiary pl-md py-sm overflow-hidden">
                       <div className="flex items-center gap-sm mb-xs flex-wrap">
                         <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary font-body-sm text-body-sm font-bold shrink-0">
@@ -1317,8 +1333,18 @@ export function StatisticsPage() {
                   ))
                 )}
               </div>
-            )}
-          </div>
+              {suggestionsWithSession.length > 0 && (
+                <Pagination
+                  totalItems={suggestionsWithSession.length}
+                  page={suggestionsPage}
+                  perPage={suggestionsPerPage}
+                  onPageChange={setSuggestionsPage}
+                  onPerPageChange={setSuggestionsPerPage}
+                />
+              )}
+            </>
+          )}
+        </div>
         </>
       )}
 

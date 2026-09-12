@@ -379,6 +379,49 @@ El servidor de desarrollo arranca en `http://localhost:3000`.
 3. Mostrar mensaje de error específico cuando no se tiene permiso
 4. Deshabilitar acciones no permitidas en la UI
 
+### 15. Envío de Correos SMTP (Gmail)
+
+PulseClass envía los correos de autenticación (verificación de email, restablecimiento de contraseña, códigos OTP) a través de un servidor SMTP propio de Gmail. Esta configuración vive en el **backend de InsForge**, gestionada con el CLI de InsForge (no está en el repositorio porque se referencia por secreto).
+
+#### Cómo cambiar la contraseña de la cuenta de correo
+
+Cuando se regenere la contraseña de aplicación de Gmail (p. ej. porque rotaste o perdiste la clave), debes actualizar el secreto en InsForge:
+
+```powershell
+# 1) Ver el valor actual
+npx -y @insforge/cli secrets get SMTP_PASSWORD
+
+# 2) Cambiar el secreto (usa la nueva contraseña de aplicación de Gmail de 16 caracteres, sin espacios)
+npx -y @insforge/cli secrets update SMTP_PASSWORD --value "xxxx yyyy zzzz wwww"
+
+# 3) Verificar que el backend sigue conectando correctamente con Gmail
+#    (fuerza una prueba de conexión SMTP; si las credenciales son inválidas, la aplicación falla)
+npx -y @insforge/cli config plan
+npx -y @insforge/cli config apply --auto-approve
+```
+
+> **Importante:** La contraseña almacenada es una **contraseña de aplicación** de Google, NO la contraseña normal de la cuenta. Para generarla: Activa la Verificación en 2 pasos en tu cuenta Google → [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) → crea una para "Correo" con nombre `PulseClass`.
+
+#### Configuración actual
+
+| Parámetro | Valor |
+|-----------|-------|
+| Host | `smtp.gmail.com` |
+| Puerto | `465` (SSL) |
+| Usuario | `miguel.jaeger@gmail.com` |
+| Remitente | `miguel.jaeger@gmail.com` |
+| Nombre de remitente | `PulseClass` |
+| Secreto de contraseña | `SMTP_PASSWORD` (referenciado como `env(SMTP_PASSWORD)` en `insforge.toml`) |
+
+#### Consultas de plantillas de correo (opcional)
+
+Los templates de email viven en la tabla `email.templates` del backend. Para inspeccionarlos:
+
+```bash
+npx -y @insforge/cli db query "SELECT template_type, subject FROM email.templates"
+npx -y @insforge/cli db query "SELECT body_html FROM email.templates WHERE template_type = 'reset-password-code'"
+```
+
 ## Pasos Generales para Replicar el Sistema
 
 ### 1. Configuración Inicial
