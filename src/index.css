@@ -103,7 +103,7 @@
   --color-on-green-container: #c8e6c9;
   --color-success: #81c784;
   --color-on-success: #1b5e20;
-  --color-success-container: #4caf50;
+  --color-success-container: #a5d6a7;
   --color-on-success-container: #1b5e20;
   --color-secondary-container: #474746;
   --color-primary-fixed-dim: #ffb3b1;
@@ -165,6 +165,5 @@ input[type="date"] {
 }
 
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
   cursor: pointer;
 }
