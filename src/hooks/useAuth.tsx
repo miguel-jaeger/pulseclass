@@ -130,45 +130,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function hydrateAuth() {
       const saved = loadAnySession()
 
-      if (saved?.accessToken) {
-        try {
-          insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
-          if (saved.refreshToken) {
-            try { insforge.getHttpClient().setRefreshToken(saved.refreshToken) } catch {}
-          }
-        } catch {}
+      if (!saved?.accessToken) {
+        clearAllSessions()
+        try { insforge.setAccessToken(null as any) } catch {}
+        if (!cancelled) { setUser(null); setProfile(null); setLoading(false) }
+        return
       }
 
       try {
+        insforge.setAccessToken(saved.accessToken, AuthChangeEvent.TOKEN_REFRESHED)
+        if (saved.refreshToken) {
+          try { insforge.getHttpClient().setRefreshToken(saved.refreshToken) } catch {}
+        }
+
+        const token = await insforge.getHttpClient().getValidAccessToken()
+
+        if (cancelled) return
+        if (!token) throw new Error('invalid token')
+
+        const tokenManager = (insforge as any).tokenManager
+        if (tokenManager?.getUser && !tokenManager.getUser()) {
+          try { tokenManager.setUser(saved.user) } catch {}
+        }
+
         const { data, error } = await insforge.auth.getCurrentUser()
 
         if (cancelled) return
+        if (error || !data?.user) throw error || new Error('no user')
 
-        if (!error && data?.user) {
-          const freshUser = data.user as User
-          setUser(freshUser)
-          const profileData = await fetchProfile(freshUser.id)
-          if (!cancelled) setProfile(profileData)
+        const freshUser = data.user as User
+        setUser(freshUser)
+        const profileData = await fetchProfile(freshUser.id)
+        if (!cancelled) setProfile(profileData)
 
-          const pendingRemember = getStorage('local').getItem(REMEMBER_KEY)
-          const kind: StorageKind = pendingRemember === 'session' ? 'session' : 'local'
-          persistCurrentSession(freshUser, kind)
-          try { getStorage('session').removeItem(REMEMBER_KEY) } catch {}
+        const pendingRemember = getStorage('local').getItem(REMEMBER_KEY)
+        const kind: StorageKind = pendingRemember === 'session' ? 'session' : 'local'
+        persistCurrentSession(freshUser, kind)
+        try { getStorage('session').removeItem(REMEMBER_KEY) } catch {}
 
-          if (!cancelled) setLoading(false)
-          return
-        }
+        if (!cancelled) setLoading(false)
       } catch {
+        if (cancelled) return
+
+        // Token inválido o expirado sin refresh válido => sign-out limpio
+        clearAllSessions()
+        try { insforge.setAccessToken(null as any) } catch {}
+        setUser(null)
+        setProfile(null)
+        if (!cancelled) setLoading(false)
       }
-
-      if (cancelled) return
-
-      // No session or expired/invalid => clean sign-out
-      clearAllSessions()
-      try { insforge.setAccessToken(null as any) } catch {}
-      setUser(null)
-      setProfile(null)
-      if (!cancelled) setLoading(false)
     }
 
     void hydrateAuth()
