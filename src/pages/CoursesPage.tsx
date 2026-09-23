@@ -196,14 +196,21 @@ export function CoursesPage() {
     }
   }
 
-  const filteredCourses = courses.filter((c) => {
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesTab = courseTab === 'active' ? c.is_active : !c.is_active
-    const matchesTeacher = selectedTeacher === 'all' || c.created_by === selectedTeacher
-    return matchesSearch && matchesTab && matchesTeacher
-  })
+  const filteredCourses = courses
+    .filter((c) => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesTab = courseTab === 'active' ? c.is_active : !c.is_active
+      const matchesTeacher = selectedTeacher === 'all' || c.created_by === selectedTeacher
+      return matchesSearch && matchesTab && matchesTeacher
+    })
+    .sort((a, b) => {
+      const aToday = coursesWithSessionToday.has(a.id) ? 0 : 1
+      const bToday = coursesWithSessionToday.has(b.id) ? 0 : 1
+      if (aToday !== bToday) return aToday - bToday
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
 
   const activeCount = courses.filter(c => c.is_active).length
   const inactiveCount = courses.length - activeCount
