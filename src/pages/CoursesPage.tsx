@@ -28,7 +28,8 @@ export function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newCourse, setNewCourse] = useState({ name: '', description: '' })
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [courseTab, setCourseTab] = useState<'active' | 'inactive'>('active')
+  const [coursesWithSessionToday, setCoursesWithSessionToday] = useState<Set<string>>(new Set())
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [selectedTeacher, setSelectedTeacher] = useState('all')
   const [teacherSearch, setTeacherSearch] = useState('')
@@ -47,6 +48,9 @@ export function CoursesPage() {
   useEffect(() => {
     if (courses.length > 0) {
       fetchCourseStats(courses.map(c => c.id))
+      fetchTodaySessions(courses.map(c => c.id))
+    } else {
+      setCoursesWithSessionToday(new Set())
     }
   }, [courses])
 
@@ -123,6 +127,21 @@ export function CoursesPage() {
     }
   }
 
+  const fetchTodaySessions = async (courseIds: string[]) => {
+    const today = new Date()
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const { data, error } = await insforge.database
+      .from('sessions')
+      .select('course_id')
+      .eq('date', dateStr)
+      .in('course_id', courseIds)
+    if (!error && data) {
+      setCoursesWithSessionToday(new Set((data as { course_id: string }[]).map(r => r.course_id)))
+    } else {
+      setCoursesWithSessionToday(new Set())
+    }
+  }
+
   const createCourse = async () => {
     const { data, error } = await insforge.database
       .from('courses')
@@ -181,12 +200,13 @@ export function CoursesPage() {
     const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'active' && c.is_active) ||
-      (statusFilter === 'inactive' && !c.is_active)
+    const matchesTab = courseTab === 'active' ? c.is_active : !c.is_active
     const matchesTeacher = selectedTeacher === 'all' || c.created_by === selectedTeacher
-    return matchesSearch && matchesStatus && matchesTeacher
+    return matchesSearch && matchesTab && matchesTeacher
   })
+
+  const activeCount = courses.filter(c => c.is_active).length
+  const inactiveCount = courses.length - activeCount
 
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredCourses.length, 10)
   const paginatedCourses = paginatedSlice(filteredCourses)
@@ -201,11 +221,14 @@ export function CoursesPage() {
           </div>
           <div className="h-10 w-24 bg-surface-container animate-pulse rounded-full" />
         </div>
+        <div className="flex gap-sm mb-lg">
+          <div className="h-10 w-28 bg-surface-container animate-pulse rounded-xl" />
+          <div className="h-10 w-28 bg-surface-container animate-pulse rounded-xl" />
+        </div>
         <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl">
           <div className="flex gap-lg">
             <div className="h-10 flex-1 bg-surface-container animate-pulse rounded-xl" />
-            <div className="h-10 w-32 bg-surface-container animate-pulse rounded-xl" />
-            <div className="h-10 w-32 bg-surface-container animate-pulse rounded-xl" />
+            <div className="h-10 w-40 bg-surface-container animate-pulse rounded-xl" />
           </div>
         </div>
         <div className="bg-surface border border-outline-variant rounded-xl p-md mb-xl flex gap-lg">
@@ -257,6 +280,44 @@ export function CoursesPage() {
           </button>
         )}
       </header>
+
+      <div className="flex flex-wrap gap-sm mb-md">
+        <button
+          onClick={() => { setCourseTab('active'); setPage(1) }}
+          className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+            courseTab === 'active'
+              ? 'bg-primary-container text-on-primary-container font-bold'
+              : 'text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">check_circle</span>
+          Activos
+          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${courseTab === 'active' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'}`}>
+            {activeCount}
+          </span>
+        </button>
+        <button
+          onClick={() => { setCourseTab('inactive'); setPage(1) }}
+          className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+            courseTab === 'inactive'
+              ? 'bg-primary-container text-on-primary-container font-bold'
+              : 'text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">pause_circle</span>
+          Inactivos
+          <span className={`text-xs font-bold rounded-full px-2 py-0.5 ${courseTab === 'inactive' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'}`}>
+            {inactiveCount}
+          </span>
+        </button>
+      </div>
+
+      {courseTab === 'active' && coursesWithSessionToday.size > 0 && (
+        <p className="flex items-center gap-xs font-body-xs text-body-xs text-on-surface-variant mb-lg">
+          <span className="material-symbols-outlined text-base text-primary">today</span>
+          Los cursos con sesiones el día de hoy aparecen resaltados.
+        </p>
+      )}
 
       <div className="flex flex-col md:flex-row gap-md mb-lg">
         <div className="flex-1 relative">
@@ -315,15 +376,6 @@ export function CoursesPage() {
             </div>
           </div>
         )}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-          className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
-        >
-          <option value="all">Todos los estados</option>
-          <option value="active">Activos</option>
-          <option value="inactive">Inactivos</option>
-        </select>
       </div>
 
       {/* Summary Bar */}
@@ -352,8 +404,14 @@ export function CoursesPage() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-        {paginatedCourses.map((course) => (
-          <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${course.is_active ? 'border-outline-variant border-t-[3px] border-t-primary' : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'}`}>
+        {paginatedCourses.map((course) => {
+          const hasSessionToday = coursesWithSessionToday.has(course.id)
+          return (
+          <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
+            course.is_active
+              ? `border-outline-variant border-t-[3px] border-t-primary${hasSessionToday ? ' ring-2 ring-primary' : ''}`
+              : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
+          }`}>
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-sm mb-1">
@@ -365,6 +423,12 @@ export function CoursesPage() {
                       {course.is_active ? 'check' : 'pause'}
                     </span>
                   </span>
+                  {course.is_active && hasSessionToday && (
+                    <span className="inline-flex items-center gap-1 bg-primary text-on-primary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
+                      <span className="material-symbols-outlined text-[14px]">today</span>
+                      Hoy
+                    </span>
+                  )}
                 </div>
                 <p className="font-body-xs text-body-xs text-on-surface-variant mt-1 line-clamp-2">{course.description}</p>
               </div>
@@ -408,14 +472,15 @@ export function CoursesPage() {
               )}
             </div>
           </article>
-        ))}
+          )
+        })}
       </div>
 
       {filteredCourses.length === 0 && (
         <div className="text-center py-xl">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">school</span>
           <p className="font-body-md text-body-md text-on-surface-variant">
-            {searchQuery ? 'No se encontraron cursos.' : 'No hay cursos creados aún.'}
+            {searchQuery ? 'No se encontraron cursos.' : courseTab === 'active' ? 'No hay cursos activos aún.' : 'No hay cursos inactivos aún.'}
           </p>
         </div>
       )}
