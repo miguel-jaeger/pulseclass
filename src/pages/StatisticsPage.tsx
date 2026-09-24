@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { useRatingVotes } from '../hooks/useRatingVotes'
 import { Pagination, usePagination } from '../components/Pagination'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts'
+import { useTheme } from '../hooks/useTheme'
 
 interface Course {
   id: string
@@ -79,6 +80,7 @@ function getDefaultDateEnd(): string {
 
 export function StatisticsPage() {
   const { profile } = useAuth()
+  const { theme } = useTheme()
   const { impersonatedRole, isImpersonating } = useImpersonation()
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [courses, setCourses] = useState<Course[]>([])
@@ -307,6 +309,10 @@ export function StatisticsPage() {
     return ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
   }, [ratings])
 
+  const chartColors = theme === 'dark'
+    ? { grid: '#534342', axis: '#e0bdbb', primary: '#ffb3b1', primarySoft: 'rgba(255,179,177,0.35)', success: '#81c784', warning: '#e5b94a', error: '#ffb4ab', surface: '#1e272e' }
+    : { grid: '#f0d8d6', axis: '#5c403f', primary: '#9e001f', primarySoft: 'rgba(158,0,31,0.15)', success: '#2e7d32', warning: '#f9a825', error: '#c62828', surface: '#ffffff' }
+
   const scoreDistribution = useMemo(() => {
     return Array.from({ length: 10 }, (_, i) => ({
       score: i + 1,
@@ -324,6 +330,31 @@ export function StatisticsPage() {
       { name: 'Insatisfecho (1-6)', value: bajo }
     ]
   }, [ratings])
+
+  const sessionAverages = useMemo(() => {
+    const map = new Map<string, { title: string; date: string; count: number; sum: number }>()
+    for (const r of ratings) {
+      const s = sessions.find(sess => sess.id === r.session_id)
+      if (!s) continue
+      const existing = map.get(s.id)
+      if (existing) {
+        existing.count++
+        existing.sum += r.score
+      } else {
+        map.set(s.id, { title: s.title, date: s.date, count: 1, sum: r.score })
+      }
+    }
+    return Array.from(map.entries())
+      .map(([id, v]) => ({
+        id,
+        title: v.title,
+        date: v.date,
+        shortDate: v.date ? new Date(v.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }) : '',
+        count: v.count,
+        avg: Math.round((v.sum / v.count) * 10) / 10
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }, [ratings, sessions])
 
   const sessionStats = useMemo<SessionStat[]>(() => {
     const map = new Map<string, { courseName: string; count: number; sum: number }>()
@@ -762,42 +793,113 @@ export function StatisticsPage() {
             <div className="bg-surface border border-outline-variant rounded-xl p-lg">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución de Puntuaciones</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={scoreDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5bdbb" />
-                  <XAxis dataKey="score" stroke="#5c403f" />
-                  <YAxis stroke="#5c403f" />
-                  <Tooltip formatter={(value: number) => [value, 'Cant']} />
-                  <Bar dataKey="count" fill="#9e001f" />
+                <BarChart data={scoreDistribution} barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                  <XAxis dataKey="score" stroke={chartColors.axis} tickLine={false} axisLine={{ stroke: chartColors.grid }} fontSize={12} />
+                  <YAxis stroke={chartColors.axis} tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                  <Tooltip
+                    cursor={{ fill: chartColors.primarySoft }}
+                    contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
+                    formatter={(value: number) => [value, 'Cantidad']}
+                    labelFormatter={label => `Puntuación ${label}`}
+                  />
+                  <Bar dataKey="count" fill={chartColors.primary} radius={[6, 6, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
+
             <div className="bg-surface border border-outline-variant rounded-xl p-lg overflow-hidden">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Distribución por Categorías</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={categoryData}
+                    data={categoryData.filter(d => d.value > 0)}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
                     label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    innerRadius={40}
+                    outerRadius={90}
+                    innerRadius={50}
+                    paddingAngle={2}
                     fill="#8884d8"
                     dataKey="value"
+                    stroke="none"
                   >
-                    <Cell fill="#2e7d32" />
-                    <Cell fill="#f9a825" />
-                    <Cell fill="#c62828" />
+                    <Cell fill={chartColors.success} />
+                    <Cell fill={chartColors.warning} />
+                    <Cell fill={chartColors.error} />
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
+                  />
                   <Legend
-                    formatter={(value: string) => value}
+                    formatter={(value: string) => <span style={{ color: chartColors.axis }}>{value}</span>}
                     iconType="circle"
                     wrapperStyle={{ fontSize: '12px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
+            </div>
+
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg overflow-hidden">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Promedio por Curso</h3>
+              {sessionStats.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={sessionStats} layout="vertical" margin={{ left: 8, right: 16 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} horizontal={false} />
+                    <XAxis type="number" domain={[0, 10]} stroke={chartColors.axis} tickLine={false} axisLine={{ stroke: chartColors.grid }} fontSize={12} />
+                    <YAxis
+                      type="category"
+                      dataKey="courseName"
+                      stroke={chartColors.axis}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={11}
+                      width={90}
+                      tick={{ fill: chartColors.axis }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: chartColors.primarySoft }}
+                      contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
+                      formatter={(value: number) => [value.toFixed(1), 'Promedio']}
+                      labelFormatter={label => label}
+                    />
+                    <Bar dataKey="avg" fill={chartColors.primary} radius={[0, 6, 6, 0]} maxBarSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="font-body-sm text-body-sm text-on-surface-variant">Sin datos en el rango seleccionado.</p>
+              )}
+            </div>
+
+            <div className="bg-surface border border-outline-variant rounded-xl p-lg overflow-hidden">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Evolución del Promedio por Sesión</h3>
+              {sessionAverages.length > 1 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={sessionAverages} margin={{ left: 8, right: 16 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.grid} vertical={false} />
+                    <XAxis dataKey="shortDate" stroke={chartColors.axis} tickLine={false} axisLine={{ stroke: chartColors.grid }} fontSize={11} />
+                    <YAxis domain={[0, 10]} stroke={chartColors.axis} tickLine={false} axisLine={false} fontSize={12} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
+                      formatter={(value: number) => [value.toFixed(1), 'Promedio']}
+                      labelFormatter={(_label, payload) => payload?.[0]?.payload?.title || ''}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="avg"
+                      stroke={chartColors.primary}
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: chartColors.primary, strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  {sessionAverages.length === 1 ? 'Se necesita más de una sesión para mostrar la evolución.' : 'Sin datos en el rango seleccionado.'}
+                </p>
+              )}
             </div>
           </div>
 

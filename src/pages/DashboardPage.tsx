@@ -55,6 +55,10 @@ export function DashboardPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
 
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(
+    () => dayDateStrs.slice(1).reduce<Record<string, boolean>>((acc, key) => ({ ...acc, [key]: true }), {})
+  )
+
   useEffect(() => {
     if (!profile) return
 
@@ -264,6 +268,12 @@ export function DashboardPage() {
 
   const visibleGroups = dayGroups.filter(g => g.sessions.length > 0)
 
+  const toggleGroup = (key: string) => {
+    setCollapsed(prev => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  const isCollapsed = (key: string) => collapsed[key] ?? false
+
   return (
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
@@ -366,21 +376,38 @@ export function DashboardPage() {
         </div>
       ) : (
         <div className="space-y-xl">
-          {visibleGroups.map(group => (
-            <section key={group.key}>
-              <div className="flex items-baseline gap-sm mb-md">
-                <h2 className="font-headline-sm text-headline-sm text-primary font-bold">
-                  {group.label}
-                </h2>
-                <span className="font-body-sm text-body-sm text-on-surface-variant">
-                  {formatShortDate(group.key)}
+          {visibleGroups.map(group => {
+            const groupKey = group.key
+            const collapsedGroup = isCollapsed(groupKey)
+            return (
+            <section key={groupKey}>
+              <button
+                onClick={() => toggleGroup(groupKey)}
+                className="w-full flex items-center justify-between gap-sm mb-md hover:opacity-90 transition-opacity"
+              >
+                <div className="flex items-baseline gap-sm min-w-0">
+                  <span className={`material-symbols-outlined text-lg shrink-0 ${group.label === 'Hoy' ? 'text-primary' : 'text-on-surface-variant'}`}>
+                    {collapsedGroup ? 'chevron_right' : 'expand_more'}
+                  </span>
+                  <h2 className="font-headline-sm text-headline-sm text-primary font-bold">
+                    {group.label}
+                  </h2>
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">
+                    {formatShortDate(groupKey)}
+                  </span>
+                </div>
+                <span className="font-body-xs text-body-xs text-on-surface-variant bg-surface-container rounded-full px-sm py-0.5 shrink-0">
+                  {group.sessions.length}
                 </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-                {group.sessions.map(session => renderCourseCard(session, group.isToday))}
-              </div>
+              </button>
+              {!collapsedGroup && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+                  {group.sessions.map(session => renderCourseCard(session, group.isToday))}
+                </div>
+              )}
             </section>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
