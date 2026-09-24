@@ -189,12 +189,82 @@ export function DashboardPage() {
     return () => { cancelled = true }
   }, [profile, effectiveRole])
 
+  const courseRows = Array.from(new Map(sessionsToday.map(s => [s.course_id, s])).values())
+    .sort((a, b) => b.avgScore - a.avgScore)
+  const totalEvaluaciones = courseRows.reduce((sum, r) => sum + r.ratingCount, 0)
+  const avgGeneral = totalEvaluaciones > 0
+    ? courseRows.reduce((sum, r) => sum + r.avgScore * r.ratingCount, 0) / totalEvaluaciones
+    : 0
+  const nivelLabel = avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
+  const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
+
   return (
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy con las estadísticas de sus cursos</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy con el resumen de evaluaciones de sus cursos</p>
       </header>
+
+      {sessionsToday.length > 0 && (
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-lg overflow-hidden">
+          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Resumen de evaluaciones de los cursos del día</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-lg">
+            <div className="bg-surface-container-low rounded-xl p-md text-center">
+              <p className="font-headline-sm text-headline-sm text-primary">{totalEvaluaciones}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Total evaluaciones</p>
+            </div>
+            <div className="bg-surface-container-low rounded-xl p-md text-center">
+              <p className="font-headline-sm text-headline-sm text-primary">{avgGeneral > 0 ? avgGeneral.toFixed(1) : '-'}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
+            </div>
+            <div className="bg-surface-container-low rounded-xl p-md text-center">
+              <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
+            </div>
+          </div>
+
+          {courseRows.length > 0 && (
+            <>
+              <div className="hidden md:block">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-outline-variant">
+                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Curso</th>
+                      <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Evaluaciones</th>
+                      <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm">Promedio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {courseRows.map(r => (
+                      <tr key={r.course_id} className="border-b border-outline-variant last:border-0">
+                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{r.courseName}</td>
+                        <td className="py-sm pr-md font-body-md text-body-md text-on-surface text-right">{r.ratingCount}</td>
+                        <td className="py-sm font-body-md text-body-md text-on-surface text-right font-semibold">{r.avgScore > 0 ? r.avgScore.toFixed(1) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="md:hidden space-y-md">
+                {courseRows.map(r => (
+                  <div key={r.course_id} className="border border-outline-variant rounded-xl p-md">
+                    <p className="font-body-md text-body-md text-on-surface font-medium mb-sm text-center">{r.courseName}</p>
+                    <div className="flex justify-between items-center px-sm">
+                      <span className="font-body-sm text-body-sm text-on-surface-variant">Evaluaciones</span>
+                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{r.ratingCount}</span>
+                    </div>
+                    <div className="flex justify-between items-center px-sm">
+                      <span className="font-body-sm text-body-sm text-on-surface-variant">Promedio</span>
+                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{r.avgScore > 0 ? r.avgScore.toFixed(1) : '-'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
