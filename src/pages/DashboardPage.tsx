@@ -231,29 +231,29 @@ export function DashboardPage() {
             <Link
               key={session.id}
               to={`/courses/${session.course_id}/sessions`}
-              className="bg-success-container/60 border border-success/70 border-t-[3px] border-t-success rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
+              className="bg-secondary-container border border-outline-variant border-t-[3px] border-t-secondary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-md">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-sm mb-1">
-                    <span className="material-symbols-outlined text-success text-lg">menu_book</span>
-                    <h2 className="font-title-sm text-title-sm text-on-success-container truncate" title={session.courseName}>{session.courseName}</h2>
+                    <span className="material-symbols-outlined text-secondary text-lg">menu_book</span>
+                    <h2 className="font-title-sm text-title-sm text-on-secondary-container truncate" title={session.courseName}>{session.courseName}</h2>
                   </div>
-                  <p className="font-body-xs text-body-xs text-on-success-container mt-1 line-clamp-2">{session.title}</p>
+                  <p className="font-body-xs text-body-xs text-on-secondary-container mt-1 line-clamp-2">{session.title}</p>
                 </div>
-                <span className="inline-flex items-center gap-1 bg-success text-on-success text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
+                <span className="inline-flex items-center gap-1 bg-secondary text-on-secondary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
                   <span className="material-symbols-outlined text-[14px]">today</span>
                   Hoy
                 </span>
               </div>
-              <div className="mt-auto flex items-center justify-between pt-md border-t border-success/40">
+              <div className="mt-auto flex items-center justify-between pt-md border-t border-outline-variant">
                 <div className="flex items-center gap-xs" title={`${session.sessionCount} sesiones del curso`}>
-                  <span className="material-symbols-outlined text-on-success-container text-lg">event</span>
-                  <span className="font-body-sm text-body-sm text-on-success-container font-medium">{session.sessionCount}</span>
+                  <span className="material-symbols-outlined text-on-secondary-container text-lg">event</span>
+                  <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.sessionCount}</span>
                 </div>
                 <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones del curso`}>
-                  <span className="material-symbols-outlined text-on-success-container text-lg">rate_review</span>
-                  <span className="font-body-sm text-body-sm text-on-success-container font-medium">{session.ratingCount}</span>
+                  <span className="material-symbols-outlined text-on-secondary-container text-lg">rate_review</span>
+                  <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.ratingCount}</span>
                 </div>
                 <div className="flex items-center gap-xs" title={`Promedio del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
                   <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>

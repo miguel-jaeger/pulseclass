@@ -417,7 +417,7 @@ export function CoursesPage() {
           <article key={course.id} className={`border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
             course.is_active
               ? hasSessionToday
-                ? 'bg-success-container/60 border-success/70 border-t-[3px] border-t-success'
+                ? 'bg-secondary-container border-outline-variant border-t-[3px] border-t-secondary'
                 : 'bg-surface border-outline-variant border-t-[3px] border-t-primary'
               : 'bg-surface border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
           }`}>
@@ -433,7 +433,7 @@ export function CoursesPage() {
                     </span>
                   </span>
                   {course.is_active && hasSessionToday && (
-                    <span className="inline-flex items-center gap-1 bg-success text-on-success text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
+                    <span className="inline-flex items-center gap-1 bg-secondary text-on-secondary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
                       <span className="material-symbols-outlined text-[14px]">today</span>
                       Hoy
                     </span>
