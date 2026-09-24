@@ -906,23 +906,6 @@ export function StatisticsPage() {
 
             {activeTab === 'overview' && (
               <div className="space-y-md">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-                  <div className="bg-surface-container-low rounded-xl p-md text-center">
-                    <p className="font-headline-sm text-headline-sm text-primary">{totalEvaluaciones}</p>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Total evaluaciones</p>
-                  </div>
-                  <div className="bg-surface-container-low rounded-xl p-md text-center">
-                    <p className="font-headline-sm text-headline-sm text-primary">{avgScore.toFixed(1)}</p>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
-                  </div>
-                  <div className="bg-surface-container-low rounded-xl p-md text-center">
-                    <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
-                    <div className="flex items-center justify-center gap-xs mt-xs">
-                      <span className={`material-symbols-outlined text-base ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
-                      <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
-                    </div>
-                  </div>
-                </div>
                 {sessionStats.length > 0 && (
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
                     {sessionStats.length} curso{sessionStats.length !== 1 ? 's' : ''} con evaluaciones en el rango seleccionado.
