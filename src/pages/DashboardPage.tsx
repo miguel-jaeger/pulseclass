@@ -30,12 +30,30 @@ interface TodaySession {
   avgScore: number
 }
 
+interface DayGroup {
+  key: string
+  label: string
+  sessions: TodaySession[]
+  isToday: boolean
+}
+
+function formatShortDate(dateStr: string): string {
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 export function DashboardPage() {
   const { profile } = useAuth()
   const { impersonatedRole, isImpersonating } = useImpersonation()
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
-  const [sessionsToday, setSessionsToday] = useState<TodaySession[]>([])
+  const [daySessions, setDaySessions] = useState<TodaySession[]>([])
   const [loading, setLoading] = useState(true)
+
+  const today = new Date()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const dayDateStrs = [0, 1, 2].map(offset => {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
 
   useEffect(() => {
     if (!profile) return
@@ -108,47 +126,45 @@ export function DashboardPage() {
 
         const courseIds = courses.map(c => c.id)
         if (courseIds.length === 0) {
-          setSessionsToday([])
+          setDaySessions([])
           setLoading(false)
           return
         }
-
-        const today = new Date()
-        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
         const { data: sessionsData, error: sessionsError } = await insforge.database
           .from('sessions')
           .select('id, course_id, title, date')
           .in('course_id', courseIds)
-          .eq('date', dateStr)
+          .gte('date', dayDateStrs[0])
+          .lte('date', dayDateStrs[2])
 
         if (cancelled) return
 
         if (sessionsError) {
           console.error('Error fetching sessions:', sessionsError)
-          setSessionsToday([])
+          setDaySessions([])
           setLoading(false)
           return
         }
 
         const sessions = (sessionsData as Session[]) || []
         if (sessions.length === 0) {
-          setSessionsToday([])
+          setDaySessions([])
           setLoading(false)
           return
         }
 
-        const todayCourseIds = [...new Set(sessions.map(s => s.course_id))]
+        const sessionCourseIds = [...new Set(sessions.map(s => s.course_id))]
 
         const [courseStatsRes, ratingStatsRes] = await Promise.all([
           insforge.database
             .from('course_stats')
             .select('course_id, session_count')
-            .in('course_id', todayCourseIds),
+            .in('course_id', sessionCourseIds),
           insforge.database
             .from('course_rating_stats')
             .select('course_id, rating_count, avg_score')
-            .in('course_id', todayCourseIds)
+            .in('course_id', sessionCourseIds)
         ])
 
         if (cancelled) return
@@ -175,9 +191,9 @@ export function DashboardPage() {
           }
         })
 
-        result.sort((a, b) => a.courseName.localeCompare(b.courseName))
+        result.sort((a, b) => a.date.localeCompare(b.date) || a.courseName.localeCompare(b.courseName))
 
-        setSessionsToday(result)
+        setDaySessions(result)
       } catch (err) {
         console.error('Error in fetchDashboard:', err)
       } finally {
@@ -189,6 +205,17 @@ export function DashboardPage() {
     return () => { cancelled = true }
   }, [profile, effectiveRole])
 
+  const sessionsToday = daySessions.filter(s => s.date === todayStr)
+
+  const dayGroups: DayGroup[] = dayDateStrs.map((dateStr, i) => ({
+    key: dateStr,
+    label: i === 0 ? 'Hoy' : i === 1 ? 'Mañana' : 'Pasado',
+    isToday: i === 0,
+    sessions: daySessions
+      .filter(s => s.date === dateStr)
+      .sort((a, b) => a.courseName.localeCompare(b.courseName))
+  }))
+
   const courseRows = Array.from(new Map(sessionsToday.map(s => [s.course_id, s])).values())
     .sort((a, b) => b.avgScore - a.avgScore)
   const totalEvaluaciones = courseRows.reduce((sum, r) => sum + r.ratingCount, 0)
@@ -199,11 +226,49 @@ export function DashboardPage() {
   const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
   const nivelIcon = avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
+  const renderCourseCard = (session: TodaySession, isToday: boolean) => (
+    <Link
+      key={session.id}
+      to={`/courses/${session.course_id}/sessions`}
+      className={`rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
+        isToday
+          ? 'bg-primary-container/20 border border-primary border-t-[3px] border-t-primary'
+          : 'bg-secondary-container border border-outline-variant border-t-[3px] border-t-secondary'
+      }`}
+    >
+      <div className="flex justify-between items-start mb-md">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-sm mb-1">
+            <span className={`material-symbols-outlined text-lg ${isToday ? 'text-primary' : 'text-secondary'}`}>menu_book</span>
+            <h2 className={`font-title-sm text-title-sm truncate ${isToday ? 'text-on-surface font-bold' : 'text-on-secondary-container'}`} title={session.courseName}>{session.courseName}</h2>
+          </div>
+          <p className={`font-body-xs text-body-xs mt-1 line-clamp-2 ${isToday ? 'text-on-surface-variant' : 'text-on-secondary-container'}`}>{session.title}</p>
+        </div>
+      </div>
+      <div className="mt-auto flex items-center justify-between pt-md border-t border-outline-variant">
+        <div className="flex items-center gap-xs" title={`${session.sessionCount} sesiones del curso`}>
+          <span className="material-symbols-outlined text-on-secondary-container text-lg">event</span>
+          <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.sessionCount}</span>
+        </div>
+        <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones del curso`}>
+          <span className="material-symbols-outlined text-on-secondary-container text-lg">rate_review</span>
+          <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.ratingCount}</span>
+        </div>
+        <div className="flex items-center gap-xs" title={`Promedio del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
+          <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
+          <span className={`font-body-sm text-body-sm font-medium ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}</span>
+        </div>
+      </div>
+    </Link>
+  )
+
+  const visibleGroups = dayGroups.filter(g => g.sessions.length > 0)
+
   return (
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy con el resumen de evaluaciones de sus cursos</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy, mañana y pasado agrupadas por día</p>
       </header>
 
       {sessionsToday.length > 0 && (
@@ -294,47 +359,27 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
-      ) : sessionsToday.length === 0 ? (
+      ) : daySessions.length === 0 ? (
         <div className="text-center py-xl">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">event</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No hay sesiones programadas para hoy.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">No hay sesiones programadas para hoy, mañana o pasado.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-          {sessionsToday.map(session => (
-            <Link
-              key={session.id}
-              to={`/courses/${session.course_id}/sessions`}
-              className="bg-secondary-container border border-outline-variant border-t-[3px] border-t-secondary rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
-            >
-              <div className="flex justify-between items-start mb-md">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-sm mb-1">
-                    <span className="material-symbols-outlined text-secondary text-lg">menu_book</span>
-                    <h2 className="font-title-sm text-title-sm text-on-secondary-container truncate" title={session.courseName}>{session.courseName}</h2>
-                  </div>
-                  <p className="font-body-xs text-body-xs text-on-secondary-container mt-1 line-clamp-2">{session.title}</p>
-                </div>
-                <span className="inline-flex items-center gap-1 bg-secondary text-on-secondary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
-                  <span className="material-symbols-outlined text-[14px]">today</span>
-                  Hoy
+        <div className="space-y-xl">
+          {visibleGroups.map(group => (
+            <section key={group.key}>
+              <div className="flex items-baseline gap-sm mb-md">
+                <h2 className="font-headline-sm text-headline-sm text-primary font-bold">
+                  {group.label}
+                </h2>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">
+                  {formatShortDate(group.key)}
                 </span>
               </div>
-              <div className="mt-auto flex items-center justify-between pt-md border-t border-outline-variant">
-                <div className="flex items-center gap-xs" title={`${session.sessionCount} sesiones del curso`}>
-                  <span className="material-symbols-outlined text-on-secondary-container text-lg">event</span>
-                  <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.sessionCount}</span>
-                </div>
-                <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones del curso`}>
-                  <span className="material-symbols-outlined text-on-secondary-container text-lg">rate_review</span>
-                  <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.ratingCount}</span>
-                </div>
-                <div className="flex items-center gap-xs" title={`Promedio del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
-                  <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
-                  <span className={`font-body-sm text-body-sm font-medium ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}</span>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+                {group.sessions.map(session => renderCourseCard(session, group.isToday))}
               </div>
-            </Link>
+            </section>
           ))}
         </div>
       )}
