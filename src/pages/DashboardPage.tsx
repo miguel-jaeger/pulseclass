@@ -40,7 +40,6 @@ export function DashboardPage() {
   const { impersonatedRole, isImpersonating } = useImpersonation()
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [sessionsToday, setSessionsToday] = useState<TodaySession[]>([])
-  const [summary, setSummary] = useState({ courseCount: 0, totalSessions: 0, totalRatings: 0, allAvg: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -115,7 +114,6 @@ export function DashboardPage() {
         const courseIds = courses.map(c => c.id)
         if (courseIds.length === 0) {
           setSessionsToday([])
-          setSummary({ courseCount: 0, totalSessions: 0, totalRatings: 0, allAvg: 0 })
           setLoading(false)
           return
         }
@@ -127,19 +125,18 @@ export function DashboardPage() {
           .from('sessions')
           .select('id, course_id, title, date')
           .in('course_id', courseIds)
+          .eq('date', dateStr)
 
         if (cancelled) return
 
         if (sessionsError) {
           console.error('Error fetching sessions:', sessionsError)
           setSessionsToday([])
-          setSummary({ courseCount: 0, totalSessions: 0, totalRatings: 0, allAvg: 0 })
           setLoading(false)
           return
         }
 
         const sessions = (sessionsData as Session[]) || []
-        const todaySessions = sessions.filter(s => s.date === dateStr)
         const sessionIds = sessions.map(s => s.id)
 
         let ratings: Rating[] = []
@@ -154,7 +151,7 @@ export function DashboardPage() {
         if (cancelled) return
 
         const courseNameById = new Map(courses.map(c => [c.id, c.name]))
-        const result: TodaySession[] = todaySessions.map(session => {
+        const result: TodaySession[] = sessions.map(session => {
           const sessionRatings = ratings.filter(r => r.session_id === session.id)
           const avgScore = sessionRatings.length > 0
             ? sessionRatings.reduce((sum, r) => sum + r.score, 0) / sessionRatings.length
@@ -173,14 +170,6 @@ export function DashboardPage() {
         result.sort((a, b) => a.courseName.localeCompare(b.courseName))
 
         setSessionsToday(result)
-        setSummary({
-          courseCount: courses.length,
-          totalSessions: sessions.length,
-          totalRatings: ratings.length,
-          allAvg: ratings.length > 0
-            ? ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length
-            : 0
-        })
       } catch (err) {
         console.error('Error in fetchDashboard:', err)
       } finally {
@@ -196,44 +185,11 @@ export function DashboardPage() {
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Resumen general y sesiones de hoy</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-          <div className="flex items-center gap-sm mb-sm">
-            <span className="material-symbols-outlined text-primary">menu_book</span>
-            <h3 className="font-label-md text-label-md text-on-surface-variant">Cursos</h3>
-          </div>
-          <p className="font-headline-lg text-headline-lg text-primary font-bold">{summary.courseCount}</p>
-        </div>
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-          <div className="flex items-center gap-sm mb-sm">
-            <span className="material-symbols-outlined text-primary">event</span>
-            <h3 className="font-label-md text-label-md text-on-surface-variant">Sesiones</h3>
-          </div>
-          <p className="font-headline-lg text-headline-lg text-primary font-bold">{summary.totalSessions}</p>
-        </div>
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
-          <div className="flex items-center gap-sm mb-sm">
-            <span className="material-symbols-outlined text-primary">trending_up</span>
-            <h3 className="font-label-md text-label-md text-on-surface-variant">Promedio General</h3>
-          </div>
-          <p className="font-headline-lg text-headline-lg text-primary font-bold">{summary.allAvg > 0 ? summary.allAvg.toFixed(1) : '-'}</p>
-        </div>
-      </div>
-
       {loading ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
-                <div className="h-4 w-20 bg-surface-container animate-pulse rounded mb-sm" />
-                <div className="h-8 w-12 bg-surface-container animate-pulse rounded" />
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
           {[1, 2, 3].map(i => (
             <div key={i} className="bg-surface border border-outline-variant rounded-xl p-lg">
               <div className="flex justify-between items-start mb-md">
@@ -256,7 +212,6 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
-        </>
       ) : sessionsToday.length === 0 ? (
         <div className="text-center py-xl">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">event</span>
