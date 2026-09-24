@@ -414,10 +414,12 @@ export function CoursesPage() {
         {paginatedCourses.map((course) => {
           const hasSessionToday = coursesWithSessionToday.has(course.id)
           return (
-          <article key={course.id} className={`bg-surface border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
+          <article key={course.id} className={`border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
             course.is_active
-              ? `border-outline-variant border-t-[3px] border-t-primary${hasSessionToday ? ' ring-2 ring-primary' : ''}`
-              : 'border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
+              ? hasSessionToday
+                ? 'bg-success-container/60 border-success/70 border-t-[3px] border-t-success'
+                : 'bg-surface border-outline-variant border-t-[3px] border-t-primary'
+              : 'bg-surface border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
           }`}>
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
@@ -431,7 +433,7 @@ export function CoursesPage() {
                     </span>
                   </span>
                   {course.is_active && hasSessionToday && (
-                    <span className="inline-flex items-center gap-1 bg-primary text-on-primary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
+                    <span className="inline-flex items-center gap-1 bg-success text-on-success text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
                       <span className="material-symbols-outlined text-[14px]">today</span>
                       Hoy
                     </span>

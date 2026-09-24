@@ -268,7 +268,7 @@ export function DashboardPage() {
             <Link
               key={session.id}
               to={`/sessions/${session.id}`}
-              className="bg-success-container border border-success border-t-[3px] border-t-success rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
+              className="bg-success-container/60 border border-success/70 border-t-[3px] border-t-success rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-md">
                 <div className="flex-1 min-w-0">
