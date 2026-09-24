@@ -417,14 +417,14 @@ export function CoursesPage() {
           <article key={course.id} className={`border rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200 ${
             course.is_active
               ? hasSessionToday
-                ? 'bg-secondary-container border-outline-variant border-t-[3px] border-t-secondary'
+                ? 'bg-primary-container/20 border-primary border-t-[3px] border-t-primary'
                 : 'bg-surface border-outline-variant border-t-[3px] border-t-primary'
               : 'bg-surface border-outline-variant border-t-[3px] border-t-outline-variant opacity-70'
           }`}>
             <div className="flex justify-between items-start mb-md">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-sm mb-1">
-                  <h2 className="font-title-sm text-title-sm text-on-surface truncate" title={course.name}>{course.name}</h2>
+                  <h2 className={`font-title-sm text-title-sm truncate ${hasSessionToday ? 'text-on-surface font-bold' : 'text-on-surface'}`} title={course.name}>{course.name}</h2>
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${
                     course.is_active ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'
                   }`}>
@@ -433,7 +433,7 @@ export function CoursesPage() {
                     </span>
                   </span>
                   {course.is_active && hasSessionToday && (
-                    <span className="inline-flex items-center gap-1 bg-secondary text-on-secondary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
+                    <span className="inline-flex items-center gap-1 bg-primary text-on-primary text-[11px] font-bold rounded-full px-2 py-0.5 shrink-0">
                       <span className="material-symbols-outlined text-[14px]">today</span>
                       Hoy
                     </span>

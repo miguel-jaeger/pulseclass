@@ -152,6 +152,7 @@ export function StatisticsPage() {
         const { data } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
+          .eq('is_active', true)
           .order('name')
         if (data) setCourses(data as Course[])
       } else if (profile.role === 'teacher') {
@@ -159,6 +160,7 @@ export function StatisticsPage() {
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
           .eq('created_by', profile.user_id)
+          .eq('is_active', true)
         const { data: memberRows } = await insforge.database
           .from('course_members')
           .select('course_id')
@@ -170,6 +172,7 @@ export function StatisticsPage() {
             .from('courses')
             .select('id, name, description, created_by, created_at, is_active')
             .in('id', memberIds)
+            .eq('is_active', true)
           memberCourses = (data as Course[]) || []
         }
         const all = [...(owned as Course[] || []), ...memberCourses]
@@ -187,6 +190,7 @@ export function StatisticsPage() {
             .from('courses')
             .select('id, name, description, created_by, created_at, is_active')
             .in('id', memberIds)
+            .eq('is_active', true)
           if (data) setCourses(data as Course[])
         }
       }
@@ -232,7 +236,7 @@ export function StatisticsPage() {
         sessionQuery = sessionQuery.eq('course_id', selectedCourse)
       } else if (courseIds && courseIds.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courseIds)
-      } else if (effectiveRole !== 'admin' && courses.length > 0) {
+      } else if (courses.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courses.map(c => c.id))
       }
 
@@ -332,21 +336,23 @@ export function StatisticsPage() {
   }, [ratings])
 
   const sessionAverages = useMemo(() => {
-    const map = new Map<string, { title: string; date: string; count: number; sum: number }>()
+    const map = new Map<string, { courseName: string; title: string; date: string; count: number; sum: number }>()
     for (const r of ratings) {
       const s = sessions.find(sess => sess.id === r.session_id)
       if (!s) continue
+      const course = courses.find(c => c.id === s.course_id)
       const existing = map.get(s.id)
       if (existing) {
         existing.count++
         existing.sum += r.score
       } else {
-        map.set(s.id, { title: s.title, date: s.date, count: 1, sum: r.score })
+        map.set(s.id, { courseName: course?.name ?? 'Sin curso', title: s.title, date: s.date, count: 1, sum: r.score })
       }
     }
     return Array.from(map.entries())
       .map(([id, v]) => ({
         id,
+        courseName: v.courseName,
         title: v.title,
         date: v.date,
         shortDate: v.date ? new Date(v.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }) : '',
@@ -354,7 +360,7 @@ export function StatisticsPage() {
         avg: Math.round((v.sum / v.count) * 10) / 10
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
-  }, [ratings, sessions])
+  }, [ratings, sessions, courses])
 
   const sessionStats = useMemo<SessionStat[]>(() => {
     const map = new Map<string, { courseName: string; count: number; sum: number }>()
@@ -883,7 +889,9 @@ export function StatisticsPage() {
                     <Tooltip
                       contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
                       formatter={(value: number) => [value.toFixed(1), 'Promedio']}
-                      labelFormatter={(_label, payload) => payload?.[0]?.payload?.title || ''}
+                      labelFormatter={(_label, payload) => payload?.[0]?.payload?.courseName
+                        ? `${payload[0].payload.courseName} · ${payload[0].payload.title}`
+                        : ''}
                     />
                     <Line
                       type="monotone"

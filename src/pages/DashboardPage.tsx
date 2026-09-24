@@ -278,7 +278,7 @@ export function DashboardPage() {
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy, mañana y pasado agrupadas por día</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Consulta tus próximas sesiones con el resumen de evaluaciones de cada curso</p>
       </header>
 
       {sessionsToday.length > 0 && (
