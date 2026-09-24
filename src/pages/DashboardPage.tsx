@@ -19,18 +19,13 @@ interface Session {
   date: string
 }
 
-interface Rating {
-  id: string
-  session_id: string
-  score: number
-}
-
 interface TodaySession {
   id: string
   course_id: string
   courseName: string
   title: string
   date: string
+  sessionCount: number
   ratingCount: number
   avgScore: number
 }
@@ -137,33 +132,46 @@ export function DashboardPage() {
         }
 
         const sessions = (sessionsData as Session[]) || []
-        const sessionIds = sessions.map(s => s.id)
-
-        let ratings: Rating[] = []
-        if (sessionIds.length > 0) {
-          const { data: ratingsData } = await insforge.database
-            .from('ratings')
-            .select('id, session_id, score')
-            .in('session_id', sessionIds)
-          if (ratingsData) ratings = ratingsData as Rating[]
+        if (sessions.length === 0) {
+          setSessionsToday([])
+          setLoading(false)
+          return
         }
+
+        const todayCourseIds = [...new Set(sessions.map(s => s.course_id))]
+
+        const [courseStatsRes, ratingStatsRes] = await Promise.all([
+          insforge.database
+            .from('course_stats')
+            .select('course_id, session_count')
+            .in('course_id', todayCourseIds),
+          insforge.database
+            .from('course_rating_stats')
+            .select('course_id, rating_count, avg_score')
+            .in('course_id', todayCourseIds)
+        ])
 
         if (cancelled) return
 
+        const sessionCounts = new Map(
+          (courseStatsRes.data as { course_id: string; session_count: number }[] || []).map(r => [r.course_id, r.session_count])
+        )
+        const ratingStats = new Map(
+          (ratingStatsRes.data as { course_id: string; rating_count: number; avg_score: number | string }[] || []).map(r => [r.course_id, r])
+        )
+
         const courseNameById = new Map(courses.map(c => [c.id, c.name]))
         const result: TodaySession[] = sessions.map(session => {
-          const sessionRatings = ratings.filter(r => r.session_id === session.id)
-          const avgScore = sessionRatings.length > 0
-            ? sessionRatings.reduce((sum, r) => sum + r.score, 0) / sessionRatings.length
-            : 0
+          const rs = ratingStats.get(session.course_id)
           return {
             id: session.id,
             course_id: session.course_id,
             courseName: courseNameById.get(session.course_id) || 'Curso',
             title: session.title,
             date: session.date,
-            ratingCount: sessionRatings.length,
-            avgScore
+            sessionCount: sessionCounts.get(session.course_id) ?? 0,
+            ratingCount: rs?.rating_count ?? 0,
+            avgScore: Number(rs?.avg_score ?? 0)
           }
         })
 
@@ -185,7 +193,7 @@ export function DashboardPage() {
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Sesiones de hoy con las estadísticas de sus cursos</p>
       </header>
 
       {loading ? (
@@ -222,7 +230,7 @@ export function DashboardPage() {
           {sessionsToday.map(session => (
             <Link
               key={session.id}
-              to={`/sessions/${session.id}`}
+              to={`/courses/${session.course_id}/sessions`}
               className="bg-success-container/60 border border-success/70 border-t-[3px] border-t-success rounded-xl p-lg flex flex-col hover:shadow-sm hover:scale-[1.01] transition-all duration-200"
             >
               <div className="flex justify-between items-start mb-md">
@@ -239,11 +247,15 @@ export function DashboardPage() {
                 </span>
               </div>
               <div className="mt-auto flex items-center justify-between pt-md border-t border-success/40">
-                <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones`}>
+                <div className="flex items-center gap-xs" title={`${session.sessionCount} sesiones del curso`}>
+                  <span className="material-symbols-outlined text-on-success-container text-lg">event</span>
+                  <span className="font-body-sm text-body-sm text-on-success-container font-medium">{session.sessionCount}</span>
+                </div>
+                <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones del curso`}>
                   <span className="material-symbols-outlined text-on-success-container text-lg">rate_review</span>
                   <span className="font-body-sm text-body-sm text-on-success-container font-medium">{session.ratingCount}</span>
                 </div>
-                <div className="flex items-center gap-xs" title={`Promedio: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
+                <div className="flex items-center gap-xs" title={`Promedio del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
                   <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
                   <span className={`font-body-sm text-body-sm font-medium ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}</span>
                 </div>
