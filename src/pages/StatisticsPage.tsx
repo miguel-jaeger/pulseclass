@@ -749,10 +749,9 @@ export function StatisticsPage() {
               </div>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
-              <span className={`material-symbols-outlined block text-[40px] ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
               <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
               <div className="flex items-center gap-xs mt-xs">
-                <span className="material-symbols-outlined text-primary text-base">emoji_emotions</span>
+                <span className={`material-symbols-outlined text-base ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
                 <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
               </div>
             </div>
@@ -917,9 +916,11 @@ export function StatisticsPage() {
                     <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
                   </div>
                   <div className="bg-surface-container-low rounded-xl p-md text-center">
-                    <span className={`material-symbols-outlined block mx-auto text-[36px] ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
                     <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
+                    <div className="flex items-center justify-center gap-xs mt-xs">
+                      <span className={`material-symbols-outlined text-base ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
+                      <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
+                    </div>
                   </div>
                 </div>
                 {sessionStats.length > 0 && (
