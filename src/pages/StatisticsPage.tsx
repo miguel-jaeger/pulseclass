@@ -397,6 +397,7 @@ export function StatisticsPage() {
 
   const nivelLabel = avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'
   const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
+  const nivelIcon = avgScore >= 8 ? 'sentiment_satisfied' : avgScore >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
   const canEdit = (studentId: string) => {
     if (effectiveRole === 'admin') return true
@@ -748,6 +749,7 @@ export function StatisticsPage() {
               </div>
             </div>
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
+              <span className={`material-symbols-outlined block text-[40px] ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
               <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
               <div className="flex items-center gap-xs mt-xs">
                 <span className="material-symbols-outlined text-primary text-base">emoji_emotions</span>
@@ -915,6 +917,7 @@ export function StatisticsPage() {
                     <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
                   </div>
                   <div className="bg-surface-container-low rounded-xl p-md text-center">
+                    <span className={`material-symbols-outlined block mx-auto text-[36px] ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
                     <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
                     <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
                   </div>

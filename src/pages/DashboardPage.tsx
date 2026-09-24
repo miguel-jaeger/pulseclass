@@ -197,6 +197,7 @@ export function DashboardPage() {
     : 0
   const nivelLabel = avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
   const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
+  const nivelIcon = avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
   return (
     <div className="pb-20 md:pb-xl">
@@ -219,6 +220,9 @@ export function DashboardPage() {
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Promedio general</p>
             </div>
             <div className="bg-surface-container-low rounded-xl p-md text-center">
+              <span className={`material-symbols-outlined block mx-auto text-[36px] md:text-[40px] ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+                {nivelIcon}
+              </span>
               <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Nivel de satisfacción</p>
             </div>
