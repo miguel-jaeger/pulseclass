@@ -13,19 +13,6 @@ interface Course {
   is_active: boolean
 }
 
-interface Session {
-  id: string
-  course_id: string
-  title: string
-  date: string
-}
-
-interface Rating {
-  id: string
-  session_id: string
-  score: number
-}
-
 interface CourseSummary {
   course: Course
   sessionCount: number
@@ -118,59 +105,42 @@ export function DashboardPage() {
           return
         }
 
-        const { data: sessionsData, error: sessionsError } = await insforge.database
-          .from('sessions')
-          .select('id, course_id, title, date')
-          .in('course_id', courseIds)
-
-        if (cancelled) return
-
-        if (sessionsError) {
-          console.error('Error fetching sessions:', sessionsError)
-          setSummaries(courses.map(course => ({
-            course,
-            sessionCount: 0,
-            ratingCount: 0,
-            avgScore: 0
-          })))
-          setCoursesWithSessionToday(new Set())
-          setLoading(false)
-          return
-        }
-
-        const sessions = (sessionsData as Session[]) || []
         const today = new Date()
         const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-        setCoursesWithSessionToday(new Set(sessions.filter(s => s.date === dateStr).map(s => s.course_id)))
 
-        const sessionIds = sessions.map(s => s.id)
-
-        let ratings: Rating[] = []
-        if (sessionIds.length > 0) {
-          const { data: ratingsData, error: ratingsError } = await insforge.database
-            .from('ratings')
-            .select('id, session_id, score')
-            .in('session_id', sessionIds)
-
-          if (!ratingsError && ratingsData) {
-            ratings = ratingsData as Rating[]
-          }
-        }
+        const [sessionCountsRes, ratingStatsRes, todayRes] = await Promise.all([
+          insforge.database
+            .from('course_stats')
+            .select('course_id, session_count')
+            .in('course_id', courseIds),
+          insforge.database
+            .from('course_rating_stats')
+            .select('course_id, rating_count, avg_score')
+            .in('course_id', courseIds),
+          insforge.database
+            .from('sessions')
+            .select('course_id')
+            .eq('date', dateStr)
+            .in('course_id', courseIds)
+        ])
 
         if (cancelled) return
 
+        const sessionCounts = new Map(
+          (sessionCountsRes.data as { course_id: string; session_count: number }[] || []).map(r => [r.course_id, r.session_count])
+        )
+        const ratingStats = new Map(
+          (ratingStatsRes.data as { course_id: string; rating_count: number; avg_score: number | string }[] || []).map(r => [r.course_id, r])
+        )
+        setCoursesWithSessionToday(new Set((todayRes.data as { course_id: string }[] || []).map(r => r.course_id)))
+
         const result: CourseSummary[] = courses.map(course => {
-          const courseSessions = sessions.filter(s => s.course_id === course.id)
-          const courseSessionIds = new Set(courseSessions.map(s => s.id))
-          const courseRatings = ratings.filter(r => courseSessionIds.has(r.session_id))
-          const avgScore = courseRatings.length > 0
-            ? courseRatings.reduce((sum, r) => sum + r.score, 0) / courseRatings.length
-            : 0
+          const rs = ratingStats.get(course.id)
           return {
             course,
-            sessionCount: courseSessions.length,
-            ratingCount: courseRatings.length,
-            avgScore
+            sessionCount: sessionCounts.get(course.id) ?? 0,
+            ratingCount: rs?.rating_count ?? 0,
+            avgScore: Number(rs?.avg_score ?? 0)
           }
         })
 
