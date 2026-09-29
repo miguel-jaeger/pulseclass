@@ -9,9 +9,12 @@ interface HelpVideo {
   title: string
   description: string
   youtube_code: string
+  category: 'platform' | 'course'
   created_by: string
   created_at: string
 }
+
+type VideoCategory = 'platform' | 'course'
 
 interface HelpComment {
   id: string
@@ -51,6 +54,7 @@ export function HelpPage() {
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const [videos, setVideos] = useState<HelpVideo[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeCategory, setActiveCategory] = useState<VideoCategory>('platform')
   const [expandedVideo, setExpandedVideo] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [commentsMap, setCommentsMap] = useState<Record<string, HelpComment[]>>({})
@@ -329,8 +333,9 @@ export function HelpPage() {
   }
 
   const filteredVideos = videos.filter(v =>
-    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    v.category === activeCategory &&
+    (v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase())))
   )
 
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredVideos.length, 8)
@@ -379,6 +384,29 @@ export function HelpPage() {
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
       </header>
 
+      <div className="flex flex-wrap gap-xs mb-lg">
+        <button
+          onClick={() => { setActiveCategory('platform'); setExpandedVideo(null) }}
+          className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+            activeCategory === 'platform'
+              ? 'bg-primary text-on-primary font-bold'
+              : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          Videos de la plataforma
+        </button>
+        <button
+          onClick={() => { setActiveCategory('course'); setExpandedVideo(null) }}
+          className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+            activeCategory === 'course'
+              ? 'bg-primary text-on-primary font-bold'
+              : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+          }`}
+        >
+          Sugerencias de estudio
+        </button>
+      </div>
+
       {videos.length > 0 && (
         <div className="relative mb-lg">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
@@ -395,7 +423,9 @@ export function HelpPage() {
       ) : filteredVideos.length === 0 ? (
         <div className="bg-surface border border-outline-variant rounded-xl p-xl text-center">
           <span className="material-symbols-outlined text-on-surface-variant text-[48px] mb-md block">search_off</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No se encontraron videos para "{searchQuery}".</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {searchQuery ? `No se encontraron videos para "${searchQuery}" en esta sección.` : `No hay videos de ${activeCategory === 'platform' ? 'la plataforma' : 'sugerencia de estudio'} por ahora.`}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-lg">

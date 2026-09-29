@@ -8,8 +8,16 @@ interface HelpVideo {
   title: string
   description: string
   youtube_code: string
+  category: 'platform' | 'course'
   created_by: string
   created_at: string
+}
+
+type VideoCategory = 'platform' | 'course'
+
+const CATEGORY_LABELS: Record<VideoCategory, string> = {
+  platform: 'Plataforma',
+  course: 'Sugerencia de estudio',
 }
 
 export function HelpAdminPage() {
@@ -18,7 +26,7 @@ export function HelpAdminPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ title: '', description: '', youtube_code: '' })
+  const [form, setForm] = useState({ title: '', description: '', youtube_code: '', category: 'platform' as VideoCategory })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
@@ -41,7 +49,7 @@ export function HelpAdminPage() {
   }
 
   const resetForm = () => {
-    setForm({ title: '', description: '', youtube_code: '' })
+    setForm({ title: '', description: '', youtube_code: '', category: 'platform' })
     setEditingId(null)
     setShowForm(false)
   }
@@ -52,7 +60,7 @@ export function HelpAdminPage() {
   }
 
   const openEdit = (video: HelpVideo) => {
-    setForm({ title: video.title, description: video.description || '', youtube_code: video.youtube_code })
+    setForm({ title: video.title, description: video.description || '', youtube_code: video.youtube_code, category: video.category })
     setEditingId(video.id)
     setShowForm(true)
   }
@@ -84,20 +92,20 @@ export function HelpAdminPage() {
     if (editingId) {
       const { error } = await insforge.database
         .from('help_videos')
-        .update({ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, updated_at: new Date().toISOString() })
+        .update({ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category, updated_at: new Date().toISOString() })
         .eq('id', editingId)
 
       if (error) {
         showToast('No se pudo actualizar el video', 'error')
       } else {
-        setVideos(prev => prev.map(v => v.id === editingId ? { ...v, title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode } : v))
+        setVideos(prev => prev.map(v => v.id === editingId ? { ...v, title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category } : v))
         showToast('Video actualizado')
         resetForm()
       }
     } else {
       const { data, error } = await insforge.database
         .from('help_videos')
-        .insert([{ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, created_by: profile?.user_id }])
+        .insert([{ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category, created_by: profile?.user_id }])
         .select('*')
         .single()
 
@@ -223,11 +231,21 @@ export function HelpAdminPage() {
       </header>
 
       {showForm && (
-        <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
-          <h2 className="font-headline-sm text-headline-sm text-on-surface mb-lg">
-            {editingId ? 'Editar video' : 'Nuevo video'}
-          </h2>
-          <div className="space-y-md">
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant my-lg">
+            <div className="flex items-center justify-between mb-lg">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">
+                {editingId ? 'Editar video' : 'Nuevo video'}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="p-xs rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                title="Cerrar"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="space-y-md">
             <div>
               <label htmlFor="video-title" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Título *</label>
               <input
@@ -249,6 +267,28 @@ export function HelpAdminPage() {
                 rows={3}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
               />
+            </div>
+            <div>
+              <label htmlFor="video-category" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Categoría *</label>
+              <div className="flex flex-wrap gap-xs">
+                {(['platform', 'course'] as VideoCategory[]).map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setForm(prev => ({ ...prev, category: cat }))}
+                    className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+                      form.category === cat
+                        ? 'bg-primary text-on-primary font-bold'
+                        : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                    }`}
+                  >
+                    {CATEGORY_LABELS[cat]}
+                  </button>
+                ))}
+              </div>
+              <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs">
+                "Plataforma" para videos sobre el trabajo con la plataforma; "Sugerencia de estudio" para videos de curso sugeridos a los estudiantes.
+              </p>
             </div>
             <div>
               <label htmlFor="video-code" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Código o URL de YouTube *</label>
@@ -292,6 +332,7 @@ export function HelpAdminPage() {
                 Cancelar
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}
@@ -350,6 +391,7 @@ export function HelpAdminPage() {
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-16">Vista previa</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Título</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Descripción</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Categoría</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Fecha</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
                 </tr>
@@ -383,6 +425,15 @@ export function HelpAdminPage() {
                       ) : (
                         <span className="font-body-sm text-body-sm text-on-surface-variant italic">Sin descripción</span>
                       )}
+                    </td>
+                    <td className="px-md py-3">
+                      <span className={`inline-block px-sm py-xs rounded-full font-label-xs text-label-xs ${
+                        video.category === 'platform'
+                          ? 'bg-primary-container text-on-primary-container'
+                          : 'bg-secondary-container text-on-surface'
+                      }`}>
+                        {CATEGORY_LABELS[video.category] || video.category}
+                      </span>
                     </td>
                     <td className="px-md py-3">
                       <span className="font-body-xs text-body-xs text-on-surface-variant">
@@ -433,6 +484,13 @@ export function HelpAdminPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-body-sm text-body-sm text-on-surface font-medium truncate">{video.title}</div>
+                      <span className={`inline-block mt-xs px-sm py-xs rounded-full font-label-xs text-label-xs ${
+                        video.category === 'platform'
+                          ? 'bg-primary-container text-on-primary-container'
+                          : 'bg-secondary-container text-on-surface'
+                      }`}>
+                        {CATEGORY_LABELS[video.category] || video.category}
+                      </span>
                       {video.description && (
                         <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs line-clamp-2">{video.description}</p>
                       )}
