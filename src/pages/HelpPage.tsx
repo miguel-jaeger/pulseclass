@@ -10,6 +10,7 @@ interface HelpVideo {
   description: string
   youtube_code: string
   category: 'platform' | 'course'
+  sort_order: number
   created_by: string
   created_at: string
 }
@@ -67,6 +68,7 @@ export function HelpPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [videoLikes, setVideoLikes] = useState<Record<string, { likes: number; dislikes: number; userVote: number | null }>>({})
+  const [videoStats, setVideoStats] = useState<Record<VideoCategory, number>>({ platform: 0, course: 0 })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [expandedCommentPage, setExpandedCommentPage] = useState(1)
   const commentsPerPage = 5
@@ -76,13 +78,27 @@ export function HelpPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => { fetchVideos() }, [])
+  useEffect(() => { fetchVideos(); fetchStats() }, [])
+
+  const fetchStats = async () => {
+    const { data } = await insforge.database
+      .from('help_video_stats')
+      .select('category, video_count')
+    const counts: Record<VideoCategory, number> = { platform: 0, course: 0 }
+    for (const row of (data || []) as { category: VideoCategory; video_count: number }[]) {
+      if (row.category === 'platform' || row.category === 'course') {
+        counts[row.category] = row.video_count ?? 0
+      }
+    }
+    setVideoStats(counts)
+  }
 
   const fetchVideos = async () => {
     setLoading(true)
     const { data } = await insforge.database
       .from('help_videos')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) {
       setVideos(data as HelpVideo[])
@@ -384,26 +400,32 @@ export function HelpPage() {
         <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Videos tutoriales para sacar el máximo provecho de PulseClass.</p>
       </header>
 
-      <div className="flex flex-wrap gap-xs mb-lg">
+      <div className="flex flex-wrap gap-md mb-lg">
         <button
           onClick={() => { setActiveCategory('platform'); setExpandedVideo(null) }}
-          className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+          className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
             activeCategory === 'platform'
               ? 'bg-primary text-on-primary font-bold'
               : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
           }`}
         >
           Uso de la plataforma
+          <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
+            {videoStats.platform}
+          </span>
         </button>
         <button
           onClick={() => { setActiveCategory('course'); setExpandedVideo(null) }}
-          className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+          className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
             activeCategory === 'course'
               ? 'bg-primary text-on-primary font-bold'
               : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
           }`}
         >
           Sugerencias de estudio
+          <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
+            {videoStats.course}
+          </span>
         </button>
       </div>
 

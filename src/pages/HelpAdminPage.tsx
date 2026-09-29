@@ -9,6 +9,7 @@ interface HelpVideo {
   description: string
   youtube_code: string
   category: 'platform' | 'course'
+  sort_order: number
   created_by: string
   created_at: string
 }
@@ -58,6 +59,7 @@ export function HelpAdminPage() {
     const { data } = await insforge.database
       .from('help_videos')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
     if (data) setVideos(data as HelpVideo[])
     setLoading(false)
@@ -196,6 +198,40 @@ export function HelpAdminPage() {
       setSelectedVideos(new Set())
       fetchStats()
       showToast(`${ids.length} video(s) eliminado(s)`)
+    }
+  }
+
+  const moveVideo = async (id: string, direction: -1 | 1) => {
+    const sorted = [...videos].sort((a, b) => a.sort_order - b.sort_order)
+    const fromIndex = sorted.findIndex(v => v.id === id)
+    const toIndex = fromIndex + direction
+    if (fromIndex === -1 || toIndex < 0 || toIndex >= sorted.length) return
+
+    const from = sorted[fromIndex]
+    const to = sorted[toIndex]
+
+    setVideos(prev => prev.map(v => {
+      if (v.id === from.id) return { ...v, sort_order: to.sort_order }
+      if (v.id === to.id) return { ...v, sort_order: from.sort_order }
+      return v
+    }).sort((a, b) => a.sort_order - b.sort_order))
+
+    const { error } = await insforge.database
+      .from('help_videos')
+      .update({ sort_order: to.sort_order })
+      .eq('id', from.id)
+    if (!error) {
+      const { error: err2 } = await insforge.database
+        .from('help_videos')
+        .update({ sort_order: from.sort_order })
+        .eq('id', to.id)
+      if (err2) {
+        showToast('No se pudo cambiar el orden', 'error')
+        fetchVideos()
+      }
+    } else {
+      showToast('No se pudo cambiar el orden', 'error')
+      fetchVideos()
     }
   }
 
@@ -429,6 +465,7 @@ export function HelpAdminPage() {
                   </th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Video</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-40">Categoría</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Orden</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Acciones</th>
                 </tr>
               </thead>
@@ -470,6 +507,26 @@ export function HelpAdminPage() {
                       }`}>
                         {CATEGORY_LABELS[video.category] || video.category}
                       </span>
+                    </td>
+                    <td className="px-md py-2">
+                      <div className="flex items-center gap-xs">
+                        <button
+                          onClick={() => moveVideo(video.id, -1)}
+                          disabled={paginatedVideos[0]?.id === video.id}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Subir"
+                        >
+                          <span className="material-symbols-outlined text-lg">arrow_upward</span>
+                        </button>
+                        <button
+                          onClick={() => moveVideo(video.id, 1)}
+                          disabled={paginatedVideos[paginatedVideos.length - 1]?.id === video.id}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Bajar"
+                        >
+                          <span className="material-symbols-outlined text-lg">arrow_downward</span>
+                        </button>
+                      </div>
                     </td>
                     <td className="px-md py-2">
                       <div className="flex items-center gap-sm">
@@ -528,6 +585,22 @@ export function HelpAdminPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-sm shrink-0">
+                    <button
+                      onClick={() => moveVideo(video.id, -1)}
+                      disabled={paginatedVideos[0]?.id === video.id}
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Subir"
+                    >
+                      <span className="material-symbols-outlined text-xl">arrow_upward</span>
+                    </button>
+                    <button
+                      onClick={() => moveVideo(video.id, 1)}
+                      disabled={paginatedVideos[paginatedVideos.length - 1]?.id === video.id}
+                      className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Bajar"
+                    >
+                      <span className="material-symbols-outlined text-xl">arrow_downward</span>
+                    </button>
                     <button
                       onClick={() => openEdit(video)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
