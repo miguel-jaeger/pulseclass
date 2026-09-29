@@ -233,8 +233,8 @@ export function HelpAdminPage() {
       </header>
 
       {showForm && (
-        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant my-lg">
+        <div className="fixed inset-0 bg-scrim/60 flex overflow-y-auto z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-lg border border-outline-variant m-auto">
             <div className="flex items-center justify-between mb-lg">
               <h3 className="font-headline-sm text-headline-sm text-on-surface">
                 {editingId ? 'Editar video' : 'Nuevo video'}
@@ -398,7 +398,7 @@ export function HelpAdminPage() {
           )}
           {/* Desktop table */}
           <div className="hidden md:block">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
                   <th className="px-md py-3 text-left w-10">
@@ -410,8 +410,8 @@ export function HelpAdminPage() {
                     />
                   </th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Video</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Categoría</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-40">Categoría</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -505,7 +505,7 @@ export function HelpAdminPage() {
                         {CATEGORY_LABELS[video.category] || video.category}
                       </span>
                       {video.description && (
-                        <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs line-clamp-2">{video.description}</p>
+                        <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs truncate cursor-default" title={video.description}>{video.description}</p>
                       )}
                     </div>
                   </div>
