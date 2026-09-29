@@ -393,7 +393,7 @@ export function HelpPage() {
               : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
           }`}
         >
-          Videos de la plataforma
+          Uso de la plataforma
         </button>
         <button
           onClick={() => { setActiveCategory('course'); setExpandedVideo(null) }}
