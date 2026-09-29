@@ -17,7 +17,7 @@ type VideoCategory = 'platform' | 'course'
 
 const CATEGORY_LABELS: Record<VideoCategory, string> = {
   platform: 'Plataforma',
-  course: 'Sugerencia de estudio',
+  course: 'Sugerencia',
 }
 
 export function HelpAdminPage() {
@@ -356,19 +356,19 @@ export function HelpAdminPage() {
 
       {videos.length > 0 && (
         <>
-          <div className="flex flex-wrap gap-xs mb-md">
+          <div className="flex flex-wrap gap-md mb-lg">
             {(['all', 'platform', 'course'] as const).map(cat => (
               <button
                 key={cat}
                 onClick={() => { setCategoryFilter(cat); fetchStats() }}
-                className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+                className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
                   categoryFilter === cat
                     ? 'bg-primary text-on-primary font-bold'
                     : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
                 }`}
               >
                 {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat]}
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-inverse-surface text-inverse-on-surface text-[10px] font-bold leading-none align-middle">
+                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
                   {cat === 'all'
                     ? videoStats.platform + videoStats.course
                     : videoStats[cat]}
