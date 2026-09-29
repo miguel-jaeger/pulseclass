@@ -286,9 +286,6 @@ export function HelpAdminPage() {
                   </button>
                 ))}
               </div>
-              <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs">
-                "Plataforma" para videos sobre el trabajo con la plataforma; "Sugerencia de estudio" para videos de curso sugeridos a los estudiantes.
-              </p>
             </div>
             <div>
               <label htmlFor="video-code" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Código o URL de YouTube *</label>
