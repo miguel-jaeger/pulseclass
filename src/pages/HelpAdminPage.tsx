@@ -30,6 +30,7 @@ export function HelpAdminPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<'all' | VideoCategory>('all')
+  const [videoStats, setVideoStats] = useState<Record<VideoCategory, number>>({ platform: 0, course: 0 })
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -37,7 +38,20 @@ export function HelpAdminPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => { fetchVideos() }, [])
+  useEffect(() => { fetchVideos(); fetchStats() }, [])
+
+  const fetchStats = async () => {
+    const { data } = await insforge.database
+      .from('help_video_stats')
+      .select('category, video_count')
+    const counts: Record<VideoCategory, number> = { platform: 0, course: 0 }
+    for (const row of (data || []) as { category: VideoCategory; video_count: number }[]) {
+      if (row.category === 'platform' || row.category === 'course') {
+        counts[row.category] = row.video_count ?? 0
+      }
+    }
+    setVideoStats(counts)
+  }
 
   const fetchVideos = async () => {
     setLoading(true)
@@ -100,6 +114,7 @@ export function HelpAdminPage() {
         showToast('No se pudo actualizar el video', 'error')
       } else {
         setVideos(prev => prev.map(v => v.id === editingId ? { ...v, title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category } : v))
+        fetchStats()
         showToast('Video actualizado')
         resetForm()
       }
@@ -114,6 +129,7 @@ export function HelpAdminPage() {
         showToast('No se pudo crear el video', 'error')
       } else {
         setVideos(prev => [data as HelpVideo, ...prev])
+        fetchStats()
         showToast('Video creado')
         resetForm()
       }
@@ -141,6 +157,7 @@ export function HelpAdminPage() {
     } else {
       setVideos(prev => prev.filter(v => v.id !== id))
       setSelectedVideos(prev => { const n = new Set(prev); n.delete(id); return n })
+      fetchStats()
       showToast('Video eliminado')
     }
   }
@@ -177,6 +194,7 @@ export function HelpAdminPage() {
     } else {
       setVideos(prev => prev.filter(v => !selectedVideos.has(v.id)))
       setSelectedVideos(new Set())
+      fetchStats()
       showToast(`${ids.length} video(s) eliminado(s)`)
     }
   }
@@ -342,7 +360,7 @@ export function HelpAdminPage() {
             {(['all', 'platform', 'course'] as const).map(cat => (
               <button
                 key={cat}
-                onClick={() => setCategoryFilter(cat)}
+                onClick={() => { setCategoryFilter(cat); fetchStats() }}
                 className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
                   categoryFilter === cat
                     ? 'bg-primary text-on-primary font-bold'
@@ -350,10 +368,10 @@ export function HelpAdminPage() {
                 }`}
               >
                 {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat]}
-                <span className="ml-1">
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-inverse-surface text-inverse-on-surface text-[10px] font-bold leading-none align-middle">
                   {cat === 'all'
-                    ? videos.length
-                    : videos.filter(v => v.category === cat).length}
+                    ? videoStats.platform + videoStats.course
+                    : videoStats[cat]}
                 </span>
               </button>
             ))}
