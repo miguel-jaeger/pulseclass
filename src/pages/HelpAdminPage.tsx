@@ -29,6 +29,7 @@ export function HelpAdminPage() {
   const [form, setForm] = useState({ title: '', description: '', youtube_code: '', category: 'platform' as VideoCategory })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<'all' | VideoCategory>('all')
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -120,8 +121,9 @@ export function HelpAdminPage() {
   }
 
   const filteredVideos = videos.filter(v =>
-    v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    (categoryFilter === 'all' || v.category === categoryFilter) &&
+    (v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (v.description && v.description.toLowerCase().includes(searchQuery.toLowerCase())))
   )
 
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredVideos.length, 10)
@@ -335,16 +337,38 @@ export function HelpAdminPage() {
       )}
 
       {videos.length > 0 && (
-        <div className="relative mb-lg overflow-hidden">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Buscar por título o descripción..."
-            className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-          />
-        </div>
+        <>
+          <div className="flex flex-wrap gap-xs mb-md">
+            {(['all', 'platform', 'course'] as const).map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+                  categoryFilter === cat
+                    ? 'bg-primary text-on-primary font-bold'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                }`}
+              >
+                {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat]}
+                <span className="ml-1">
+                  {cat === 'all'
+                    ? videos.length
+                    : videos.filter(v => v.category === cat).length}
+                </span>
+              </button>
+            ))}
+          </div>
+          <div className="relative mb-lg overflow-hidden">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar por título o descripción..."
+              className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
+            />
+          </div>
+        </>
       )}
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
@@ -373,7 +397,7 @@ export function HelpAdminPage() {
             </div>
           )}
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block">
             <table className="w-full">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -385,18 +409,15 @@ export function HelpAdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-16">Vista previa</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Título</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Descripción</th>
+                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Video</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Categoría</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Fecha</th>
                   <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedVideos.map(video => (
                   <tr key={video.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
-                    <td className="px-md py-3">
+                    <td className="px-md py-2">
                       <input
                         type="checkbox"
                         checked={selectedVideos.has(video.id)}
@@ -404,27 +425,27 @@ export function HelpAdminPage() {
                         className="w-4 h-4 accent-primary rounded"
                       />
                     </td>
-                    <td className="px-md py-3">
-                      <div className="w-16 aspect-video rounded-lg overflow-hidden bg-surface-container">
-                        <img
-                          src={`https://img.youtube.com/vi/${video.youtube_code}/mqdefault.jpg`}
-                          alt={video.title}
-                          className="w-full h-full object-cover"
-                        />
+                    <td className="px-md py-2">
+                      <div className="flex items-center gap-md min-w-0">
+                        <div className="w-24 aspect-video rounded-lg overflow-hidden bg-surface-container shrink-0">
+                          <img
+                            src={`https://img.youtube.com/vi/${video.youtube_code}/mqdefault.jpg`}
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-body-sm text-body-sm text-on-surface font-medium truncate cursor-default" title={video.title}>{video.title}</div>
+                          {video.description ? (
+                            <p className="font-body-xs text-body-xs text-on-surface-variant truncate cursor-default" title={video.description}>{video.description}</p>
+                          ) : (
+                            <span className="font-body-xs text-body-xs text-on-surface-variant italic">Sin descripción</span>
+                          )}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-md py-3">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[150px] cursor-default" title={video.title}>{video.title}</div>
-                    </td>
-                    <td className="px-md py-3">
-                      {video.description ? (
-                        <p className="font-body-sm text-body-sm text-on-surface-variant truncate max-w-[180px] cursor-default" title={video.description}>{video.description}</p>
-                      ) : (
-                        <span className="font-body-sm text-body-sm text-on-surface-variant italic">Sin descripción</span>
-                      )}
-                    </td>
-                    <td className="px-md py-3">
-                      <span className={`inline-block px-sm py-xs rounded-full font-label-xs text-label-xs ${
+                    <td className="px-md py-2">
+                      <span className={`inline-block px-sm py-xs rounded-full font-label-xs text-label-xs whitespace-nowrap ${
                         video.category === 'platform'
                           ? 'bg-primary-container text-on-primary-container'
                           : 'bg-secondary-container text-on-surface'
@@ -432,12 +453,7 @@ export function HelpAdminPage() {
                         {CATEGORY_LABELS[video.category] || video.category}
                       </span>
                     </td>
-                    <td className="px-md py-3">
-                      <span className="font-body-xs text-body-xs text-on-surface-variant">
-                        {new Date(video.created_at).toLocaleDateString('es-ES')}
-                      </span>
-                    </td>
-                    <td className="px-md py-3">
+                    <td className="px-md py-2">
                       <div className="flex items-center gap-sm">
                         <button
                           onClick={() => openEdit(video)}
@@ -491,9 +507,6 @@ export function HelpAdminPage() {
                       {video.description && (
                         <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs line-clamp-2">{video.description}</p>
                       )}
-                      <span className="font-body-xs text-body-xs text-on-surface-variant mt-xs block">
-                        {new Date(video.created_at).toLocaleDateString('es-ES')}
-                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-sm shrink-0">
@@ -519,7 +532,11 @@ export function HelpAdminPage() {
           {filteredVideos.length === 0 && (
             <div className="text-center py-lg">
               <p className="font-body-md text-body-md text-on-surface-variant">
-                {searchQuery ? `No se encontraron videos para "${searchQuery}".` : 'No hay videos de ayuda.'}
+                {searchQuery
+                  ? `No se encontraron videos para "${searchQuery}".`
+                  : categoryFilter !== 'all'
+                    ? `No hay videos de ${CATEGORY_LABELS[categoryFilter].toLowerCase()}.`
+                    : 'No hay videos de ayuda.'}
               </p>
             </div>
           )}
