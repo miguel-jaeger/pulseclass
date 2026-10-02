@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@insforge/sdk'
+import { createAdminClient, createClient } from 'npm:@insforge/sdk'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,7 +23,7 @@ export default async function(req: Request): Promise<Response> {
     const userToken = authHeader.replace('Bearer ', '')
     const { userId, newPassword } = await req.json()
 
-    if (!userId || !newPassword) {
+    if (typeof userId !== 'string' || typeof newPassword !== 'string' || !userId || !newPassword) {
       return new Response(JSON.stringify({ error: 'ID de usuario y nueva contraseña son requeridos' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -40,6 +40,13 @@ export default async function(req: Request): Promise<Response> {
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
     const apiKey = Deno.env.get('API_KEY')
 
+    if (!baseUrl || !apiKey) {
+      return new Response(JSON.stringify({ error: 'Configuración de administración incompleta' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const userClient = createClient({ baseUrl, accessToken: userToken })
 
     const { data: userData } = await userClient.auth.getCurrentUser()
@@ -50,7 +57,7 @@ export default async function(req: Request): Promise<Response> {
       })
     }
 
-    const adminClient = createClient({ baseUrl, accessToken: apiKey })
+    const adminClient = createAdminClient({ baseUrl, apiKey })
 
     const { data: profileData, error: profileError } = await adminClient.database
       .from('profiles')
@@ -72,23 +79,10 @@ export default async function(req: Request): Promise<Response> {
 
     if (updateError) {
       console.error('RPC error:', updateError)
-
-      const sqlRes = await fetch(`${baseUrl}/rest/v1/rpc/admin_update_user_password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': apiKey!,
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ p_user_id: userId, p_new_password: newPassword })
+      return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
-
-      if (!sqlRes.ok) {
-        return new Response(JSON.stringify({ error: 'Error al cambiar la contraseña' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-      }
     }
 
     return new Response(JSON.stringify({ success: true }), {

@@ -117,11 +117,12 @@ export function AdminPage() {
       if (error) throw error
 
       if (editForm.password) {
-        const { error: passwordError } = await insforge.functions.invoke('admin-change-password', {
+        const { data: passwordData, error: passwordError } = await insforge.functions.invoke('admin-change-password', {
           method: 'POST',
           body: { userId: editingUser.user_id, newPassword: editForm.password }
         })
         if (passwordError) throw passwordError
+        if (passwordData?.success !== true) throw new Error('El servidor no confirmó el cambio de contraseña')
       }
 
       setUsers(prev => prev.map(u =>
@@ -143,15 +144,18 @@ export function AdminPage() {
   const resetPassword = async (userId: string) => {
     if (!confirm('¿Restablecer la contraseña de este usuario a 12345678?')) return
 
-    const { error } = await insforge.functions.invoke('admin-change-password', {
-      method: 'POST',
-      body: { userId, newPassword: '12345678' }
-    })
+    try {
+      const { data, error } = await insforge.functions.invoke('admin-change-password', {
+        method: 'POST',
+        body: { userId, newPassword: '12345678' }
+      })
 
-    if (!error) {
+      if (error) throw error
+      if (data?.success !== true) throw new Error('El servidor no confirmó el cambio de contraseña')
       showToast('Contraseña restablecida a 12345678')
-    } else {
-      showToast('Error al restablecer la contraseña', 'error')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al restablecer la contraseña'
+      showToast(message, 'error')
     }
   }
 

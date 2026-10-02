@@ -40,15 +40,21 @@ export function ForgotPasswordPage() {
     setError('')
     setLoading(true)
     try {
-      const { error } = await insforge.auth.sendResetPasswordEmail({ email: targetEmail })
+      const normalizedEmail = targetEmail.trim().toLowerCase()
+      const { error } = await insforge.auth.sendResetPasswordEmail({ email: normalizedEmail })
       if (error) throw error
+      setEmail(normalizedEmail)
       setSecondsLeft(CODE_EXPIRY_SECONDS)
       setCanResend(false)
       setStep('code')
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
-      const message = raw.includes('rate') ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
-        : raw || 'Error al enviar el correo'
+      const normalizedError = raw.toLowerCase()
+      const message = normalizedError.includes('535') || normalizedError.includes('smtp')
+        ? 'El servicio de correo rechazó sus credenciales. El administrador debe actualizar la contraseña de aplicación de Gmail para reactivar la recuperación.'
+        : normalizedError.includes('rate') || normalizedError.includes('429') || normalizedError.includes('wait')
+          ? 'Demasiados intentos. Espera un momento antes de solicitar otro código.'
+          : raw || 'No se pudo enviar el correo. Intenta nuevamente más tarde.'
       setError(message)
     } finally {
       setLoading(false)
@@ -57,7 +63,7 @@ export function ForgotPasswordPage() {
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault()
-    await sendCode(email)
+    await sendCode(email.trim())
   }
 
   const handleResend = async () => {
@@ -76,9 +82,10 @@ export function ForgotPasswordPage() {
       setStep('password')
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
-      const message = raw.includes('expired') ? 'El código ha expirado. Solicita uno nuevo.'
-        : raw.includes('invalid') ? 'Código inválido. Verifica e intenta de nuevo.'
-        : raw.includes('Bad Request') ? 'Código inválido o expirado. Solicita uno nuevo.'
+      const normalizedError = raw.toLowerCase()
+      const message = normalizedError.includes('expired') ? 'El código ha expirado. Solicita uno nuevo.'
+        : normalizedError.includes('invalid') ? 'Código inválido. Verifica e intenta de nuevo.'
+        : normalizedError.includes('bad request') ? 'Código inválido o expirado. Solicita uno nuevo.'
         : raw || 'Código inválido o expirado'
       setError(message)
     } finally {
@@ -104,8 +111,9 @@ export function ForgotPasswordPage() {
       setStep('done')
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
-      const message = raw.includes('expired') ? 'El enlace ha expirado. Solicita uno nuevo.'
-        : raw.includes('invalid') ? 'Enlace inválido. Solicita uno nuevo.'
+      const normalizedError = raw.toLowerCase()
+      const message = normalizedError.includes('expired') ? 'El enlace ha expirado. Solicita uno nuevo.'
+        : normalizedError.includes('invalid') ? 'Enlace inválido. Solicita uno nuevo.'
         : raw || 'Error al restablecer la contraseña'
       setError(message)
     } finally {
