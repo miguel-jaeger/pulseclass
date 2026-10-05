@@ -1018,7 +1018,7 @@ export function StatisticsPage() {
               <div className="space-y-md">
                 {sessionStats.length > 0 && (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                    <div className={`grid grid-cols-1 gap-md ${sessionStats.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
                       <div className="bg-success-container rounded-xl p-md">
                         <div className="flex items-center gap-xs mb-xs">
                           <span className="material-symbols-outlined text-lg text-on-success-container">emoji_events</span>
@@ -1029,16 +1029,18 @@ export function StatisticsPage() {
                           {sessionStats[0].avg.toFixed(1)} de promedio · {sessionStats[0].count} evaluación{sessionStats[0].count !== 1 ? 'es' : ''}
                         </p>
                       </div>
-                      <div className="bg-error-container rounded-xl p-md">
-                        <div className="flex items-center gap-xs mb-xs">
-                          <span className="material-symbols-outlined text-lg text-on-error-container">trending_down</span>
-                          <p className="font-label-md text-label-md text-on-error-container font-semibold">Peor promedio</p>
+                      {sessionStats.length > 1 && (
+                        <div className="bg-error-container rounded-xl p-md">
+                          <div className="flex items-center gap-xs mb-xs">
+                            <span className="material-symbols-outlined text-lg text-on-error-container">trending_down</span>
+                            <p className="font-label-md text-label-md text-on-error-container font-semibold">Peor promedio</p>
+                          </div>
+                          <p className="font-headline-sm text-headline-sm text-on-error-container font-bold truncate">{sessionStats[sessionStats.length - 1].courseName}</p>
+                          <p className="font-body-sm text-body-sm text-on-error-container mt-xs">
+                            {sessionStats[sessionStats.length - 1].avg.toFixed(1)} de promedio · {sessionStats[sessionStats.length - 1].count} evaluación{sessionStats[sessionStats.length - 1].count !== 1 ? 'es' : ''}
+                          </p>
                         </div>
-                        <p className="font-headline-sm text-headline-sm text-on-error-container font-bold truncate">{sessionStats[sessionStats.length - 1].courseName}</p>
-                        <p className="font-body-sm text-body-sm text-on-error-container mt-xs">
-                          {sessionStats[sessionStats.length - 1].avg.toFixed(1)} de promedio · {sessionStats[sessionStats.length - 1].count} evaluación{sessionStats[sessionStats.length - 1].count !== 1 ? 'es' : ''}
-                        </p>
-                      </div>
+                      )}
                     </div>
                     <p className="font-body-sm text-body-sm text-on-surface-variant">
                       {sessionStats.length} curso{sessionStats.length !== 1 ? 's' : ''} con evaluaciones en el rango seleccionado.
