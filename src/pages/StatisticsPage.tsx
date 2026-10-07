@@ -837,6 +837,8 @@ export function StatisticsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{ backgroundColor: chartColors.surface, border: 'none', borderRadius: 12, fontSize: 12, color: chartColors.axis }}
+                    itemStyle={{ color: chartColors.axis }}
+                    labelStyle={{ color: chartColors.axis }}
                   />
                   <Legend
                     formatter={(value: string) => <span style={{ color: chartColors.axis }}>{value}</span>}
