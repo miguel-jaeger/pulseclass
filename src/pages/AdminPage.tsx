@@ -618,15 +618,6 @@ export function AdminPage() {
                         >
                           <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
-                        {user.role === 'student' && (
-                          <button
-                            onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
-                            className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
-                            title={`Ver como ${roleLabel(user.role)}`}
-                          >
-                            <span className="material-symbols-outlined text-lg">visibility</span>
-                          </button>
-                        )}
                         <button
                           onClick={() => resetPassword(user.user_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
@@ -685,15 +676,6 @@ export function AdminPage() {
                     >
                       <span className="material-symbols-outlined text-xl">delete</span>
                     </button>
-                    {user.role === 'student' && (
-                      <button
-                        onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
-                        className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
-                        title={`Ver como ${roleLabel(user.role)}`}
-                      >
-                        <span className="material-symbols-outlined text-xl">visibility</span>
-                      </button>
-                    )}
                     <button
                       onClick={() => resetPassword(user.user_id)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
