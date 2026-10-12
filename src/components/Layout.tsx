@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Avatar } from '../pages/ProfilePage'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { formatDisplayName } from '../lib/formatDisplayName'
 import type { ReactNode } from 'react'
 
 const navItems = [
@@ -217,13 +218,13 @@ export function Layout({ children }: { children: ReactNode }) {
           <div className={`border-t border-outline-variant pt-sm space-y-sm ${collapsed ? 'flex flex-col items-center border-t w-full' : ''}`}>
             <Link
               to="/profile"
-              title={profile?.name || 'Usuario'}
+              title={formatDisplayName(profile?.name) || 'Usuario'}
               className={`flex items-center text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all ${
                 collapsed ? 'justify-center w-10 h-10' : 'gap-md px-4 py-2'
               }`}
             >
               <Avatar url={profile?.avatar_url} name={profile?.name} size="sm" />
-              {!collapsed && <span className="truncate">{profile?.name || 'Usuario'}</span>}
+              {!collapsed && <span className="truncate">{formatDisplayName(profile?.name) || 'Usuario'}</span>}
             </Link>
             <button
               onClick={signOut}

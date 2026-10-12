@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface Session {
   id: string
@@ -522,7 +523,7 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
@@ -719,7 +720,7 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
