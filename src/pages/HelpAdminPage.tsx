@@ -241,7 +241,7 @@ export function HelpAdminPage() {
         <div className="h-8 w-64 bg-surface-container animate-pulse rounded" />
         <div className="h-4 w-96 bg-surface-container animate-pulse rounded" />
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-          <table className="w-full hidden md:table">
+          <table className="w-full hidden xl:table table-fixed">
             <thead>
               <tr className="border-b border-outline-variant">
                 <th className="w-10 px-md py-3"><div className="h-4 w-4 bg-surface-container animate-pulse rounded" /></th>
@@ -265,6 +265,21 @@ export function HelpAdminPage() {
               ))}
             </tbody>
           </table>
+          <div className="xl:hidden p-md space-y-md">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="border border-outline-variant rounded-xl p-md">
+                <div className="flex items-start gap-sm">
+                  <div className="h-4 w-4 bg-surface-container animate-pulse rounded shrink-0" />
+                  <div className="h-10 w-16 bg-surface-container animate-pulse rounded shrink-0" />
+                  <div className="flex-1 space-y-sm">
+                    <div className="h-4 w-40 bg-surface-container animate-pulse rounded" />
+                    <div className="h-3 w-full bg-surface-container animate-pulse rounded" />
+                    <div className="h-3 w-24 bg-surface-container animate-pulse rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -437,7 +452,7 @@ export function HelpAdminPage() {
       ) : (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
           {selectedVideos.size > 0 && (
-            <div className="flex items-center justify-between px-md py-2 bg-error-container border-b border-outline-variant">
+            <div className="flex flex-wrap items-center justify-between gap-sm px-md py-2 bg-error-container border-b border-outline-variant">
               <span className="font-body-sm text-body-sm text-on-error-container">
                 {selectedVideos.size} video(s) seleccionado(s)
               </span>
@@ -451,7 +466,7 @@ export function HelpAdminPage() {
             </div>
           )}
           {/* Desktop table */}
-          <div className="hidden md:block">
+          <div className="hidden xl:block min-w-0">
             <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -463,10 +478,10 @@ export function HelpAdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Video</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-40">Categoría</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Orden</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant w-28">Acciones</th>
+                  <th className="px-sm py-3 text-left font-label-xs text-label-xs text-on-surface-variant">Video</th>
+                  <th className="px-sm py-3 text-left font-label-xs text-label-xs text-on-surface-variant w-32">Categoría</th>
+                  <th className="px-sm py-3 text-left font-label-xs text-label-xs text-on-surface-variant w-24">Orden</th>
+                  <th className="px-sm py-3 text-left font-label-xs text-label-xs text-on-surface-variant w-24">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -480,9 +495,9 @@ export function HelpAdminPage() {
                         className="w-4 h-4 accent-primary rounded"
                       />
                     </td>
-                    <td className="px-md py-2">
+                    <td className="px-sm py-2">
                       <div className="flex items-center gap-md min-w-0">
-                        <div className="w-24 aspect-video rounded-lg overflow-hidden bg-surface-container shrink-0">
+                        <div className="w-16 aspect-video rounded-lg overflow-hidden bg-surface-container shrink-0">
                           <img
                             src={`https://img.youtube.com/vi/${video.youtube_code}/mqdefault.jpg`}
                             alt={video.title}
@@ -490,17 +505,17 @@ export function HelpAdminPage() {
                           />
                         </div>
                         <div className="min-w-0">
-                          <div className="font-body-sm text-body-sm text-on-surface font-medium truncate cursor-default" title={video.title}>{video.title}</div>
+                          <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{video.title}</div>
                           {video.description ? (
-                            <p className="font-body-xs text-body-xs text-on-surface-variant truncate cursor-default" title={video.description}>{video.description}</p>
+                            <p className="font-body-xs text-body-xs text-on-surface-variant break-words">{video.description}</p>
                           ) : (
                             <span className="font-body-xs text-body-xs text-on-surface-variant italic">Sin descripción</span>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-md py-2">
-                      <span className={`inline-block px-sm py-xs rounded-full font-label-xs text-label-xs whitespace-nowrap ${
+                    <td className="px-sm py-2">
+                      <span className={`inline-block max-w-full px-sm py-xs rounded-full font-label-xs text-label-xs whitespace-normal break-words text-center ${
                         video.category === 'platform'
                           ? 'bg-primary-container text-on-primary-container'
                           : 'bg-secondary-container text-on-surface'
@@ -508,7 +523,7 @@ export function HelpAdminPage() {
                         {CATEGORY_LABELS[video.category] || video.category}
                       </span>
                     </td>
-                    <td className="px-md py-2">
+                    <td className="px-sm py-2">
                       <div className="flex items-center gap-xs">
                         <button
                           onClick={() => moveVideo(video.id, -1)}
@@ -528,7 +543,7 @@ export function HelpAdminPage() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-md py-2">
+                    <td className="px-sm py-2">
                       <div className="flex items-center gap-sm">
                         <button
                           onClick={() => openEdit(video)}
@@ -552,10 +567,10 @@ export function HelpAdminPage() {
             </table>
           </div>
           {/* Mobile cards */}
-          <div className="md:hidden">
+          <div className="xl:hidden">
             {paginatedVideos.map(video => (
               <div key={video.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="flex flex-col gap-sm">
                   <div className="flex items-start gap-sm min-w-0 flex-1">
                     <input
                       type="checkbox"
@@ -571,7 +586,7 @@ export function HelpAdminPage() {
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate">{video.title}</div>
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium break-words">{video.title}</div>
                       <span className={`inline-block mt-xs px-sm py-xs rounded-full font-label-xs text-label-xs ${
                         video.category === 'platform'
                           ? 'bg-primary-container text-on-primary-container'
@@ -580,11 +595,11 @@ export function HelpAdminPage() {
                         {CATEGORY_LABELS[video.category] || video.category}
                       </span>
                       {video.description && (
-                        <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs truncate cursor-default" title={video.description}>{video.description}</p>
+                        <p className="font-body-xs text-body-xs text-on-surface-variant mt-xs break-words">{video.description}</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-sm shrink-0">
+                  <div className="flex flex-wrap items-center gap-xs self-end">
                     <button
                       onClick={() => moveVideo(video.id, -1)}
                       disabled={paginatedVideos[0]?.id === video.id}

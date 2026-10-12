@@ -442,7 +442,7 @@ export function AdminPage() {
 
       {loading ? (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-          <table className="w-full hidden md:table">
+          <table className="w-full hidden xl:table table-fixed">
             <thead>
               <tr className="border-b border-outline-variant">
                 <th className="w-10 px-md py-3"><div className="h-4 w-4 bg-surface-container animate-pulse rounded" /></th>
@@ -472,7 +472,7 @@ export function AdminPage() {
               ))}
             </tbody>
           </table>
-          <div className="md:hidden p-md space-y-md">
+          <div className="xl:hidden p-md space-y-md">
             {[1, 2, 3].map(i => (
               <div key={i} className="border border-outline-variant rounded-xl p-md">
                 <div className="flex items-center gap-sm mb-sm">
@@ -496,7 +496,7 @@ export function AdminPage() {
       ) : (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
           {selectedUsers.size > 0 && (
-            <div className="flex items-center justify-between px-md py-2 bg-error-container border-b border-outline-variant">
+            <div className="flex flex-wrap items-center justify-between gap-sm px-md py-2 bg-error-container border-b border-outline-variant">
               <span className="font-body-sm text-body-sm text-on-error-container">
                 {selectedUsers.size} usuarios seleccionados
               </span>
@@ -510,11 +510,11 @@ export function AdminPage() {
             </div>
           )}
           {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
+          <div className="hidden xl:block min-w-0">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-md py-3 text-left w-10">
+                  <th className="px-xs py-sm text-left w-[10%]">
                     <input
                       type="checkbox"
                       id="select-all-users"
@@ -524,16 +524,16 @@ export function AdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Nombre</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Correo</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Rol</th>
-                  <th className="px-md py-3 text-left font-label-md text-label-md text-on-surface-variant">Acciones</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[18%]">Nombre</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[30%]">Correo</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[17%]">Rol</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[25%]">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedUsers.map((user) => (
                   <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
-                    <td className="px-md py-3">
+                    <td className="px-xs py-sm align-top">
                       <input
                         type="checkbox"
                         name="selectUser"
@@ -542,12 +542,12 @@ export function AdminPage() {
                         className="w-4 h-4 accent-primary rounded"
                       />
                     </td>
-                    <td className="px-md py-3">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium">{user.name}</div>
+                    <td className="px-sm py-sm align-top">
+                      <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{user.name}</div>
                     </td>
-                    <td className="px-md py-3 font-body-sm text-body-sm text-on-surface-variant">{user.email}</td>
-                    <td className="px-md py-3">
-                      <span className={`inline-flex items-center px-sm py-xs rounded-full font-label-sm text-label-sm ${
+                    <td className="px-sm py-sm align-top font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
+                    <td className="px-sm py-sm align-top">
+                      <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs break-words ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
@@ -558,37 +558,37 @@ export function AdminPage() {
                         {roleLabel(user.role)}
                       </span>
                     </td>
-                    <td className="px-md py-3">
-                      <div className="flex items-center gap-sm">
+                    <td className="px-sm py-sm align-top">
+                      <div className="flex flex-wrap items-center gap-2xs">
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
                             title={`Ver como ${roleLabel(user.role)}`}
                           >
-                            <span className="material-symbols-outlined text-xl">visibility</span>
+                            <span className="material-symbols-outlined text-lg">visibility</span>
                           </button>
                         )}
                         <button
                           onClick={() => openEditModal(user)}
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
                           title="Editar usuario"
                         >
-                          <span className="material-symbols-outlined text-xl">edit</span>
+                          <span className="material-symbols-outlined text-lg">edit</span>
                         </button>
                         <button
                           onClick={() => resetPassword(user.user_id)}
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
                           title="Restablecer contraseña"
                         >
-                          <span className="material-symbols-outlined text-xl">key</span>
+                          <span className="material-symbols-outlined text-lg">key</span>
                         </button>
                         <button
                           onClick={() => deleteUser(user.user_id)}
-                          className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
                           title="Eliminar usuario"
                         >
-                          <span className="material-symbols-outlined text-xl">delete</span>
+                          <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
                       </div>
                     </td>
@@ -598,10 +598,10 @@ export function AdminPage() {
             </table>
           </div>
           {/* Mobile cards */}
-          <div className="md:hidden">
+          <div className="xl:hidden">
             {paginatedUsers.map((user) => (
               <div key={user.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
-                <div className="flex items-start justify-between gap-sm">
+                <div className="flex flex-col gap-sm">
                   <div className="flex items-center gap-sm min-w-0">
                     <input
                       type="checkbox"
@@ -610,9 +610,9 @@ export function AdminPage() {
                       onChange={() => toggleSelectUser(user.user_id)}
                       className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
                     />
-                    <div className="min-w-0">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium truncate">{user.name}</div>
-                      <div className="font-body-xs text-body-xs text-on-surface-variant truncate">{user.email}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium break-words">{user.name}</div>
+                      <div className="font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</div>
                       <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs mt-xs ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
@@ -625,7 +625,7 @@ export function AdminPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-sm shrink-0">
+                  <div className="flex flex-wrap items-center gap-xs">
                     {user.role !== 'admin' && (
                       <button
                         onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
@@ -715,25 +715,14 @@ export function AdminPage() {
                   </div>
                 )}
                 {importResult.skipped.length > 0 && (
-                  <div className="max-h-48 overflow-y-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-outline-variant">
-                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Nombre</th>
-                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Correo</th>
-                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Motivo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {importResult.skipped.map((user, index) => (
-                          <tr key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0">
-                            <td className="px-sm py-2 font-body-sm text-body-sm text-primary font-bold">{user.name}</td>
-                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{user.email}</td>
-                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{user.reason || 'omitido'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="max-h-48 overflow-y-auto space-y-sm">
+                    {importResult.skipped.map((user, index) => (
+                      <div key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0 pb-sm">
+                        <p className="font-body-sm text-body-sm text-primary font-bold break-words">{user.name}</p>
+                        <p className="font-body-xs text-body-xs text-on-surface-variant break-all">Correo: {user.email}</p>
+                        <p className="font-body-xs text-body-xs text-on-surface-variant break-words">Motivo: {user.reason || 'omitido'}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
