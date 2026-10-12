@@ -62,7 +62,7 @@ export function Layout({ children }: { children: ReactNode }) {
   })
 
   return (
-    <div className="flex h-full">
+    <div className="flex min-h-screen">
       <ImpersonationBanner />
       {/* SideNavBar (Desktop) */}
       <nav className={`hidden md:flex flex-col h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40 ${collapsed ? 'w-16 p-2' : 'w-64 p-md'}`}>
