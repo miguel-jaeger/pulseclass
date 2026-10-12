@@ -617,7 +617,7 @@ export function AdminPage() {
                         >
                           <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
-                        {user.role !== 'admin' && (
+                        {user.role === 'student' && (
                           <button
                             onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
                             className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
@@ -684,7 +684,7 @@ export function AdminPage() {
                     >
                       <span className="material-symbols-outlined text-xl">delete</span>
                     </button>
-                    {user.role !== 'admin' && (
+                    {user.role === 'student' && (
                       <button
                         onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
                         className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
