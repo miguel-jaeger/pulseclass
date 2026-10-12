@@ -605,14 +605,14 @@ export function AdminPage() {
                       <div className="flex flex-wrap items-center gap-xs xl:gap-sm">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:bg-primary-container hover:text-on-primary-container transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:bg-surface-container-high hover:text-on-surface transition-colors"
                           title="Editar usuario"
                         >
                           <span className="material-symbols-outlined text-lg">edit</span>
                         </button>
                         <button
                           onClick={() => deleteUser(user.user_id)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-error text-on-error hover:bg-error-container hover:text-on-error-container transition-colors"
                           title="Eliminar usuario"
                         >
                           <span className="material-symbols-outlined text-lg">delete</span>
@@ -672,14 +672,14 @@ export function AdminPage() {
                   <div className="flex flex-wrap items-center gap-sm">
                     <button
                       onClick={() => openEditModal(user)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:bg-primary-container hover:text-on-primary-container transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:bg-surface-container-high hover:text-on-surface transition-colors"
                       title="Editar"
                     >
                       <span className="material-symbols-outlined text-xl">edit</span>
                     </button>
                     <button
                       onClick={() => deleteUser(user.user_id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-error text-on-error hover:bg-error-container hover:text-on-error-container transition-colors"
                       title="Eliminar"
                     >
                       <span className="material-symbols-outlined text-xl">delete</span>
