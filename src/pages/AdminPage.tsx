@@ -511,7 +511,7 @@ export function AdminPage() {
             <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-xs py-sm text-left w-[10%]">
+                  <th className="px-0 py-sm text-center w-[5%]">
                     <input
                       type="checkbox"
                       id="select-all-users"
@@ -521,16 +521,16 @@ export function AdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[18%]">Nombre</th>
-                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[30%]">Correo</th>
-                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[17%]">Rol</th>
-                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[25%]">Acciones</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[27%]">Nombre</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[38%]">Correo</th>
+                  <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[12%]">Rol</th>
+                  <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[18%]">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedUsers.map((user) => (
                   <tr key={user.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
-                    <td className="px-xs py-sm align-top">
+                    <td className="px-0 py-sm align-top text-center">
                       <input
                         type="checkbox"
                         name="selectUser"
@@ -543,7 +543,7 @@ export function AdminPage() {
                       <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{user.name}</div>
                     </td>
                     <td className="px-sm py-sm align-top font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
-                    <td className="px-sm py-sm align-top">
+                    <td className="px-xs py-sm align-top">
                       <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs break-words ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
@@ -552,7 +552,7 @@ export function AdminPage() {
                         {roleLabel(user.role)}
                       </span>
                     </td>
-                    <td className="px-sm py-sm align-top">
+                    <td className="px-xs py-sm align-top">
                       <div className="flex flex-wrap items-center gap-2xs">
                         <button
                           onClick={() => openEditModal(user)}
