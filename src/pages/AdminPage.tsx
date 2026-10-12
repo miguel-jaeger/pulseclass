@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { PasswordInput } from '../components/PasswordInput'
 import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS, ROLE_OPTIONS } from '../lib/roles'
 import { formatDisplayName } from '../lib/formatDisplayName'
 
@@ -911,12 +912,11 @@ export function AdminPage() {
               </div>
               <div className="border-t border-outline-variant pt-md mt-md">
                 <label htmlFor="edit-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña (opcional)</label>
-                <input
-                  type="password"
+                <PasswordInput
                   id="edit-password"
                   name="password"
                   value={editForm.password}
-                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  onChange={(value) => setEditForm({ ...editForm, password: value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                   placeholder="Dejar en blanco para no cambiar"
                 />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { insforge } from '../lib/insforge'
+import { PasswordInput } from '../components/PasswordInput'
 
 type Step = 'email' | 'code' | 'password' | 'done'
 
@@ -262,11 +263,10 @@ export function ForgotPasswordPage() {
           <form onSubmit={handleResetPassword} className="space-y-md">
             <div>
               <label htmlFor="new-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña</label>
-              <input
+              <PasswordInput
                 id="new-password"
-                type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={setNewPassword}
                 required
                 minLength={6}
                 className="w-full px-md py-2 border border-outline-variant rounded-xl bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -276,11 +276,10 @@ export function ForgotPasswordPage() {
             </div>
             <div>
               <label htmlFor="confirm-password" className="block font-label-md text-label-md text-on-surface mb-xs">Confirmar contraseña</label>
-              <input
+              <PasswordInput
                 id="confirm-password"
-                type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={setConfirmPassword}
                 required
                 minLength={6}
                 className="w-full px-md py-2 border border-outline-variant rounded-xl bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
