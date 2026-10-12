@@ -6,6 +6,7 @@ import { useRatingVotes } from '../hooks/useRatingVotes'
 import { Pagination, usePagination } from '../components/Pagination'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts'
 import { useTheme } from '../hooks/useTheme'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface Course {
   id: string
@@ -643,12 +644,12 @@ export function StatisticsPage() {
                     .map(t => (
                       <button
                         key={t.user_id}
-                        onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(t.name); setTeacherDropdownOpen(false); setSelectedCourse('all') }}
+                        onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(formatDisplayName(t.name)); setTeacherDropdownOpen(false); setSelectedCourse('all') }}
                         className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
                           selectedTeacher === t.user_id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                         }`}
                       >
-                        {t.name}
+                        {formatDisplayName(t.name)}
                       </button>
                     ))
                   }
@@ -1157,7 +1158,7 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
@@ -1366,7 +1367,7 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{reply.user_name}</span>
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>

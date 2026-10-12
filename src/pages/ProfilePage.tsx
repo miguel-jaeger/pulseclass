@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
 import { roleLabel } from '../lib/roles'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -24,10 +25,11 @@ async function uploadToCloudinary(file: File): Promise<string> {
 
 function Avatar({ url, name, size = 'lg' }: { url?: string; name?: string; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'w-8 h-8 text-sm', md: 'w-12 h-12 text-lg', lg: 'w-20 h-20 sm:w-24 sm:h-24 text-2xl sm:text-3xl' }
-  const initials = (name || '?').charAt(0).toUpperCase()
+  const displayName = formatDisplayName(name)
+  const initials = displayName.charAt(0).toLocaleUpperCase('es') || '?'
 
   if (url) {
-    return <img src={url} alt={name} className={`${sizes[size]} rounded-full object-cover`} />
+    return <img src={url} alt={displayName} className={`${sizes[size]} rounded-full object-cover`} />
   }
   return (
     <div className={`${sizes[size]} rounded-full bg-primary-container flex items-center justify-center`}>
@@ -252,7 +254,7 @@ export function ProfilePage() {
               <span className="material-symbols-outlined text-on-surface-variant">account_circle</span>
               <div>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">Nombre</p>
-                <p className="font-body-md text-body-md text-on-surface font-medium">{profile?.name || 'Sin nombre'}</p>
+                <p className="font-body-md text-body-md text-on-surface font-medium">{formatDisplayName(profile?.name) || 'Sin nombre'}</p>
               </div>
             </div>
             <div className="flex items-center gap-md">

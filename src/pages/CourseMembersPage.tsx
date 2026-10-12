@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS } from '../lib/roles'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface Course {
   id: string
@@ -478,7 +479,7 @@ export function CourseMembersPage() {
                     />
                     <div>
                       <div className="flex items-center gap-sm">
-                        <span className="font-body-sm text-body-sm text-primary font-bold">{user.name}</span>
+                        <span className="font-body-sm text-body-sm text-primary font-bold">{formatDisplayName(user.name)}</span>
                         <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
                           user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                           user.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
@@ -583,7 +584,7 @@ export function CourseMembersPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-sm">
-                      <span className="font-body-md text-body-md text-primary font-bold">{member.name || 'Sin nombre'}</span>
+                      <span className="font-body-md text-body-md text-primary font-bold">{formatDisplayName(member.name) || 'Sin nombre'}</span>
                         <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-sm text-label-sm ${
                           member.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                           member.role === 'teacher' ? 'bg-surface-container-high text-on-surface' :
@@ -677,7 +678,7 @@ export function CourseMembersPage() {
                       <tbody>
                         {importResult.skipped.map((s, i) => (
                           <tr key={i} className="border-b border-outline-variant last:border-0">
-                            <td className="px-sm py-2 font-body-sm text-body-sm text-primary font-bold">{s.name}</td>
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-primary font-bold">{formatDisplayName(s.name)}</td>
                             <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{s.email}</td>
                           </tr>
                         ))}

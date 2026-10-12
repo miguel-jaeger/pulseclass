@@ -3,6 +3,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface HelpVideo {
   id: string
@@ -492,7 +493,7 @@ export function HelpPage() {
                             {paginatedComments.map(comment => (
                         <div key={comment.id} className="border-l-2 border-outline-variant pl-md">
                           <div className="flex items-center gap-xs mb-xs">
-                            <span className="font-label-sm text-label-sm text-on-surface font-semibold">{comment.user_name}</span>
+                            <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(comment.user_name)}</span>
                             <span className="font-body-xs text-on-surface-variant">{new Date(comment.created_at).toLocaleDateString('es-ES')}</span>
                             {canEdit(comment.user_id) && (
                               <>
@@ -532,7 +533,7 @@ export function HelpPage() {
                               {repliesMap[comment.id]?.map(reply => (
                                 <div key={reply.id}>
                                   <div className="flex items-center gap-xs mb-xs">
-                                    <span className="font-label-xs text-label-xs text-on-surface font-semibold">{reply.user_name}</span>
+                                    <span className="font-label-xs text-label-xs text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
                                     <span className="font-body-xs text-on-surface-variant">{new Date(reply.created_at).toLocaleDateString('es-ES')}</span>
                                     {canEdit(reply.user_id) && (
                                       <>
