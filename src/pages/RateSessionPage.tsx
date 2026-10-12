@@ -220,7 +220,7 @@ export function RateSessionPage() {
           <label className="block font-label-md text-label-md text-on-surface mb-sm">
             Nivel de Satisfacción
           </label>
-          <div className="flex justify-between gap-2xs overflow-x-auto pb-2 p-1">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2xs pb-2 p-1">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((score) => {
               const isInsatisfied = score <= 6
               const isNeutral = score >= 7 && score <= 8
@@ -234,7 +234,7 @@ export function RateSessionPage() {
               return (
                 <label
                   key={score}
-                  className={`relative flex flex-col items-center flex-1 min-w-0 py-xs px-2xs rounded-xl cursor-pointer transition-all ${
+                  className={`relative flex flex-col items-center min-w-0 py-xs px-2xs rounded-xl cursor-pointer transition-all ${
                     isSelected
                       ? selectedBg
                       : 'hover:bg-surface-container'
@@ -258,17 +258,17 @@ export function RateSessionPage() {
               )
             })}
           </div>
-          <div className="flex justify-between font-body-xs text-body-xs text-on-surface-variant mt-sm px-xs">
-            <span className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-red-500">sentiment_dissatisfied</span>
+          <div className="grid grid-cols-3 gap-xs font-body-xs text-body-xs text-on-surface-variant mt-sm px-xs">
+            <span className="flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-red-500">sentiment_dissatisfied</span>
               Insatisfecho
             </span>
-            <span className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-yellow-500">sentiment_neutral</span>
+            <span className="flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-yellow-500">sentiment_neutral</span>
               Neutral
             </span>
-            <span className="flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[24px] md:text-[28px] text-green-500">sentiment_satisfied</span>
+            <span className="flex flex-col items-center text-center">
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-green-500">sentiment_satisfied</span>
               Satisfecho
             </span>
           </div>

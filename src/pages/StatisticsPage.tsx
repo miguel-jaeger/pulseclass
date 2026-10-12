@@ -917,37 +917,37 @@ export function StatisticsPage() {
           {sessionStats.length > 0 && (
             <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-xl overflow-hidden">
               <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Desglose por Curso</h3>
-              <div className="space-y-sm md:space-y-0 overflow-x-auto">
+              <div className="space-y-sm lg:space-y-0">
                 {/* Desktop table */}
-                <table className="w-full hidden md:table">
+                <table className="w-full hidden lg:table table-fixed">
                   <thead>
                     <tr className="border-b border-outline-variant">
-                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Curso</th>
-                      <th className="text-left font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Período</th>
-                      <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm pr-md">Evaluaciones</th>
-                      <th className="text-right font-body-sm text-body-sm text-on-surface-variant pb-sm">Promedio</th>
+                      <th className="w-[38%] text-left font-label-xs text-label-xs text-on-surface-variant pb-sm pr-sm">Curso</th>
+                      <th className="w-[32%] text-left font-label-xs text-label-xs text-on-surface-variant pb-sm pr-sm">Período</th>
+                      <th className="w-[16%] text-right font-label-xs text-label-xs text-on-surface-variant pb-sm pr-sm">Evaluaciones</th>
+                      <th className="w-[14%] text-right font-label-xs text-label-xs text-on-surface-variant pb-sm">Promedio</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sessionStats.map(s => (
                       <tr key={s.id} className="border-b border-outline-variant last:border-0">
-                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[200px]">{s.courseName}</td>
-                        <td className="py-sm pr-md font-body-sm text-body-sm text-on-surface-variant">{s.dateRange}</td>
-                        <td className="py-sm pr-md font-body-md text-body-md text-on-surface text-right">{s.count}</td>
-                        <td className="py-sm font-body-md text-body-md text-on-surface text-right font-semibold">{s.avg.toFixed(1)}</td>
+                        <td className="py-sm pr-sm font-body-xs text-body-xs text-on-surface font-medium break-words">{s.courseName}</td>
+                        <td className="py-sm pr-sm font-body-xs text-body-xs text-on-surface-variant break-words">{s.dateRange}</td>
+                        <td className="py-sm pr-sm font-body-xs text-body-xs text-on-surface text-right">{s.count}</td>
+                        <td className="py-sm font-body-xs text-body-xs text-on-surface text-right font-semibold">{s.avg.toFixed(1)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {/* Mobile cards */}
-                <div className="md:hidden space-y-md">
+                <div className="lg:hidden space-y-md">
                   {sessionStats.map(s => (
                     <div key={s.id} className="border border-outline-variant rounded-xl p-md">
-                      <p className="font-body-md text-body-md text-on-surface font-medium mb-sm text-center">{s.courseName}</p>
+                      <p className="font-body-md text-body-md text-on-surface font-medium mb-sm text-center break-words">{s.courseName}</p>
                       <div className="space-y-sm">
-                        <div className="flex justify-between items-center px-sm">
+                        <div className="flex flex-wrap justify-between items-start gap-xs px-sm">
                           <span className="font-body-sm text-body-sm text-on-surface-variant">Período</span>
-                          <span className="font-body-sm text-sm text-primary font-bold">{s.dateRange}</span>
+                          <span className="font-body-xs text-body-xs text-primary font-bold text-right break-words">{s.dateRange}</span>
                         </div>
                         <div className="flex justify-between items-center px-sm">
                           <span className="font-body-sm text-body-sm text-on-surface-variant">Evaluaciones</span>

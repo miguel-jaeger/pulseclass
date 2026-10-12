@@ -253,7 +253,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ml-0 pt-16 md:pt-xl pb-32 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'} ${isImpersonating ? 'mt-10' : ''}`}>
+      <main className={`flex-1 min-w-0 ml-0 pt-16 md:pt-xl pb-32 md:pb-xl px-4 md:px-12 max-w-[1200px] mx-auto w-full min-h-screen transition-all duration-200 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'} ${isImpersonating ? 'mt-10' : ''}`}>
         {children}
       </main>
 
@@ -290,9 +290,9 @@ export function Layout({ children }: { children: ReactNode }) {
               <button
                 key={item.to}
                 onClick={() => setMobileAdminOpen(!mobileAdminOpen)}
-                className="flex items-center justify-center min-w-[56px]"
+                className="flex flex-1 min-w-0 items-center justify-center"
               >
-                <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+                <span className={`flex items-center justify-center rounded-full px-2 sm:px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
                   <span className="material-symbols-outlined text-[22px]" style={iconFill}>{item.icon}</span>
                 </span>
               </button>
@@ -302,9 +302,9 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center justify-center min-w-[56px]"
+              className="flex flex-1 min-w-0 items-center justify-center"
             >
-              <span className={`flex items-center justify-center rounded-full px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
+              <span className={`flex items-center justify-center rounded-full px-2 sm:px-4 py-1 transition-colors ${active ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant'}`}>
                 <span
                   className="material-symbols-outlined text-[22px]"
                   style={iconFill}
