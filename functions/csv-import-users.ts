@@ -31,12 +31,12 @@ export default async function(req: Request): Promise<Response> {
       })
     }
     const { courseId, users } = body as {
-      courseId: string
+      courseId?: string
       users: { name: string; email: string }[]
     }
 
-    if (!courseId || !users || !Array.isArray(users) || users.length === 0) {
-      return new Response(JSON.stringify({ error: 'courseId y users son requeridos' }), {
+    if ((courseId !== undefined && (typeof courseId !== 'string' || !courseId.trim())) || !users || !Array.isArray(users) || users.length === 0) {
+      return new Response(JSON.stringify({ error: 'users es requerido y courseId debe ser válido' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -83,7 +83,8 @@ export default async function(req: Request): Promise<Response> {
       .eq('user_id', userData.user.id)
       .single()
 
-    if (!profileData || !['admin', 'teacher'].includes((profileData as { role: string }).role)) {
+    const role = (profileData as { role: string } | null)?.role
+    if (!role || !['admin', 'teacher'].includes(role) || (!courseId && role !== 'admin')) {
       return new Response(JSON.stringify({ error: 'No tienes permisos para importar usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -101,13 +102,17 @@ export default async function(req: Request): Promise<Response> {
       ((existingProfiles as { user_id: string; email: string }[] | null) || []).map(p => [p.email?.toLowerCase(), p.user_id])
     )
 
-    const { data: existingMembers, error: membersErr } = await adminClient.database
-      .from('course_members')
-      .select('user_id')
-      .eq('course_id', courseId)
-    if (membersErr) console.error('members fetch error:', membersErr)
-
-    const memberUserIds = new Set(((existingMembers as { user_id: string }[] | null) || []).map(m => m.user_id))
+    const memberUserIds = new Set<string>()
+    if (courseId) {
+      const { data: existingMembers, error: membersErr } = await adminClient.database
+        .from('course_members')
+        .select('user_id')
+        .eq('course_id', courseId)
+      if (membersErr) console.error('members fetch error:', membersErr)
+      for (const member of (existingMembers as { user_id: string }[] | null) || []) {
+        memberUserIds.add(member.user_id)
+      }
+    }
 
     let imported = 0
     const skipped: { name: string; email: string; reason?: string }[] = []
@@ -123,6 +128,10 @@ export default async function(req: Request): Promise<Response> {
       let userId = emailToUserId.get(email)
 
       if (userId) {
+        if (!courseId) {
+          skipped.push({ name: cleanName, email, reason: 'el usuario ya existe' })
+          continue
+        }
         try {
           await adminClient.database
             .from('profiles')
@@ -175,6 +184,10 @@ export default async function(req: Request): Promise<Response> {
             const retryId = (retryProfiles as { user_id: string } | null)?.user_id
             if (retryId) {
               emailToUserId.set(email, retryId)
+              if (!courseId) {
+                skipped.push({ name: cleanName, email, reason: 'el usuario ya existe' })
+                continue
+              }
               if (!memberUserIds.has(retryId)) {
                 const { error: retryErr } = await adminClient.database.from('course_members').insert([{ course_id: courseId, user_id: retryId }])
                 if (!retryErr) {
@@ -211,22 +224,24 @@ export default async function(req: Request): Promise<Response> {
         console.error('profile update error:', e)
       }
 
-      const { error: memberErr } = await adminClient.database
-        .from('course_members')
-        .insert([{ course_id: courseId, user_id: newUserId }])
-      if (memberErr) {
-        const msg = (memberErr as { message?: string })?.message || ''
-        if (msg.includes('duplicate') || msg.includes('Unique')) {
-          imported++
-          memberUserIds.add(newUserId)
+      if (courseId) {
+        const { error: memberErr } = await adminClient.database
+          .from('course_members')
+          .insert([{ course_id: courseId, user_id: newUserId }])
+        if (memberErr) {
+          const msg = (memberErr as { message?: string })?.message || ''
+          if (msg.includes('duplicate') || msg.includes('Unique')) {
+            imported++
+            memberUserIds.add(newUserId)
+            continue
+          }
+          console.error('Error adding new user to course:', memberErr)
+          skipped.push({ name: cleanName, email, reason: 'creado pero no agregado al curso' })
           continue
         }
-        console.error('Error adding new user to course:', memberErr)
-        skipped.push({ name: cleanName, email, reason: 'creado pero no agregado al curso' })
-        continue
+        memberUserIds.add(newUserId)
       }
 
-      memberUserIds.add(newUserId)
       imported++
     }
 
