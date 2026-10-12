@@ -571,7 +571,7 @@ export function AdminPage() {
                   </th>
                   <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[27%]">Nombre</th>
                   <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[38%]">Correo</th>
-                  <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[12%]">Rol</th>
+                  <th className="px-xs xl:px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[12%]">Rol</th>
                   <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[18%]">Acciones</th>
                 </tr>
               </thead>
@@ -592,8 +592,8 @@ export function AdminPage() {
                       <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{formatDisplayName(user.name)}</div>
                     </td>
                     <td className="px-sm py-sm align-top font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
-                    <td className="px-xs py-sm align-top">
-                      <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs break-words ${
+                    <td className="px-xs xl:px-sm py-sm align-top">
+                      <span className={`inline-flex items-center px-xs xl:px-sm py-[2px] rounded-full font-label-xs text-label-xs break-words ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
@@ -602,7 +602,7 @@ export function AdminPage() {
                       </span>
                     </td>
                     <td className="px-xs py-sm align-top">
-                      <div className="flex flex-wrap items-center gap-2xs">
+                      <div className="flex flex-wrap items-center gap-xs xl:gap-sm">
                         <button
                           onClick={() => openEditModal(user)}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:opacity-90 transition-opacity"
@@ -669,7 +669,7 @@ export function AdminPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-xs">
+                  <div className="flex flex-wrap items-center gap-sm">
                     <button
                       onClick={() => openEditModal(user)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:opacity-90 transition-opacity"
