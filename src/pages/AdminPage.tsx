@@ -569,10 +569,10 @@ export function AdminPage() {
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
-                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[27%]">Nombre</th>
+                  <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[26%]">Nombre</th>
                   <th className="px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[38%]">Correo</th>
-                  <th className="px-xs xl:px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[12%]">Rol</th>
-                  <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[18%]">Acciones</th>
+                  <th className="px-xs xl:px-sm py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[14%]">Rol</th>
+                  <th className="px-xs py-sm text-left font-label-xs text-label-xs text-on-surface-variant w-[17%]">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -588,12 +588,12 @@ export function AdminPage() {
                         className="w-4 h-4 accent-primary rounded"
                       />
                     </td>
-                    <td className="px-sm py-sm align-top">
+                    <td className="px-sm py-sm align-top text-left">
                       <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{formatDisplayName(user.name)}</div>
                     </td>
-                    <td className="px-sm py-sm align-top font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
-                    <td className="px-xs xl:px-sm py-sm align-top">
-                      <span className={`inline-flex items-center px-xs xl:px-sm py-[2px] rounded-full font-label-xs text-label-xs break-words ${
+                    <td className="px-sm py-sm align-top text-left font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
+                    <td className="px-xs xl:px-sm py-sm align-top text-left">
+                      <span className={`inline-block max-w-full px-xs xl:px-sm py-[2px] rounded-full font-label-xs text-label-xs text-left whitespace-normal break-words xl:whitespace-nowrap ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
@@ -601,7 +601,7 @@ export function AdminPage() {
                         {roleLabel(user.role)}
                       </span>
                     </td>
-                    <td className="px-xs py-sm align-top">
+                    <td className="px-xs py-sm align-top text-left">
                       <div className="flex flex-wrap items-center gap-xs xl:gap-sm">
                         <button
                           onClick={() => openEditModal(user)}
