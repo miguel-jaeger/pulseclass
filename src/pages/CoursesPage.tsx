@@ -4,6 +4,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface Course {
   id: string
@@ -366,12 +367,12 @@ export function CoursesPage() {
                     .map(t => (
                       <button
                         key={t.user_id}
-                        onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(t.name); setTeacherDropdownOpen(false) }}
+                        onClick={() => { setSelectedTeacher(t.user_id); setTeacherSearch(formatDisplayName(t.name)); setTeacherDropdownOpen(false) }}
                         className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${
                           selectedTeacher === t.user_id ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                         }`}
                       >
-                        {t.name}
+                        {formatDisplayName(t.name)}
                       </button>
                     ))
                   }

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS, ROLE_OPTIONS } from '../lib/roles'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 interface UserProfile {
   id: string
@@ -588,7 +589,7 @@ export function AdminPage() {
                       />
                     </td>
                     <td className="px-sm py-sm align-top">
-                      <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{user.name}</div>
+                      <div className="font-body-xs text-body-xs text-on-surface font-medium break-words">{formatDisplayName(user.name)}</div>
                     </td>
                     <td className="px-sm py-sm align-top font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</td>
                     <td className="px-xs py-sm align-top">
@@ -654,7 +655,7 @@ export function AdminPage() {
                       className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="font-body-sm text-body-sm text-on-surface font-medium break-words">{user.name}</div>
+                      <div className="font-body-sm text-body-sm text-on-surface font-medium break-words">{formatDisplayName(user.name)}</div>
                       <div className="font-body-xs text-body-xs text-on-surface-variant break-all">{user.email}</div>
                       <span className={`inline-flex items-center px-xs py-[2px] rounded-full font-label-xs text-label-xs mt-xs ${
                         user.role === 'admin' ? 'bg-primary-container text-on-primary-container' :
@@ -763,7 +764,7 @@ export function AdminPage() {
                   <div className="max-h-48 overflow-y-auto space-y-sm">
                     {importResult.skipped.map((user, index) => (
                       <div key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0 pb-sm">
-                        <p className="font-body-sm text-body-sm text-primary font-bold break-words">{user.name}</p>
+                        <p className="font-body-sm text-body-sm text-primary font-bold break-words">{formatDisplayName(user.name)}</p>
                         <p className="font-body-xs text-body-xs text-on-surface-variant break-all">Correo: {user.email}</p>
                         <p className="font-body-xs text-body-xs text-on-surface-variant break-words">Motivo: {user.reason || 'omitido'}</p>
                       </div>

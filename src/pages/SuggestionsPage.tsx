@@ -3,6 +3,7 @@ import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
+import { formatDisplayName } from '../lib/formatDisplayName'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -434,7 +435,7 @@ export function SuggestionsPage() {
                 <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
                 <div className="flex items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
-                  <span className="font-body-sm text-body-sm">{s.profiles?.name || 'Anónimo'}</span>
+                  <span className="font-body-sm text-body-sm">{formatDisplayName(s.profiles?.name) || 'Anónimo'}</span>
                   <span className="font-body-sm text-body-sm">·</span>
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
@@ -703,7 +704,7 @@ export function SuggestionsPage() {
 
             <div className="flex items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
-              <span className="font-body-sm text-body-sm">{detailSuggestion.profiles?.name || 'Anónimo'}</span>
+              <span className="font-body-sm text-body-sm">{formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo'}</span>
               <span className="font-body-sm text-body-sm">·</span>
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>
