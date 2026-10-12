@@ -604,7 +604,7 @@ export function AdminPage() {
                       <div className="flex flex-wrap items-center gap-2xs">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:opacity-90 transition-opacity"
                           title="Editar usuario"
                         >
                           <span className="material-symbols-outlined text-lg">edit</span>
@@ -671,7 +671,7 @@ export function AdminPage() {
                   <div className="flex flex-wrap items-center gap-xs">
                     <button
                       onClick={() => openEditModal(user)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container hover:opacity-90 transition-opacity"
                       title="Editar"
                     >
                       <span className="material-symbols-outlined text-xl">edit</span>
