@@ -350,12 +350,15 @@ export function ProfilePage() {
           </div>
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-              theme === 'dark' ? 'bg-primary' : 'bg-surface-container-highest'
+            role="switch"
+            aria-checked={theme === 'dark'}
+            aria-label="Alternar modo oscuro"
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              theme === 'dark' ? 'bg-primary border-primary' : 'bg-tertiary-container border-outline-variant'
             }`}
           >
-            <span className={`inline-block h-5 w-5 transform rounded-full bg-on-primary transition-transform shadow-sm ${
-              theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+            <span className={`inline-block h-5 w-5 transform rounded-full transition-transform shadow-sm ${
+              theme === 'dark' ? 'translate-x-6 bg-on-primary' : 'translate-x-1 bg-inverse-on-surface'
             }`} />
           </button>
         </div>
