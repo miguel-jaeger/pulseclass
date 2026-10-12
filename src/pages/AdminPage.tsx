@@ -41,6 +41,7 @@ export function AdminPage() {
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState<{ current: number; total: number } | null>(null)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showMoreOptions, setShowMoreOptions] = useState(false)
   const moreOptionsRef = useRef<HTMLDivElement>(null)
@@ -269,15 +270,36 @@ export function AdminPage() {
     if (selectedUsers.size === 0) return
     if (!confirm(`¿Eliminar ${selectedUsers.size} usuario(s)? Esta acción no se puede deshacer.`)) return
 
-    for (const userId of selectedUsers) {
-      await insforge.functions.invoke('delete-user', {
-        method: 'POST',
-        body: { userId }
-      })
+    const userIds = Array.from(selectedUsers)
+    const deletedUserIds = new Set<string>()
+    setBulkDeleteProgress({ current: 0, total: userIds.length })
+    try {
+      for (let index = 0; index < userIds.length; index++) {
+        const userId = userIds[index]
+        try {
+          const { data, error } = await insforge.functions.invoke('delete-user', {
+            method: 'POST',
+            body: { userId }
+          })
+          if (!error && data?.success === true) deletedUserIds.add(userId)
+        } catch {
+        }
+        setBulkDeleteProgress({ current: index + 1, total: userIds.length })
+      }
+
+      setUsers(prev => prev.filter(user => !deletedUserIds.has(user.user_id)))
+      setSelectedUsers(prev => new Set([...prev].filter(userId => !deletedUserIds.has(userId))))
+      const failedCount = userIds.length - deletedUserIds.size
+      if (failedCount === 0) {
+        showToast(`${deletedUserIds.size} usuario(s) eliminado(s)`)
+      } else if (deletedUserIds.size === 0) {
+        showToast('No se pudieron eliminar los usuarios seleccionados.', 'error')
+      } else {
+        showToast(`Se eliminaron ${deletedUserIds.size} de ${userIds.length} usuarios; ${failedCount} no se pudieron eliminar.`, 'error')
+      }
+    } finally {
+      setBulkDeleteProgress(null)
     }
-    setUsers(prev => prev.filter(u => !selectedUsers.has(u.user_id)))
-    setSelectedUsers(new Set())
-    showToast(`${selectedUsers.size} usuario(s) eliminado(s)`)
   }
 
   const toggleSelectUser = (userId: string) => {
@@ -494,15 +516,39 @@ export function AdminPage() {
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
           {selectedUsers.size > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-sm px-md py-2 bg-error-container border-b border-outline-variant">
-              <span className="font-body-sm text-body-sm text-on-error-container">
-                {selectedUsers.size} usuarios seleccionados
-              </span>
+              {bulkDeleteProgress ? (
+                <div className="min-w-0 flex-1" role="status" aria-live="polite">
+                  <div className="flex items-center gap-xs mb-xs font-body-sm text-body-sm text-on-error-container">
+                    <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                    Eliminando {bulkDeleteProgress.current} de {bulkDeleteProgress.total} usuarios...
+                  </div>
+                  <div
+                    className="h-1.5 w-full rounded-full bg-surface/60 overflow-hidden"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={bulkDeleteProgress.total}
+                    aria-valuenow={bulkDeleteProgress.current}
+                  >
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      style={{ width: `${(bulkDeleteProgress.current / bulkDeleteProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <span className="font-body-sm text-body-sm text-on-error-container">
+                  {selectedUsers.size} usuarios seleccionados
+                </span>
+              )}
               <button
                 onClick={deleteSelectedUsers}
-                className="bg-error text-on-error font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+                disabled={bulkDeleteProgress !== null}
+                className="bg-error text-on-error font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-wait flex items-center gap-xs"
               >
-                <span className="material-symbols-outlined text-lg">group_remove</span>
-                Eliminar
+                <span className={`material-symbols-outlined text-lg ${bulkDeleteProgress ? 'animate-spin' : ''}`}>
+                  {bulkDeleteProgress ? 'progress_activity' : 'group_remove'}
+                </span>
+                {bulkDeleteProgress ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           )}
@@ -518,6 +564,7 @@ export function AdminPage() {
                       name="selectAll"
                       checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
                       onChange={toggleSelectAllUsers}
+                      disabled={bulkDeleteProgress !== null}
                       className="w-4 h-4 accent-primary rounded"
                     />
                   </th>
@@ -536,6 +583,7 @@ export function AdminPage() {
                         name="selectUser"
                         checked={selectedUsers.has(user.user_id)}
                         onChange={() => toggleSelectUser(user.user_id)}
+                        disabled={bulkDeleteProgress !== null}
                         className="w-4 h-4 accent-primary rounded"
                       />
                     </td>
@@ -602,6 +650,7 @@ export function AdminPage() {
                       name="selectUser"
                       checked={selectedUsers.has(user.user_id)}
                       onChange={() => toggleSelectUser(user.user_id)}
+                      disabled={bulkDeleteProgress !== null}
                       className="w-4 h-4 accent-primary rounded mt-1 shrink-0"
                     />
                     <div className="min-w-0 flex-1">
