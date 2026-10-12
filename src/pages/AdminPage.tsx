@@ -15,6 +15,12 @@ interface UserProfile {
   created_at: string
 }
 
+interface ImportResult {
+  imported: number
+  skipped: { name: string; email: string; reason?: string }[]
+  error?: string
+}
+
 export function AdminPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -24,9 +30,12 @@ export function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
-  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', role: 'student' as string })
+  const [createForm, setCreateForm] = useState({ name: '', email: '', role: 'student' as string })
   const [editForm, setEditForm] = useState({ name: '', email: '', role: 'student' as string, password: '' })
   const [formError, setFormError] = useState('')
   const [formLoading, setFormLoading] = useState(false)
@@ -34,6 +43,7 @@ export function AdminPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showVerComo, setShowVerComo] = useState(false)
   const verComoRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -72,7 +82,7 @@ export function AdminPage() {
     try {
       const { data, error } = await insforge.auth.signUp({
         email: createForm.email,
-        password: createForm.password,
+        password: '12345678',
         name: createForm.name
       })
 
@@ -86,7 +96,7 @@ export function AdminPage() {
       }
 
       setShowCreateModal(false)
-      setCreateForm({ name: '', email: '', password: '', role: 'student' })
+      setCreateForm({ name: '', email: '', role: 'student' })
       fetchUsers()
       showToast('Usuario creado exitosamente')
     } catch (err: unknown) {
@@ -94,6 +104,94 @@ export function AdminPage() {
       setFormError(message)
     } finally {
       setFormLoading(false)
+    }
+  }
+
+  const parseCsvLine = (line: string): string[] => {
+    const result: string[] = []
+    let current = ''
+    let inQuotes = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (inQuotes) {
+        if (ch === '"' && line[i + 1] === '"') {
+          current += '"'
+          i++
+        } else if (ch === '"') {
+          inQuotes = false
+        } else {
+          current += ch
+        }
+      } else if (ch === '"') {
+        inQuotes = true
+      } else if (ch === ',' || ch === ';' || ch === '\t') {
+        result.push(current.trim())
+        current = ''
+      } else {
+        current += ch
+      }
+    }
+    result.push(current.trim())
+    return result
+  }
+
+  const handleCsvImport = async (file: File) => {
+    setImportLoading(true)
+    setImportResult(null)
+    try {
+      const text = (await file.text()).replace(/^\uFEFF/, '')
+      const lines = text.split(/\r\n|\r|\n/).filter(line => line.trim())
+      if (lines.length < 2) {
+        setImportResult({ imported: 0, skipped: [], error: 'El archivo debe incluir encabezados y al menos un usuario.' })
+        return
+      }
+
+      const headers = parseCsvLine(lines[0]).map(header =>
+        header.trim().toLowerCase().replace(/^\uFEFF/, '').replace(/"/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+      )
+      const nameIdx = headers.findIndex(header => ['alumnos', 'nombre', 'name'].includes(header))
+      const emailIdx = headers.findIndex(header => ['correo', 'email', 'e-mail'].includes(header))
+      if (nameIdx === -1 || emailIdx === -1) {
+        setImportResult({ imported: 0, skipped: [], error: 'El CSV debe incluir columnas "nombre" y "correo".' })
+        return
+      }
+
+      const parsedUsers = lines.slice(1).map(line => {
+        const columns = parseCsvLine(line)
+        return {
+          name: (columns[nameIdx] || '').trim(),
+          email: (columns[emailIdx] || '').trim().toLowerCase()
+        }
+      }).filter(user => user.name || user.email)
+
+      if (parsedUsers.length === 0) {
+        setImportResult({ imported: 0, skipped: [], error: 'No se encontraron usuarios en el archivo.' })
+        return
+      }
+
+      let imported = 0
+      const skipped: ImportResult['skipped'] = []
+      const chunkSize = 15
+      for (let i = 0; i < parsedUsers.length; i += chunkSize) {
+        const chunk = parsedUsers.slice(i, i + chunkSize)
+        const { data, error } = await insforge.functions.invoke('csv-import-users', {
+          method: 'POST',
+          body: { users: chunk }
+        })
+        if (error) {
+          skipped.push(...chunk.map(user => ({ ...user, reason: 'error de importación' })))
+          continue
+        }
+        imported += data?.imported || 0
+        if (data?.skipped) skipped.push(...data.skipped)
+      }
+
+      setImportResult({ imported, skipped })
+      if (imported > 0) await fetchUsers()
+    } catch {
+      setImportResult({ imported: 0, skipped: [], error: 'No se pudo leer o importar el archivo CSV.' })
+    } finally {
+      setImportLoading(false)
     }
   }
 
@@ -231,7 +329,7 @@ export function AdminPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Gestión de Usuarios</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
-        <div className="flex items-center gap-sm flex-shrink-0 self-end md:self-auto">
+        <div className="flex flex-wrap items-center justify-end gap-sm flex-shrink-0 self-end md:self-auto">
           <div className="relative" ref={verComoRef}>
             <button
               onClick={() => setShowVerComo(!showVerComo)}
@@ -260,12 +358,28 @@ export function AdminPage() {
             )}
           </div>
           <button
-            onClick={() => { setCreateForm({ name: '', email: '', password: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+            onClick={() => { setCreateForm({ name: '', email: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
           >
             <span className="material-symbols-outlined text-lg">person_add</span>
             Crear
           </button>
+          <button
+            onClick={() => { setShowImportModal(true); setImportResult(null) }}
+            className="bg-secondary-container text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+          >
+            <span className="material-symbols-outlined text-lg">upload_file</span>
+            Importar CSV
+          </button>
+          <a
+            href="https://res.cloudinary.com/dhecags26/raw/upload/v1787804153/example-import_geijtw.csv"
+            download
+            title="Descargar plantilla CSV"
+            className="bg-secondary-container text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
+          >
+            <span className="material-symbols-outlined text-lg">download</span>
+            Plantilla
+          </a>
         </div>
       </header>
 
@@ -565,12 +679,93 @@ export function AdminPage() {
         onPerPageChange={setPerPage}
       />
 
+      {showImportModal && (
+        <div className="fixed inset-0 bg-scrim/60 flex overflow-y-auto z-50 p-margin-mobile">
+          <div className="m-auto bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-md">Importar usuarios desde CSV</h3>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+              El archivo debe incluir columnas <strong>nombre</strong> y <strong>correo</strong>. La primera fila se usa como encabezado y la contraseña para todos será <strong>12345678</strong>.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={event => {
+                const file = event.target.files?.[0]
+                if (file) handleCsvImport(file)
+              }}
+              className="hidden"
+            />
+            {importLoading ? (
+              <div className="flex items-center justify-center gap-sm py-lg">
+                <span className="material-symbols-outlined text-primary animate-spin">progress_activity</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Importando usuarios...</span>
+              </div>
+            ) : importResult ? (
+              <div className="space-y-md">
+                {importResult.error ? (
+                  <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-md rounded-xl">{importResult.error}</p>
+                ) : (
+                  <div className={`p-md rounded-xl ${importResult.imported > 0 ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'}`}>
+                    <div className="flex items-center gap-sm mb-xs">
+                      <span className="material-symbols-outlined text-lg">{importResult.imported > 0 ? 'check_circle' : 'info'}</span>
+                      <span className="font-label-md text-label-md">{importResult.imported} usuario(s) importado(s)</span>
+                    </div>
+                    {importResult.skipped.length > 0 && <span className="font-body-sm text-body-sm">{importResult.skipped.length} omitido(s)</span>}
+                  </div>
+                )}
+                {importResult.skipped.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-outline-variant">
+                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Nombre</th>
+                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Correo</th>
+                          <th className="px-sm py-2 text-left font-label-sm text-label-sm text-on-surface-variant">Motivo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importResult.skipped.map((user, index) => (
+                          <tr key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0">
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-primary font-bold">{user.name}</td>
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{user.email}</td>
+                            <td className="px-sm py-2 font-body-sm text-body-sm text-on-surface-variant">{user.reason || 'omitido'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-outline-variant rounded-xl py-lg flex flex-col items-center gap-sm hover:border-primary hover:bg-surface-container transition-colors"
+              >
+                <span className="material-symbols-outlined text-on-surface-variant text-[32px]">upload_file</span>
+                <span className="font-body-sm text-body-sm text-on-surface-variant">Seleccionar archivo CSV</span>
+              </button>
+            )}
+            <div className="flex justify-end gap-sm mt-lg">
+              <button
+                onClick={() => { setShowImportModal(false); setImportResult(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+                {importResult ? 'Cerrar' : 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Usuario</h3>
             <div className="space-y-md">
+              <p className="font-body-sm text-body-sm text-on-surface-variant">La contraseña inicial será <strong>12345678</strong>.</p>
               <div>
                 <label htmlFor="create-name" className="block font-label-md text-label-md text-on-surface mb-xs">Nombre</label>
                 <input
@@ -593,18 +788,6 @@ export function AdminPage() {
                   onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                   placeholder="correo@ejemplo.com"
-                />
-              </div>
-              <div>
-                <label htmlFor="create-password" className="block font-label-md text-label-md text-on-surface mb-xs">Contraseña</label>
-                <input
-                  type="password"
-                  id="create-password"
-                  name="password"
-                  value={createForm.password}
-                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-                  className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-                  placeholder="Mínimo 6 caracteres"
                 />
               </div>
               <div>
@@ -635,7 +818,7 @@ export function AdminPage() {
               </button>
               <button
                 onClick={createUser}
-                disabled={formLoading || !createForm.name || !createForm.email || !createForm.password}
+                disabled={formLoading || !createForm.name || !createForm.email}
                 className="bg-primary text-on-primary font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
               >
                 <span className="material-symbols-outlined text-lg">person_add</span>
