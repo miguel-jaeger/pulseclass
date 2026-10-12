@@ -554,6 +554,20 @@ export function AdminPage() {
                     </td>
                     <td className="px-sm py-sm align-top">
                       <div className="flex flex-wrap items-center gap-2xs">
+                        <button
+                          onClick={() => openEditModal(user)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-colors"
+                          title="Editar usuario"
+                        >
+                          <span className="material-symbols-outlined text-lg">edit</span>
+                        </button>
+                        <button
+                          onClick={() => deleteUser(user.user_id)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error transition-colors"
+                          title="Eliminar usuario"
+                        >
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        </button>
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
@@ -564,25 +578,11 @@ export function AdminPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => openEditModal(user)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
-                          title="Editar usuario"
-                        >
-                          <span className="material-symbols-outlined text-lg">edit</span>
-                        </button>
-                        <button
                           onClick={() => resetPassword(user.user_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
                           title="Restablecer contraseña"
                         >
                           <span className="material-symbols-outlined text-lg">key</span>
-                        </button>
-                        <button
-                          onClick={() => deleteUser(user.user_id)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
-                          title="Eliminar usuario"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
                         </button>
                       </div>
                     </td>
@@ -620,6 +620,20 @@ export function AdminPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-xs">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary transition-colors"
+                      title="Editar"
+                    >
+                      <span className="material-symbols-outlined text-xl">edit</span>
+                    </button>
+                    <button
+                      onClick={() => deleteUser(user.user_id)}
+                      className="w-9 h-9 flex items-center justify-center rounded-full bg-error-container text-on-error-container hover:bg-error hover:text-on-error transition-colors"
+                      title="Eliminar"
+                    >
+                      <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
                     {user.role !== 'admin' && (
                       <button
                         onClick={() => { startImpersonation(user.role as 'teacher' | 'student'); navigate('/') }}
@@ -630,25 +644,11 @@ export function AdminPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => openEditModal(user)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
-                      title="Editar"
-                    >
-                      <span className="material-symbols-outlined text-xl">edit</span>
-                    </button>
-                    <button
                       onClick={() => resetPassword(user.user_id)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
                       title="Restablecer contraseña"
                     >
                       <span className="material-symbols-outlined text-xl">key</span>
-                    </button>
-                    <button
-                      onClick={() => deleteUser(user.user_id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-error hover:bg-error-container hover:text-on-error-container transition-colors"
-                      title="Eliminar"
-                    >
-                      <span className="material-symbols-outlined text-xl">delete</span>
                     </button>
                   </div>
                 </div>
