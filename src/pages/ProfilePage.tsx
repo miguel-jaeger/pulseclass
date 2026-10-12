@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../hooks/useTheme'
 import { roleLabel } from '../lib/roles'
 import { formatDisplayName } from '../lib/formatDisplayName'
+import { PasswordInput } from '../components/PasswordInput'
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
@@ -293,24 +294,22 @@ export function ProfilePage() {
           <div className="space-y-md">
             <div>
               <label htmlFor="new-password" className="block font-label-md text-label-md text-on-surface mb-xs">Nueva contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 id="new-password"
                 name="newPassword"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={setNewPassword}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 placeholder="Mínimo 6 caracteres"
               />
             </div>
             <div>
               <label htmlFor="confirm-password" className="block font-label-md text-label-md text-on-surface mb-xs">Confirmar nueva contraseña</label>
-              <input
-                type="password"
+              <PasswordInput
                 id="confirm-password"
                 name="confirmPassword"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={setConfirmPassword}
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
               />
             </div>
