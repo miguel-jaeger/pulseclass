@@ -19,6 +19,7 @@ interface ImportResult {
   imported: number
   skipped: { name: string; email: string; reason?: string }[]
   error?: string
+  message?: string
 }
 
 export function AdminPage() {
@@ -41,8 +42,8 @@ export function AdminPage() {
   const [formLoading, setFormLoading] = useState(false)
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showVerComo, setShowVerComo] = useState(false)
-  const verComoRef = useRef<HTMLDivElement>(null)
+  const [showMoreOptions, setShowMoreOptions] = useState(false)
+  const moreOptionsRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -56,8 +57,8 @@ export function AdminPage() {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (verComoRef.current && !verComoRef.current.contains(e.target as Node)) {
-        setShowVerComo(false)
+      if (moreOptionsRef.current && !moreOptionsRef.current.contains(e.target as Node)) {
+        setShowMoreOptions(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -80,24 +81,17 @@ export function AdminPage() {
     setFormError('')
     setFormLoading(true)
     try {
-      const { data, error } = await insforge.auth.signUp({
-        email: createForm.email,
-        password: '12345678',
-        name: createForm.name
+      const { data, error } = await insforge.functions.invoke('admin-create-user', {
+        method: 'POST',
+        body: createForm
       })
 
       if (error) throw error
-
-      if (data?.user) {
-        await insforge.database
-          .from('profiles')
-          .update({ role: createForm.role, name: createForm.name })
-          .eq('user_id', data.user.id)
-      }
+      if (data?.success !== true) throw new Error(data?.error || 'No se pudo crear el usuario')
 
       setShowCreateModal(false)
       setCreateForm({ name: '', email: '', role: 'student' })
-      fetchUsers()
+      await fetchUsers()
       showToast('Usuario creado exitosamente')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al crear usuario'
@@ -141,8 +135,8 @@ export function AdminPage() {
     try {
       const text = (await file.text()).replace(/^\uFEFF/, '')
       const lines = text.split(/\r\n|\r|\n/).filter(line => line.trim())
-      if (lines.length < 2) {
-        setImportResult({ imported: 0, skipped: [], error: 'El archivo debe incluir encabezados y al menos un usuario.' })
+      if (lines.length === 0) {
+        setImportResult({ imported: 0, skipped: [], error: 'El archivo CSV está vacío.' })
         return
       }
 
@@ -165,7 +159,7 @@ export function AdminPage() {
       }).filter(user => user.name || user.email)
 
       if (parsedUsers.length === 0) {
-        setImportResult({ imported: 0, skipped: [], error: 'No se encontraron usuarios en el archivo.' })
+        setImportResult({ imported: 0, skipped: [], message: 'La plantilla es válida y todavía no contiene usuarios. Agrega una fila por usuario antes de importar.' })
         return
       }
 
@@ -329,34 +323,7 @@ export function AdminPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Gestión de Usuarios</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Administra los roles y permisos de los usuarios.</p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-sm flex-shrink-0 self-end md:self-auto">
-          <div className="relative" ref={verComoRef}>
-            <button
-              onClick={() => setShowVerComo(!showVerComo)}
-              className="bg-tertiary-container text-on-tertiary-container font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-lg">visibility</span>
-              Ver como<span className="material-symbols-outlined text-lg">expand_more</span>
-            </button>
-            {showVerComo && (
-              <div className="absolute right-0 top-full mt-1 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[180px] z-50">
-                <button
-                  onClick={() => { startImpersonation('teacher'); navigate('/'); setShowVerComo(false) }}
-                  className="flex items-center gap-3 px-4 py-3 w-full border-b border-outline-variant last:border-0 text-on-surface hover:bg-secondary-container transition-colors"
-                >
-                  <span className="material-symbols-outlined text-xl">school</span>
-                  <span className="font-body-md text-body-md">Profesor</span>
-                </button>
-                <button
-                  onClick={() => { startImpersonation('student'); navigate('/'); setShowVerComo(false) }}
-                  className="flex items-center gap-3 px-4 py-3 w-full text-on-surface hover:bg-secondary-container transition-colors"
-                >
-                  <span className="material-symbols-outlined text-xl">person</span>
-                  <span className="font-body-md text-body-md">Estudiante</span>
-                </button>
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-sm shrink-0 self-end md:self-auto">
           <button
             onClick={() => { setCreateForm({ name: '', email: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
@@ -364,22 +331,52 @@ export function AdminPage() {
             <span className="material-symbols-outlined text-lg">person_add</span>
             Crear
           </button>
-          <button
-            onClick={() => { setShowImportModal(true); setImportResult(null) }}
-            className="bg-secondary-container text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
-          >
-            <span className="material-symbols-outlined text-lg">upload_file</span>
-            Importar CSV
-          </button>
-          <a
-            href="https://res.cloudinary.com/dhecags26/raw/upload/v1787804153/example-import_geijtw.csv"
-            download
-            title="Descargar plantilla CSV"
-            className="bg-secondary-container text-on-surface font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
-          >
-            <span className="material-symbols-outlined text-lg">download</span>
-            Plantilla
-          </a>
+          <div className="relative" ref={moreOptionsRef}>
+            <button
+              onClick={() => setShowMoreOptions(open => !open)}
+              aria-label="Más opciones de usuarios"
+              aria-expanded={showMoreOptions}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-secondary-container text-on-surface hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-outlined">more_vert</span>
+            </button>
+            {showMoreOptions && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden z-50">
+                <p className="px-md pt-sm pb-xs font-label-xs text-label-xs text-on-surface-variant">Ver como</p>
+                <button
+                  onClick={() => { startImpersonation('teacher'); navigate('/'); setShowMoreOptions(false) }}
+                  className="flex items-center gap-sm px-md py-sm w-full text-left text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">school</span>
+                  <span className="font-body-sm text-body-sm">Profesor</span>
+                </button>
+                <button
+                  onClick={() => { startImpersonation('student'); navigate('/'); setShowMoreOptions(false) }}
+                  className="flex items-center gap-sm px-md py-sm w-full text-left text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">person</span>
+                  <span className="font-body-sm text-body-sm">Estudiante</span>
+                </button>
+                <div className="border-t border-outline-variant" />
+                <button
+                  onClick={() => { setShowImportModal(true); setImportResult(null); setShowMoreOptions(false) }}
+                  className="flex items-center gap-sm px-md py-sm w-full text-left text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">upload_file</span>
+                  <span className="font-body-sm text-body-sm">Importar CSV</span>
+                </button>
+                <a
+                  href="/plantilla-usuarios.csv"
+                  download
+                  onClick={() => setShowMoreOptions(false)}
+                  className="flex items-center gap-sm px-md py-sm text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">download</span>
+                  <span className="font-body-sm text-body-sm">Descargar plantilla CSV</span>
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -442,7 +439,7 @@ export function AdminPage() {
 
       {loading ? (
         <div className="bg-surface border border-outline-variant rounded-xl overflow-hidden">
-          <table className="w-full hidden xl:table table-fixed">
+          <table className="w-full hidden md:table table-fixed">
             <thead>
               <tr className="border-b border-outline-variant">
                 <th className="w-10 px-md py-3"><div className="h-4 w-4 bg-surface-container animate-pulse rounded" /></th>
@@ -472,7 +469,7 @@ export function AdminPage() {
               ))}
             </tbody>
           </table>
-          <div className="xl:hidden p-md space-y-md">
+          <div className="md:hidden p-md space-y-md">
             {[1, 2, 3].map(i => (
               <div key={i} className="border border-outline-variant rounded-xl p-md">
                 <div className="flex items-center gap-sm mb-sm">
@@ -510,7 +507,7 @@ export function AdminPage() {
             </div>
           )}
           {/* Desktop table */}
-          <div className="hidden xl:block min-w-0">
+          <div className="hidden md:block min-w-0">
             <table className="w-full table-fixed">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -552,9 +549,6 @@ export function AdminPage() {
                         user.role === 'teacher' ? 'bg-surface-container text-on-surface' :
                         'bg-secondary-container text-on-secondary-container'
                       }`}>
-                        <span className="material-symbols-outlined text-sm mr-xs">
-                          {user.role === 'admin' ? 'admin_panel_settings' : user.role === 'teacher' ? 'school' : 'person'}
-                        </span>
                         {roleLabel(user.role)}
                       </span>
                     </td>
@@ -598,7 +592,7 @@ export function AdminPage() {
             </table>
           </div>
           {/* Mobile cards */}
-          <div className="xl:hidden">
+          <div className="md:hidden">
             {paginatedUsers.map((user) => (
               <div key={user.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
                 <div className="flex flex-col gap-sm">
@@ -705,6 +699,8 @@ export function AdminPage() {
               <div className="space-y-md">
                 {importResult.error ? (
                   <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-md rounded-xl">{importResult.error}</p>
+                ) : importResult.message ? (
+                  <p className="font-body-sm text-body-sm text-on-surface bg-surface-container p-md rounded-xl">{importResult.message}</p>
                 ) : (
                   <div className={`p-md rounded-xl ${importResult.imported > 0 ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'}`}>
                     <div className="flex items-center gap-sm mb-xs">
@@ -752,7 +748,17 @@ export function AdminPage() {
       {showCreateModal && (
         <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
           <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Crear Usuario</h3>
+            <div className="flex items-center justify-between gap-sm mb-lg">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">Crear Usuario</h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="shrink-0 p-xs rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                title="Cerrar"
+                aria-label="Cerrar modal"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
             <div className="space-y-md">
               <p className="font-body-sm text-body-sm text-on-surface-variant">La contraseña inicial será <strong>12345678</strong>.</p>
               <div>
@@ -798,13 +804,6 @@ export function AdminPage() {
               <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl mt-md">{formError}</p>
             )}
             <div className="flex justify-end gap-sm mt-lg">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
-              >
-                <span className="material-symbols-outlined text-lg">close</span>
-                Cancelar
-              </button>
               <button
                 onClick={createUser}
                 disabled={formLoading || !createForm.name || !createForm.email}

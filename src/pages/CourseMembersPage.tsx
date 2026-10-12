@@ -34,6 +34,7 @@ interface CourseMember extends CourseMemberRow {
 interface ImportResult {
   imported: number
   skipped: { name: string; email: string }[]
+  message?: string
 }
 
 export function CourseMembersPage() {
@@ -245,8 +246,8 @@ export function CourseMembersPage() {
       const rawText = await file.text()
       const text = rawText.replace(/^\uFEFF/, '')
       const lines = text.split(/\r\n|\r|\n/).filter(l => l.trim())
-      if (lines.length < 2) {
-        setImportResult({ imported: 0, skipped: [{ name: '', email: '' }] })
+      if (lines.length === 0) {
+        setImportResult({ imported: 0, skipped: [], message: 'El archivo CSV está vacío.' })
         return
       }
 
@@ -277,6 +278,11 @@ export function CourseMembersPage() {
           if (rest && !rest.includes('@')) name = rest
         }
         if (name || email) parsedUsers.push({ name, email })
+      }
+
+      if (parsedUsers.length === 0) {
+        setImportResult({ imported: 0, skipped: [], message: 'La plantilla es válida y todavía no contiene usuarios. Agrega una fila por usuario antes de importar.' })
+        return
       }
 
       const CHUNK_SIZE = 15
@@ -402,7 +408,7 @@ export function CourseMembersPage() {
               <span className="material-symbols-outlined text-lg">upload_file</span>
             </button>
             <a
-              href="https://res.cloudinary.com/dhecags26/raw/upload/v1787804153/example-import_geijtw.csv"
+              href="/plantilla-usuarios.csv"
               download
               className="bg-secondary-container text-on-surface font-bold py-2 px-3 rounded-full hover:opacity-90 transition-opacity flex items-center justify-center"
               title="Descargar plantilla de ejemplo"
@@ -640,21 +646,25 @@ export function CourseMembersPage() {
               </div>
             ) : importResult ? (
               <div className="space-y-md">
-                <div className={`p-md rounded-xl ${importResult.imported > 0 ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'}`}>
-                  <div className="flex items-center gap-sm mb-xs">
-                    <span className="material-symbols-outlined text-lg">
-                      {importResult.imported > 0 ? 'check_circle' : 'info'}
-                    </span>
-                    <span className="font-label-md text-label-md">
-                      {importResult.imported} usuario(s) importado(s)
-                    </span>
+                {importResult.message ? (
+                  <p className="font-body-sm text-body-sm text-on-surface bg-surface-container p-md rounded-xl">{importResult.message}</p>
+                ) : (
+                  <div className={`p-md rounded-xl ${importResult.imported > 0 ? 'bg-primary-container text-on-primary-container' : 'bg-error-container text-on-error-container'}`}>
+                    <div className="flex items-center gap-sm mb-xs">
+                      <span className="material-symbols-outlined text-lg">
+                        {importResult.imported > 0 ? 'check_circle' : 'info'}
+                      </span>
+                      <span className="font-label-md text-label-md">
+                        {importResult.imported} usuario(s) importado(s)
+                      </span>
+                    </div>
+                    {importResult.skipped.length > 0 && (
+                      <span className="font-body-sm text-body-sm">
+                        {importResult.skipped.length} omitido(s)
+                      </span>
+                    )}
                   </div>
-                  {importResult.skipped.length > 0 && (
-                    <span className="font-body-sm text-body-sm">
-                      {importResult.skipped.length} omitido(s)
-                    </span>
-                  )}
-                </div>
+                )}
                 {importResult.skipped.length > 0 && (
                   <div className="max-h-48 overflow-y-auto">
                     <table className="w-full">

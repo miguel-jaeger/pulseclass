@@ -176,7 +176,6 @@ export default async function(req: Request): Promise<Response> {
         createStatus = createRes.status
         const text = await createRes.text()
         try { createBody = text ? JSON.parse(text) : {} } catch { createBody = { raw: text } }
-        console.log('Signup response:', createStatus, JSON.stringify(createBody).substring(0, 300))
         if (!createRes.ok) {
           const errMsg = (createBody as { error?: string; message?: string })?.error || (createBody as { message?: string })?.message || `status ${createStatus}`
           if (createStatus === 409 || errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exists')) {
