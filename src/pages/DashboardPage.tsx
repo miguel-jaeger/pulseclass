@@ -227,7 +227,7 @@ export function DashboardPage() {
     ? courseRows.reduce((sum, r) => sum + r.avgScore * r.ratingCount, 0) / totalEvaluaciones
     : 0
   const nivelLabel = avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
-  const nivelColor = avgGeneral >= 8 ? 'text-green-600' : avgGeneral >= 5 ? 'text-yellow-600' : 'text-red-600'
+  const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
   const nivelIconColor = avgGeneral >= 8 ? 'text-green-500' : avgGeneral >= 5 ? 'text-yellow-500' : 'text-red-500'
   const nivelIcon = avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
