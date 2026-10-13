@@ -426,7 +426,7 @@ export function StatisticsPage() {
   const totalEvaluaciones = ratings.length
 
   const nivelLabel = avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'
-  const nivelColor = avgScore >= 8 ? 'text-green-600' : avgScore >= 5 ? 'text-yellow-600' : 'text-red-600'
+  const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
   const nivelIconColor = avgScore >= 8 ? 'text-green-500' : avgScore >= 5 ? 'text-yellow-500' : 'text-red-500'
   const nivelIcon = avgScore >= 8 ? 'sentiment_satisfied' : avgScore >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
