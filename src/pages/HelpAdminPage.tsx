@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
+import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 
 interface HelpVideo {
@@ -23,8 +24,10 @@ const CATEGORY_LABELS: Record<VideoCategory, string> = {
 
 export function HelpAdminPage() {
   const { profile } = useAuth()
-  const isAdmin = profile?.role === 'admin'
-  const canManage = profile?.role === 'admin' || profile?.role === 'coordinator' || profile?.role === 'teacher'
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
+  const isAdmin = effectiveRole === 'admin'
+  const canManage = effectiveRole === 'admin' || effectiveRole === 'coordinator' || effectiveRole === 'teacher'
   const [videos, setVideos] = useState<HelpVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

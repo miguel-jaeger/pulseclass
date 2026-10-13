@@ -27,9 +27,10 @@ interface ImportResult {
 export function AdminPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
-  const { startImpersonation } = useImpersonation()
-  const isAdmin = profile?.role === 'admin'
-  const isCoordinator = profile?.role === 'coordinator'
+  const { startImpersonation, impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
+  const isAdmin = effectiveRole === 'admin'
+  const isCoordinator = effectiveRole === 'coordinator'
   const assignableRoleOptions = isCoordinator ? ROLE_OPTIONS.filter(o => o.value === 'teacher') : ROLE_OPTIONS
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
@@ -337,7 +338,7 @@ export function AdminPage() {
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredUsers.length, 10)
   const paginatedUsers = paginatedSlice(filteredUsers)
 
-  if (profile?.role !== 'admin' && profile?.role !== 'coordinator') {
+  if (effectiveRole !== 'admin' && effectiveRole !== 'coordinator') {
     return (
       <div className="p-lg">
         <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores y coordinadores pueden ver esta página.</p>
