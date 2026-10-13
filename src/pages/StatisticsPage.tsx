@@ -205,14 +205,21 @@ export function StatisticsPage() {
         courseIds = (teacherCourses as { id: string }[] || []).map(c => c.id)
       }
 
+      if (selectedTeacher !== 'all' && (!courseIds || courseIds.length === 0)) {
+        setSessions([])
+        setRatings([])
+        setLoading(false)
+        return
+      }
+
       let sessionQuery = insforge.database
         .from('sessions')
         .select('id, course_id, title, date')
 
       if (selectedCourse !== 'all') {
         sessionQuery = sessionQuery.eq('course_id', selectedCourse)
-      } else if (courseIds && courseIds.length > 0) {
-        sessionQuery = sessionQuery.in('course_id', courseIds)
+      } else if (selectedTeacher !== 'all') {
+        sessionQuery = sessionQuery.in('course_id', courseIds as string[])
       } else if (courses.length > 0) {
         sessionQuery = sessionQuery.in('course_id', courses.map(c => c.id))
       }
@@ -616,7 +623,7 @@ export function StatisticsPage() {
                     Todos los responsables
                   </button>
                   {teachers
-                    .filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase()))
+                    .filter(t => (t.name || '').toLowerCase().includes(teacherSearch.toLowerCase()))
                     .map(t => (
                       <button
                         key={t.user_id}
@@ -629,7 +636,7 @@ export function StatisticsPage() {
                       </button>
                     ))
                   }
-                  {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
+                  {teachers.filter(t => (t.name || '').toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
                     <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron responsables</div>
                   )}
                 </div>
