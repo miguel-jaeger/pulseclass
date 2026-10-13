@@ -109,7 +109,7 @@ export function CoursesPage() {
     const { data, error } = await insforge.database
       .from('profiles')
       .select('user_id, name')
-      .eq('role', 'teacher')
+      .in('role', ['teacher', 'coordinator', 'admin'])
       .order('name')
     if (!error && data) setTeachers(data as Teacher[])
   }
@@ -346,7 +346,7 @@ export function CoursesPage() {
                 value={teacherSearch}
                 onChange={e => { setTeacherSearch(e.target.value); setTeacherDropdownOpen(true) }}
                 onFocus={() => setTeacherDropdownOpen(true)}
-                placeholder="Buscar docente..."
+                placeholder="Buscar responsable..."
                 className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary pr-10"
               />
               <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-lg">
@@ -360,7 +360,7 @@ export function CoursesPage() {
                       selectedTeacher === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
-                    Todos los docentes
+                    Todos los responsables
                   </button>
                   {teachers
                     .filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase()))
@@ -377,7 +377,7 @@ export function CoursesPage() {
                     ))
                   }
                   {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
-                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron docentes</div>
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron responsables</div>
                   )}
                 </div>
               )}

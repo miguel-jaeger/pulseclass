@@ -206,7 +206,7 @@ export function StatisticsPage() {
       const { data } = await insforge.database
         .from('profiles')
         .select('id, user_id, name, role')
-        .eq('role', 'teacher')
+        .in('role', ['teacher', 'coordinator', 'admin'])
         .order('name')
       if (data) setTeachers(data as Profile[])
     }
@@ -614,7 +614,7 @@ export function StatisticsPage() {
           </div>
           {(effectiveRole === 'admin' || effectiveRole === 'coordinator') && teachers.length > 0 && (
           <div className="w-full md:w-auto" ref={teacherRef}>
-            <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Docente</label>
+            <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Responsable</label>
             <div className="relative">
               <input
                 id="teacher-search"
@@ -637,7 +637,7 @@ export function StatisticsPage() {
                       selectedTeacher === 'all' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface'
                     }`}
                   >
-                    Todos los docentes
+                    Todos los responsables
                   </button>
                   {teachers
                     .filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase()))
@@ -654,7 +654,7 @@ export function StatisticsPage() {
                     ))
                   }
                   {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
-                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron docentes</div>
+                    <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron responsables</div>
                   )}
                 </div>
               )}
