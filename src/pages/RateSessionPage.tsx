@@ -31,7 +31,7 @@ export function RateSessionPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isMember, setIsMember] = useState(false)
+  const [isMember, setIsMember] = useState<boolean | null>(null)
   const [isToday, setIsToday] = useState(true)
   const [rating, setRating] = useState({
     score: 7,
@@ -40,12 +40,25 @@ export function RateSessionPage() {
   })
 
   useEffect(() => {
-    if (sessionId && user) {
-      fetchSession()
-      fetchExistingRating()
-      checkMembership()
-      checkSessionDate()
+    if (!sessionId || !user) return
+    let cancelled = false
+
+    const load = async () => {
+      setLoading(true)
+      try {
+        await Promise.all([
+          fetchSession(),
+          fetchExistingRating(),
+          checkMembership(),
+          checkSessionDate()
+        ])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
+
+    load()
+    return () => { cancelled = true }
   }, [sessionId, user])
 
   const fetchSession = async () => {
@@ -102,6 +115,8 @@ export function RateSessionPage() {
         .maybeSingle()
 
       setIsMember(!!memberData)
+    } else {
+      setIsMember(false)
     }
   }
 
@@ -121,7 +136,6 @@ export function RateSessionPage() {
         suggestion: data.suggestion || ''
       })
     }
-    setLoading(false)
   }
 
   const submitRating = async () => {
@@ -165,10 +179,32 @@ export function RateSessionPage() {
   }
 
   if (loading) {
-    return <div className="p-lg font-body-md text-body-md text-on-surface-variant">Cargando...</div>
+    return (
+      <div className="max-w-2xl mx-auto" aria-busy="true">
+        <header className="mb-xl">
+          <div className="h-8 w-48 bg-surface-container animate-pulse rounded mb-sm" />
+          <div className="h-4 w-64 bg-surface-container animate-pulse rounded" />
+        </header>
+        <div className="bg-surface border border-outline-variant rounded-xl p-lg">
+          <div className="h-5 w-40 bg-surface-container animate-pulse rounded mb-md" />
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2xs mb-lg">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="h-14 bg-surface-container animate-pulse rounded-xl" />
+            ))}
+          </div>
+          <div className="h-5 w-44 bg-surface-container animate-pulse rounded mb-sm" />
+          <div className="h-24 w-full bg-surface-container animate-pulse rounded-xl mb-lg" />
+          <div className="h-5 w-52 bg-surface-container animate-pulse rounded mb-sm" />
+          <div className="h-24 w-full bg-surface-container animate-pulse rounded-xl mb-lg" />
+          <div className="flex justify-end">
+            <div className="h-10 w-32 bg-surface-container animate-pulse rounded-full" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  if (!isMember) {
+  if (isMember === false) {
     return (
       <div className="max-w-2xl mx-auto">
       <header className="mb-lg">
