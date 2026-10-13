@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 
-type Role = 'admin' | 'teacher' | 'student'
+type Role = 'admin' | 'coordinator' | 'teacher' | 'student'
 
 interface ImpersonationContextType {
   impersonatedRole: Role | null

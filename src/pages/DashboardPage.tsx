@@ -68,7 +68,7 @@ export function DashboardPage() {
       try {
         let courses: Course[] = []
 
-        if (effectiveRole === 'admin') {
+        if (effectiveRole === 'admin' || effectiveRole === 'coordinator') {
           const { data, error } = await insforge.database
             .from('courses')
             .select('id, name, description, created_by, is_active')

@@ -65,11 +65,28 @@ export default async function(req: Request): Promise<Response> {
       .eq('user_id', userData.user.id)
       .single()
 
-    if (profileError || !profileData || profileData.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Solo administradores pueden cambiar contraseñas de otros usuarios' }), {
+    const requesterRole = profileData?.role
+    const isAdmin = requesterRole === 'admin'
+    const isCoordinator = requesterRole === 'coordinator'
+    if (profileError || !profileData || (!isAdmin && !isCoordinator)) {
+      return new Response(JSON.stringify({ error: 'Solo administradores y coordinadores pueden cambiar contraseñas de otros usuarios' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    if (isCoordinator) {
+      const { data: targetProfile } = await adminClient.database
+        .from('profiles')
+        .select('role')
+        .eq('user_id', userId)
+        .single()
+      if (targetProfile?.role !== 'teacher') {
+        return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden cambiar la contraseña de profesores' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
 
     const { error: updateError } = await adminClient.database.rpc('admin_update_user_password', {

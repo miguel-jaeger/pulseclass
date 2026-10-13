@@ -43,7 +43,7 @@ export function CoursesPage() {
 
   useEffect(() => {
     fetchCourses()
-    if (effectiveRole === 'admin') fetchTeachers()
+    if (effectiveRole === 'admin' || effectiveRole === 'coordinator') fetchTeachers()
   }, [])
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function CoursesPage() {
   }, [courses])
 
   const fetchCourses = async () => {
-    if (effectiveRole === 'admin') {
+    if (effectiveRole === 'admin' || effectiveRole === 'coordinator') {
       const { data, error } = await insforge.database
         .from('courses')
         .select('*')
@@ -338,7 +338,7 @@ export function CoursesPage() {
             className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
           />
         </div>
-        {effectiveRole === 'admin' && teachers.length > 0 && (
+        {(effectiveRole === 'admin' || effectiveRole === 'coordinator') && teachers.length > 0 && (
           <div className="relative" ref={teacherRef}>
             <div className="relative">
               <input

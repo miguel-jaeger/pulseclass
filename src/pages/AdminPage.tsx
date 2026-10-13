@@ -28,6 +28,9 @@ export function AdminPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const { startImpersonation } = useImpersonation()
+  const isAdmin = profile?.role === 'admin'
+  const isCoordinator = profile?.role === 'coordinator'
+  const assignableRoleOptions = isCoordinator ? ROLE_OPTIONS.filter(o => o.value === 'teacher') : ROLE_OPTIONS
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -93,7 +96,7 @@ export function AdminPage() {
       if (data?.success !== true) throw new Error(data?.error || 'No se pudo crear el usuario')
 
       setShowCreateModal(false)
-      setCreateForm({ name: '', email: '', role: 'student' })
+      setCreateForm({ name: '', email: '', role: isCoordinator ? 'teacher' : 'student' })
       await fetchUsers()
       showToast('Usuario creado exitosamente')
     } catch (err: unknown) {
@@ -321,7 +324,9 @@ export function AdminPage() {
     }
   }
 
-  const filteredUsers = users.filter((u) => {
+  const visibleUsers = isCoordinator ? users.filter((u) => u.role === 'teacher') : users
+
+  const filteredUsers = visibleUsers.filter((u) => {
     const matchesSearch =
       u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -332,10 +337,10 @@ export function AdminPage() {
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filteredUsers.length, 10)
   const paginatedUsers = paginatedSlice(filteredUsers)
 
-  if (profile?.role !== 'admin') {
+  if (profile?.role !== 'admin' && profile?.role !== 'coordinator') {
     return (
       <div className="p-lg">
-        <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores pueden ver esta página.</p>
+        <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores y coordinadores pueden ver esta página.</p>
       </div>
     )
   }
@@ -349,12 +354,13 @@ export function AdminPage() {
         </div>
         <div className="flex items-center gap-sm shrink-0 self-end md:self-auto">
           <button
-            onClick={() => { setCreateForm({ name: '', email: '', role: 'student' }); setFormError(''); setShowCreateModal(true) }}
+            onClick={() => { setCreateForm({ name: '', email: '', role: isCoordinator ? 'teacher' : 'student' }); setFormError(''); setShowCreateModal(true) }}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
           >
             <span className="material-symbols-outlined text-lg">person_add</span>
-            Crear
+            {isCoordinator ? 'Crear profesor' : 'Crear'}
           </button>
+          {isAdmin && (
           <div className="relative" ref={moreOptionsRef}>
             <button
               onClick={() => setShowMoreOptions(open => !open)}
@@ -401,6 +407,7 @@ export function AdminPage() {
               </div>
             )}
           </div>
+          )}
         </div>
       </header>
 
@@ -417,20 +424,23 @@ export function AdminPage() {
             className="w-full border border-outline-variant rounded-xl pl-10 pr-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
           />
         </div>
-        <select
-          id="role-filter"
-          name="roleFilter"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
-        >
-          {ROLE_FILTER_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
+        {isAdmin && (
+          <select
+            id="role-filter"
+            name="roleFilter"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary appearance-none pr-10"
+          >
+            {ROLE_FILTER_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Summary Bar */}
+      {isAdmin && (
       <div className="flex flex-wrap items-center justify-center gap-md bg-surface border border-outline-variant rounded-xl px-md py-sm mb-lg">
         <div className="flex items-center gap-xs">
           <span className="material-symbols-outlined text-primary text-lg">group</span>
@@ -456,6 +466,7 @@ export function AdminPage() {
           <span className="font-body-sm text-body-sm text-on-surface font-bold">{users.filter(u => u.role === 'student').length}</span>
         </div>
       </div>
+      )}
 
       <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
         Mostrando <span className="font-bold text-primary font-bold">{paginatedUsers.length}</span> de <span className="font-bold text-primary font-bold">{filteredUsers.length}</span> usuarios
@@ -824,10 +835,11 @@ export function AdminPage() {
                   id="create-role"
                   name="role"
                   value={createForm.role}
+                  disabled={isCoordinator}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-{ROLE_OPTIONS.map(opt => (
+{assignableRoleOptions.map(opt => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
     </select>
@@ -884,10 +896,11 @@ export function AdminPage() {
                   id="edit-role"
                   name="role"
                   value={editForm.role}
+                  disabled={isCoordinator}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
-{ROLE_OPTIONS.map(opt => (
+{assignableRoleOptions.map(opt => (
         <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
     </select>

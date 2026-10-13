@@ -23,7 +23,7 @@ export default async function(req: Request): Promise<Response> {
     const { name, email: rawEmail, role } = await req.json()
     const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : ''
     const cleanName = typeof name === 'string' ? name.trim() : ''
-    if (!cleanName || !email || !email.includes('@') || !['admin', 'teacher', 'student'].includes(role)) {
+    if (!cleanName || !email || !email.includes('@') || !['admin', 'coordinator', 'teacher', 'student'].includes(role)) {
       return new Response(JSON.stringify({ error: 'Nombre, correo y rol válido son requeridos' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -57,8 +57,17 @@ export default async function(req: Request): Promise<Response> {
       .select('role')
       .eq('user_id', userData.user.id)
       .single()
-    if (adminProfile?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Solo administradores pueden crear usuarios' }), {
+    const requesterRole = adminProfile?.role
+    const isAdmin = requesterRole === 'admin'
+    const isCoordinator = requesterRole === 'coordinator'
+    if (!isAdmin && !isCoordinator) {
+      return new Response(JSON.stringify({ error: 'Solo administradores y coordinadores pueden crear usuarios' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    if (isCoordinator && role !== 'teacher') {
+      return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden crear profesores' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })

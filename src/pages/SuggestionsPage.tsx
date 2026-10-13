@@ -15,6 +15,7 @@ interface Suggestion {
   type: string
   description: string
   status: string
+  rejection_reason?: string | null
   images: string[]
   created_at: string
   updated_at: string
@@ -100,6 +101,9 @@ export function SuggestionsPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
+  const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionError, setRejectionError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editType, setEditType] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -261,10 +265,10 @@ export function SuggestionsPage() {
     setUploading(false)
   }
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  const performStatusUpdate = async (id: string, newStatus: string, reason: string | null) => {
     setUpdatingStatusId(id)
     try {
-      await suggestAction('update', id, { status: newStatus, updated_at: new Date().toISOString() })
+      await suggestAction('update', id, { status: newStatus, rejection_reason: reason, updated_at: new Date().toISOString() })
       showToast('Estado actualizado')
       await fetchSuggestions()
     } catch {
@@ -272,6 +276,30 @@ export function SuggestionsPage() {
     } finally {
       setUpdatingStatusId(null)
     }
+  }
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    if (newStatus === 'rechazada') {
+      setRejectionTargetId(id)
+      setRejectionReason('')
+      setRejectionError('')
+      return
+    }
+    await performStatusUpdate(id, newStatus, null)
+  }
+
+  const confirmRejection = async () => {
+    if (!rejectionTargetId) return
+    const reason = rejectionReason.trim()
+    if (!reason) {
+      setRejectionError('Indica el motivo del rechazo')
+      return
+    }
+    const id = rejectionTargetId
+    setRejectionTargetId(null)
+    setRejectionReason('')
+    setRejectionError('')
+    await performStatusUpdate(id, 'rechazada', reason)
   }
 
   const handleDelete = async (id: string) => {
@@ -443,6 +471,12 @@ export function SuggestionsPage() {
                   </div>
                 </div>
                 <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
+                {s.status === 'rechazada' && s.rejection_reason && (
+                  <div className="mb-md rounded-xl bg-error-container/60 border border-error/30 p-sm">
+                    <p className="font-label-sm text-label-sm text-on-error-container font-bold mb-xs">Motivo del rechazo</p>
+                    <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
+                  </div>
+                )}
                 <div className="flex items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
                   <span className="font-body-sm text-body-sm">{formatDisplayName(s.profiles?.name) || 'Anónimo'}</span>
@@ -669,6 +703,13 @@ export function SuggestionsPage() {
 
             <p className="font-body-md text-body-md text-on-surface mb-lg whitespace-pre-wrap">{detailSuggestion.description}</p>
 
+            {detailSuggestion.status === 'rechazada' && detailSuggestion.rejection_reason && (
+              <div className="mb-lg rounded-xl bg-error-container/60 border border-error/30 p-md">
+                <p className="font-label-md text-label-md text-on-error-container font-bold mb-xs">Motivo del rechazo</p>
+                <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{detailSuggestion.rejection_reason}</p>
+              </div>
+            )}
+
             {detailSuggestion.images && detailSuggestion.images.length > 0 && (
               <div className="mb-lg">
                 <p className="font-label-md text-label-md text-on-surface-variant mb-sm">Imágenes adjuntas</p>
@@ -717,6 +758,55 @@ export function SuggestionsPage() {
               <span className="font-body-sm text-body-sm">{formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo'}</span>
               <span className="font-body-sm text-body-sm">·</span>
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Reason Modal */}
+      {rejectionTargetId && (
+        <div className="fixed inset-0 bg-scrim/60 flex items-center justify-center z-50 p-margin-mobile">
+          <div className="bg-surface-container-lowest rounded-xl p-lg w-full max-w-md border border-outline-variant">
+            <div className="flex items-center justify-between gap-sm mb-md">
+              <h3 className="font-headline-sm text-headline-sm text-on-surface">Motivo del rechazo</h3>
+              <button
+                onClick={() => { setRejectionTargetId(null); setRejectionReason(''); setRejectionError('') }}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                title="Cerrar"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-md">
+              Explica por qué se rechaza la sugerencia. Se notificará al autor por correo.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => { setRejectionReason(e.target.value); setRejectionError('') }}
+              rows={4}
+              autoFocus
+              placeholder="Escribe el motivo del rechazo..."
+              className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none"
+            />
+            {rejectionError && (
+              <p className="font-body-sm text-body-sm text-on-error-container bg-error-container p-sm rounded-xl mt-sm">{rejectionError}</p>
+            )}
+            <div className="flex justify-end gap-sm mt-lg">
+              <button
+                onClick={() => { setRejectionTargetId(null); setRejectionReason(''); setRejectionError('') }}
+                className="px-lg py-2 text-on-surface-variant font-label-md text-label-md hover:bg-secondary-container rounded-full transition-colors flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+                Cancelar
+              </button>
+              <button
+                onClick={confirmRejection}
+                disabled={!rejectionReason.trim()}
+                className="bg-error text-on-error font-bold px-lg py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-lg">block</span>
+                Rechazar
+              </button>
             </div>
           </div>
         </div>

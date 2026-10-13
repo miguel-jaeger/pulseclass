@@ -1,7 +1,8 @@
 import { useImpersonation } from '../hooks/useImpersonation'
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   admin: 'Administrador',
+  coordinator: 'Coordinador',
   teacher: 'Profesor',
   student: 'Estudiante'
 }

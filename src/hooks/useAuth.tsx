@@ -14,7 +14,7 @@ interface User {
 interface Profile {
   id: string
   user_id: string
-  role: 'admin' | 'teacher' | 'student'
+  role: 'admin' | 'coordinator' | 'teacher' | 'student'
   name: string
   avatar_url?: string
   theme?: string
