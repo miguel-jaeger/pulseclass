@@ -67,8 +67,8 @@ export default async function(req: Request): Promise<Response> {
         .select('role')
         .eq('user_id', userId)
         .single()
-      if (targetProfile?.role !== 'teacher') {
-        return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden eliminar profesores' }), {
+      if (targetProfile?.role !== 'teacher' && targetProfile?.role !== 'coordinator') {
+        return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden eliminar profesores y coordinadores' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })

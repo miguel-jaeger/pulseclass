@@ -66,8 +66,8 @@ export default async function(req: Request): Promise<Response> {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-    if (isCoordinator && role !== 'teacher') {
-      return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden crear profesores' }), {
+    if (isCoordinator && role !== 'teacher' && role !== 'coordinator') {
+      return new Response(JSON.stringify({ error: 'Los coordinadores solo pueden crear profesores y coordinadores' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })

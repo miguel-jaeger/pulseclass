@@ -31,7 +31,9 @@ export function AdminPage() {
   const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const isAdmin = effectiveRole === 'admin'
   const isCoordinator = effectiveRole === 'coordinator'
-  const assignableRoleOptions = isCoordinator ? ROLE_OPTIONS.filter(o => o.value === 'teacher') : ROLE_OPTIONS
+  const assignableRoleOptions = isCoordinator
+    ? ROLE_OPTIONS.filter(o => o.value === 'teacher' || o.value === 'coordinator')
+    : ROLE_OPTIONS
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -325,7 +327,9 @@ export function AdminPage() {
     }
   }
 
-  const visibleUsers = isCoordinator ? users.filter((u) => u.role === 'teacher') : users
+  const visibleUsers = isCoordinator
+    ? users.filter((u) => u.role === 'teacher' || u.role === 'coordinator')
+    : users
 
   const filteredUsers = visibleUsers.filter((u) => {
     const matchesSearch =
@@ -359,7 +363,7 @@ export function AdminPage() {
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs"
           >
             <span className="material-symbols-outlined text-lg">person_add</span>
-            {isCoordinator ? 'Crear profesor' : 'Crear'}
+            Crear
           </button>
           {isAdmin && (
           <div className="relative" ref={moreOptionsRef}>
@@ -843,7 +847,6 @@ export function AdminPage() {
                   id="create-role"
                   name="role"
                   value={createForm.role}
-                  disabled={isCoordinator}
                   onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >
@@ -904,7 +907,6 @@ export function AdminPage() {
                   id="edit-role"
                   name="role"
                   value={editForm.role}
-                  disabled={isCoordinator}
                   onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                   className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
                 >

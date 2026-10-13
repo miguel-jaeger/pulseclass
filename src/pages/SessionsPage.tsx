@@ -93,7 +93,7 @@ function SessionRow({ session, index, profile, onEdit, onDelete }: {
                 Hoy no
               </span>
             )}
-            {(profile?.role === 'admin' || session.created_by === profile?.user_id) && (
+            {(profile?.role === 'admin' || profile?.role === 'coordinator' || session.created_by === profile?.user_id) && (
               <>
                 <button
                   onClick={() => onEdit(session)}
@@ -438,7 +438,7 @@ export function SessionsPage() {
             <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold truncate">{course?.name}</h1>
             <p className="font-body-sm md:font-body-md text-body-sm md:text-body-md text-on-surface-variant mt-xs line-clamp-2">Gestiona las sesiones de calificación de este curso.</p>
           </div>
-          {(effectiveRole === 'admin' || effectiveRole === 'teacher') && (
+          {(effectiveRole === 'admin' || effectiveRole === 'teacher' || effectiveRole === 'coordinator') && (
             <div className="flex gap-sm flex-shrink-0 self-end md:self-auto">
               <button
                 onClick={() => setShowCreateModal(true)}
