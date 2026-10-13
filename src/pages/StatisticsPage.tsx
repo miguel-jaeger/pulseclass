@@ -149,37 +149,13 @@ export function StatisticsPage() {
     async function fetchCourses() {
       if (!profile) return
       setCoursesLoading(true)
-      if (profile.role === 'admin' || profile.role === 'coordinator') {
+      if (profile.role === 'admin' || profile.role === 'coordinator' || profile.role === 'teacher') {
         const { data } = await insforge.database
           .from('courses')
           .select('id, name, description, created_by, created_at, is_active')
           .eq('is_active', true)
           .order('name')
         if (data) setCourses(data as Course[])
-      } else if (profile.role === 'teacher') {
-        const { data: owned } = await insforge.database
-          .from('courses')
-          .select('id, name, description, created_by, created_at, is_active')
-          .eq('created_by', profile.user_id)
-          .eq('is_active', true)
-        const { data: memberRows } = await insforge.database
-          .from('course_members')
-          .select('course_id')
-          .eq('user_id', profile.user_id)
-        const memberIds = (memberRows as { course_id: string }[] || []).map(r => r.course_id)
-        let memberCourses: Course[] = []
-        if (memberIds.length > 0) {
-          const { data } = await insforge.database
-            .from('courses')
-            .select('id, name, description, created_by, created_at, is_active')
-            .in('id', memberIds)
-            .eq('is_active', true)
-          memberCourses = (data as Course[]) || []
-        }
-        const all = [...(owned as Course[] || []), ...memberCourses]
-        const unique = all.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
-        unique.sort((a, b) => a.name.localeCompare(b.name))
-        setCourses(unique)
       } else {
         const { data: memberRows } = await insforge.database
           .from('course_members')
@@ -202,7 +178,7 @@ export function StatisticsPage() {
 
   useEffect(() => {
     async function fetchTeachers() {
-      if (!profile || (profile.role !== 'admin' && profile.role !== 'coordinator')) return
+      if (!profile) return
       const { data } = await insforge.database
         .from('profiles')
         .select('id, user_id, name, role')
@@ -612,7 +588,7 @@ export function StatisticsPage() {
               className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
             />
           </div>
-          {(effectiveRole === 'admin' || effectiveRole === 'coordinator') && teachers.length > 0 && (
+          {(effectiveRole === 'admin' || effectiveRole === 'coordinator' || effectiveRole === 'teacher') && teachers.length > 0 && (
           <div className="w-full md:w-auto" ref={teacherRef}>
             <label htmlFor="teacher-search" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Responsable</label>
             <div className="relative">
