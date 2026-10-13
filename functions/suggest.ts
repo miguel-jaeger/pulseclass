@@ -78,16 +78,111 @@ async function getProfileEmail(
   return { email: rows[0].email, name: rows[0].name }
 }
 
-async function sendNotification(
-  baseUrl: string,
-  anonKey: string,
+function toBase64(bytes: Uint8Array): string {
+  let binary = ''
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk))
+  }
+  return btoa(binary)
+}
+
+function encodeBase64Utf8(value: string): string {
+  return toBase64(new TextEncoder().encode(value))
+}
+
+function readSmtpResponse(conn: Deno.Conn, state: { buffer: string }): Promise<string> {
+  const decoder = new TextDecoder()
+  const bytes = new Uint8Array(4096)
+  return (async () => {
+    while (true) {
+      const lines = state.buffer.split('\r\n')
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (/^\d{3} /.test(lines[i])) {
+          const response = lines.slice(0, i + 1).join('\r\n')
+          state.buffer = lines.slice(i + 1).join('\r\n')
+          return response
+        }
+      }
+      const read = await conn.read(bytes)
+      if (read === null) return state.buffer
+      state.buffer += decoder.decode(bytes.subarray(0, read), { stream: true })
+    }
+  })()
+}
+
+interface SmtpConfig {
+  host: string
+  port: number
+  user: string
+  password: string
+}
+
+async function sendViaSmtp(config: SmtpConfig, to: string, subject: string, html: string): Promise<void> {
+  const conn = await Deno.connectTls({ hostname: config.host, port: config.port })
+  const encoder = new TextEncoder()
+  const state = { buffer: '' }
+  const write = (text: string) => conn.write(encoder.encode(text))
+
+  try {
+    await readSmtpResponse(conn, state)
+    await write('EHLO pulseclass\r\n')
+    await readSmtpResponse(conn, state)
+    await write('AUTH LOGIN\r\n')
+    await readSmtpResponse(conn, state)
+    await write(`${encodeBase64Utf8(config.user)}\r\n`)
+    await readSmtpResponse(conn, state)
+    await write(`${encodeBase64Utf8(config.password)}\r\n`)
+    const auth = await readSmtpResponse(conn, state)
+    if (!auth.startsWith('235')) throw new Error(`SMTP auth rechazada: ${auth}`)
+
+    await write(`MAIL FROM:<${config.user}>\r\n`)
+    await readSmtpResponse(conn, state)
+    await write(`RCPT TO:<${to}>\r\n`)
+    await readSmtpResponse(conn, state)
+    await write('DATA\r\n')
+    await readSmtpResponse(conn, state)
+
+    const wrappedBody = encodeBase64Utf8(html).replace(/(.{76})/g, '$1\r\n')
+    const message = [
+      `From: "PulseClass" <${config.user}>`,
+      `To: <${to}>`,
+      `Subject: =?UTF-8?B?${encodeBase64Utf8(subject)}?=`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset="UTF-8"',
+      'Content-Transfer-Encoding: base64',
+      '',
+      wrappedBody
+    ].join('\r\n')
+
+    await write(`${message}\r\n.\r\n`)
+    const sent = await readSmtpResponse(conn, state)
+    if (!sent.startsWith('250')) throw new Error(`SMTP envío rechazado: ${sent}`)
+
+    await write('QUIT\r\n')
+    try { await readSmtpResponse(conn, state) } catch { /* ignore */ }
+  } finally {
+    try { conn.close() } catch { /* ignore */ }
+  }
+}
+
+async function sendMail(
+  env: { baseUrl: string; anonKey?: string; smtp?: SmtpConfig },
   to: string,
   subject: string,
   html: string
-) {
-  const emailClient = createClient({ baseUrl, anonKey })
-  const { error } = await emailClient.emails.send({ to, subject, html, from: 'PulseClass' })
-  if (error) throw error
+): Promise<void> {
+  if (env.smtp && env.smtp.user && env.smtp.password) {
+    await sendViaSmtp(env.smtp, to, subject, html)
+    return
+  }
+  if (env.anonKey) {
+    const emailClient = createClient({ baseUrl: env.baseUrl, anonKey: env.anonKey })
+    const { error } = await emailClient.emails.send({ to, subject, html, from: 'PulseClass' })
+    if (error) throw error
+    return
+  }
+  throw new Error('No hay proveedor de correo configurado')
 }
 
 export default async function(req: Request): Promise<Response> {
@@ -114,6 +209,16 @@ export default async function(req: Request): Promise<Response> {
     const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
     const apiKey = Deno.env.get('API_KEY')
     const anonKey = Deno.env.get('ANON_KEY')
+
+    const smtpHost = Deno.env.get('SMTP_HOST')
+    const smtpUser = Deno.env.get('SMTP_USER')
+    const smtpPassword = Deno.env.get('SMTP_PASSWORD')
+    const smtpPort = Number(Deno.env.get('SMTP_PORT') ?? '465')
+    const smtp = smtpHost && smtpUser && smtpPassword
+      ? { host: smtpHost, port: smtpPort, user: smtpUser, password: smtpPassword }
+      : undefined
+    const mailEnv = { baseUrl, anonKey: anonKey ?? undefined, smtp }
+    const canEmail = Boolean(smtp) || Boolean(anonKey)
 
     const userClient = createClient({ baseUrl, accessToken: userToken })
     const { data: userData } = await userClient.auth.getCurrentUser()
@@ -148,7 +253,7 @@ export default async function(req: Request): Promise<Response> {
         })
       }
 
-      if (anonKey) {
+      if (canEmail) {
         try {
           const profile = await getProfileEmail(recordsBaseUrl, apiKey!, userData.user.id)
           if (profile?.email) {
@@ -163,7 +268,7 @@ export default async function(req: Request): Promise<Response> {
                 { label: 'Estado', value: STATUS_LABELS.recibida }
               ]
             )
-            await sendNotification(baseUrl, anonKey, profile.email, 'Recibimos tu sugerencia', html)
+            await sendMail(mailEnv, profile.email, 'Recibimos tu sugerencia', html)
           }
         } catch (emailError) {
           console.error('No se pudo notificar la creación de la sugerencia:', emailError)
@@ -205,7 +310,7 @@ export default async function(req: Request): Promise<Response> {
       }
 
       const newStatus = typeof data?.status === 'string' ? data.status : undefined
-      if (anonKey && previous && newStatus && newStatus !== previous.status) {
+      if (canEmail && previous && newStatus && newStatus !== previous.status) {
         try {
           const profile = await getProfileEmail(recordsBaseUrl, apiKey!, previous.user_id)
           if (profile?.email) {
@@ -219,7 +324,7 @@ export default async function(req: Request): Promise<Response> {
                 { label: 'Nuevo estado', value: statusLabel }
               ]
             )
-            await sendNotification(baseUrl, anonKey, profile.email, `Tu sugerencia ahora está: ${statusLabel}`, html)
+            await sendMail(mailEnv, profile.email, `Tu sugerencia ahora está: ${statusLabel}`, html)
           }
         } catch (emailError) {
           console.error('No se pudo notificar el cambio de estado:', emailError)
