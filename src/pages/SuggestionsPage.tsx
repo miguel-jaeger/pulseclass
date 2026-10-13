@@ -99,6 +99,7 @@ export function SuggestionsPage() {
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editType, setEditType] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -261,12 +262,15 @@ export function SuggestionsPage() {
   }
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    setUpdatingStatusId(id)
     try {
       await suggestAction('update', id, { status: newStatus, updated_at: new Date().toISOString() })
       showToast('Estado actualizado')
-      fetchSuggestions()
+      await fetchSuggestions()
     } catch {
       showToast('Error al actualizar el estado', 'error')
+    } finally {
+      setUpdatingStatusId(null)
     }
   }
 
@@ -397,20 +401,26 @@ export function SuggestionsPage() {
                       <span className="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     {(isAdmin || canEditSuggestion(s.user_id)) && (
-                      <select
-                        id={`suggestion-status-${s.id}`}
-                        name="status"
-                        aria-label="Estado de sugerencia"
-                        value={s.status}
-                        onChange={(e) => handleStatusChange(s.id, e.target.value)}
-                        className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary"
-                      >
-                        <option value="recibida">Recibida</option>
-                        <option value="revision">Revisión</option>
-                        <option value="aprobada">Aprobada</option>
-                        <option value="rechazada">Rechazada</option>
-                        <option value="implementada">Implementada</option>
-                      </select>
+                      <div className="flex items-center gap-sm">
+                        <select
+                          id={`suggestion-status-${s.id}`}
+                          name="status"
+                          aria-label="Estado de sugerencia"
+                          value={s.status}
+                          disabled={updatingStatusId === s.id}
+                          onChange={(e) => handleStatusChange(s.id, e.target.value)}
+                          className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-wait"
+                        >
+                          <option value="recibida">Recibida</option>
+                          <option value="revision">Revisión</option>
+                          <option value="aprobada">Aprobada</option>
+                          <option value="rechazada">Rechazada</option>
+                          <option value="implementada">Implementada</option>
+                        </select>
+                        {updatingStatusId === s.id && (
+                          <span className="material-symbols-outlined text-primary animate-spin text-lg">progress_activity</span>
+                        )}
+                      </div>
                     )}
                     {(isOwn || canEditSuggestion(s.user_id)) && (
                       <button
