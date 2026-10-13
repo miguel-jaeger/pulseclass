@@ -53,14 +53,16 @@ export function Layout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(path)
   }
 
-  const filteredNavItems = navItems.filter(item => {
-    if (isImpersonating) return !item.adminOnly
-    return !item.adminOnly || profile?.role === 'admin'
-  })
-  const filteredBottomNav = bottomNavItems.filter(item => {
-    if (isImpersonating) return !item.adminOnly
-    return !item.adminOnly || profile?.role === 'admin'
-  })
+  const role = profile?.role
+  const canManageUsers = role === 'admin' || role === 'coordinator'
+  const canManageVideos = role === 'admin' || role === 'coordinator' || role === 'teacher'
+  const visibleAdminSubItems = adminSubItems.filter(sub =>
+    sub.to === '/admin' ? canManageUsers : canManageVideos
+  )
+  const canSeeAdmin = !isImpersonating && visibleAdminSubItems.length > 0
+
+  const filteredNavItems = navItems.filter(item => item.adminOnly ? canSeeAdmin : true)
+  const filteredBottomNav = bottomNavItems.filter(item => item.adminOnly ? canSeeAdmin : true)
 
   return (
     <div className="flex min-h-screen">
@@ -86,7 +88,7 @@ export function Layout({ children }: { children: ReactNode }) {
               className="absolute top-4 -right-3 flex items-center justify-center w-6 h-6 bg-surface-container-low border border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all shadow-sm z-50"
               title="Colapsar menú"
             >
-              <span className="material-symbols-outlined text-sm">view_sidebar</span>
+              <span className="material-symbols-outlined text-sm">keyboard_double_arrow_left</span>
             </button>
           )}
         </div>
@@ -98,7 +100,7 @@ export function Layout({ children }: { children: ReactNode }) {
             className="mb-sm flex items-center justify-center w-10 h-10 mx-auto text-on-surface-variant hover:text-on-surface hover:bg-secondary-container rounded-full transition-all"
             title="Expandir menú"
           >
-            <span className="material-symbols-outlined text-lg">view_sidebar</span>
+            <span className="material-symbols-outlined text-lg">keyboard_double_arrow_right</span>
           </button>
         )}
 
@@ -124,7 +126,7 @@ export function Layout({ children }: { children: ReactNode }) {
                     </button>
                     {adminOpen && (
                       <div className="absolute left-full top-0 ml-2 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden min-w-[160px] z-50">
-                        {adminSubItems.map(sub => (
+                        {visibleAdminSubItems.map(sub => (
                           <Link
                             key={sub.to}
                             to={sub.to}
@@ -177,7 +179,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   </button>
                   {adminOpen && (
                     <div className="ml-5 mt-xs space-y-xs border-l-2 border-outline-variant pl-3">
-                      {adminSubItems.map(sub => (
+                      {visibleAdminSubItems.map(sub => (
                         <Link
                           key={sub.to}
                           to={sub.to}
@@ -262,7 +264,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {mobileAdminOpen && (
         <div className="md:hidden fixed bottom-14 left-0 right-0" style={{ zIndex: 10000 }}>
           <div className="mx-2 mb-2 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden">
-            {adminSubItems.map(sub => (
+            {visibleAdminSubItems.map(sub => (
               <Link
                 key={sub.to}
                 to={sub.to}

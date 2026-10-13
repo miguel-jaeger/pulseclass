@@ -315,14 +315,19 @@ export default async function(req: Request): Promise<Response> {
           const profile = await getProfileEmail(recordsBaseUrl, apiKey!, previous.user_id)
           if (profile?.email) {
             const statusLabel = STATUS_LABELS[newStatus] || newStatus
+            const detailRows = [
+              { label: 'Descripción', value: previous.description || 'Sin descripción' },
+              { label: 'Estado anterior', value: STATUS_LABELS[previous.status] || previous.status },
+              { label: 'Nuevo estado', value: statusLabel }
+            ]
+            const rejectionReason = typeof data?.rejection_reason === 'string' ? data.rejection_reason.trim() : ''
+            if (newStatus === 'rechazada' && rejectionReason) {
+              detailRows.push({ label: 'Motivo del rechazo', value: rejectionReason })
+            }
             const html = buildEmail(
               `Tu sugerencia fue actualizada`,
               STATUS_MESSAGES[newStatus] || `El estado de tu sugerencia cambió a ${statusLabel}.`,
-              [
-                { label: 'Descripción', value: previous.description || 'Sin descripción' },
-                { label: 'Estado anterior', value: STATUS_LABELS[previous.status] || previous.status },
-                { label: 'Nuevo estado', value: statusLabel }
-              ]
+              detailRows
             )
             await sendMail(mailEnv, profile.email, `Tu sugerencia ahora está: ${statusLabel}`, html)
           }
