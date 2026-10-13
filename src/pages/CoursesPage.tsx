@@ -363,7 +363,7 @@ export function CoursesPage() {
                     Todos los responsables
                   </button>
                   {teachers
-                    .filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase()))
+                    .filter(t => (t.name || '').toLowerCase().includes(teacherSearch.toLowerCase()))
                     .map(t => (
                       <button
                         key={t.user_id}
@@ -376,7 +376,7 @@ export function CoursesPage() {
                       </button>
                     ))
                   }
-                  {teachers.filter(t => t.name.toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
+                  {teachers.filter(t => (t.name || '').toLowerCase().includes(teacherSearch.toLowerCase())).length === 0 && (
                     <div className="px-md py-2 font-body-sm text-body-sm text-on-surface-variant">No se encontraron responsables</div>
                   )}
                 </div>
