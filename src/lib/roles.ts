@@ -1,8 +1,10 @@
-export type Role = 'admin' | 'teacher' | 'student'
+export type Role = 'admin' | 'coordinator' | 'teacher' | 'student'
 
 const ROLE_VARIANTS: Record<string, Role> = {
   admin: 'admin',
   Administrador: 'admin',
+  coordinator: 'coordinator',
+  Coordinador: 'coordinator',
   teacher: 'teacher',
   Profesor: 'teacher',
   student: 'student',
@@ -15,17 +17,24 @@ export function normalizeRole(role?: string | null): Role {
 
 export function roleLabel(role?: string | null): string {
   const r = normalizeRole(role)
-  return r === 'admin' ? 'Administrador' : r === 'teacher' ? 'Profesor' : 'Estudiante'
+  return r === 'admin' ? 'Administrador'
+    : r === 'coordinator' ? 'Coordinador'
+    : r === 'teacher' ? 'Profesor'
+    : 'Estudiante'
 }
 
 export function roleLabelPlural(role?: string | null): string {
   const r = normalizeRole(role)
-  return r === 'admin' ? 'Administradores' : r === 'teacher' ? 'Profesores' : 'Estudiantes'
+  return r === 'admin' ? 'Administradores'
+    : r === 'coordinator' ? 'Coordinadores'
+    : r === 'teacher' ? 'Profesores'
+    : 'Estudiantes'
 }
 
 export const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: 'student', label: 'Estudiante' },
   { value: 'teacher', label: 'Profesor' },
+  { value: 'coordinator', label: 'Coordinador' },
   { value: 'admin', label: 'Administrador' }
 ]
 

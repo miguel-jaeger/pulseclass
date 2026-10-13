@@ -23,11 +23,13 @@ const CATEGORY_LABELS: Record<VideoCategory, string> = {
 
 export function HelpAdminPage() {
   const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
+  const canManage = profile?.role === 'admin' || profile?.role === 'coordinator' || profile?.role === 'teacher'
   const [videos, setVideos] = useState<HelpVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [form, setForm] = useState({ title: '', description: '', youtube_code: '', category: 'platform' as VideoCategory })
+  const [form, setForm] = useState({ title: '', description: '', youtube_code: '', category: (isAdmin ? 'platform' : 'course') as VideoCategory })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<'all' | VideoCategory>('all')
@@ -56,17 +58,19 @@ export function HelpAdminPage() {
 
   const fetchVideos = async () => {
     setLoading(true)
-    const { data } = await insforge.database
+    let query = insforge.database
       .from('help_videos')
       .select('*')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })
+    if (!isAdmin) query = query.eq('category', 'course')
+    const { data } = await query
     if (data) setVideos(data as HelpVideo[])
     setLoading(false)
   }
 
   const resetForm = () => {
-    setForm({ title: '', description: '', youtube_code: '', category: 'platform' })
+    setForm({ title: '', description: '', youtube_code: '', category: isAdmin ? 'platform' : 'course' })
     setEditingId(null)
     setShowForm(false)
   }
@@ -235,6 +239,14 @@ export function HelpAdminPage() {
     }
   }
 
+  if (!canManage) {
+    return (
+      <div className="p-lg">
+        <p className="font-body-md text-body-md text-error bg-error-container p-md rounded-xl">Acceso denegado. Solo administradores, coordinadores y profesores pueden ver esta página.</p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="space-y-lg">
@@ -342,7 +354,7 @@ export function HelpAdminPage() {
             <div>
               <label htmlFor="video-category" className="block font-body-sm text-body-sm text-on-surface-variant mb-xs">Categoría *</label>
               <div className="flex flex-wrap gap-xs">
-                {(['platform', 'course'] as VideoCategory[]).map(cat => (
+                {(isAdmin ? (['platform', 'course'] as VideoCategory[]) : (['course'] as VideoCategory[])).map(cat => (
                   <button
                     key={cat}
                     type="button"
@@ -408,7 +420,7 @@ export function HelpAdminPage() {
       {videos.length > 0 && (
         <>
           <div className="flex flex-wrap gap-md mb-lg">
-            {(['all', 'platform', 'course'] as const).map(cat => (
+            {(isAdmin ? (['all', 'platform', 'course'] as const) : (['all', 'course'] as const)).map(cat => (
               <button
                 key={cat}
                 onClick={() => { setCategoryFilter(cat); fetchStats() }}
