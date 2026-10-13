@@ -239,26 +239,35 @@ export function StatisticsPage() {
 
       const sessionIds = (sessionsData as Session[]).map(s => s.id)
 
-      const { data: ratingsData } = await insforge.database
-        .from('ratings')
-        .select('*')
-        .in('session_id', sessionIds)
+      const CHUNK_SIZE = 50
+      const ratingsData: Rating[] = []
+      for (let i = 0; i < sessionIds.length; i += CHUNK_SIZE) {
+        const { data } = await insforge.database
+          .from('ratings')
+          .select('*')
+          .in('session_id', sessionIds.slice(i, i + CHUNK_SIZE))
+        if (data) ratingsData.push(...(data as Rating[]))
+      }
 
       if (cancelled) return
 
       setSessions(sessionsData as Session[])
-      setRatings((ratingsData as Rating[]) || [])
+      setRatings(ratingsData)
 
       setLoading(false)
 
-      const ratingIds = (ratingsData as Rating[] || []).map(r => r.id)
+      const ratingIds = ratingsData.map(r => r.id)
       fetchVotes(ratingIds)
 
       if (ratingIds.length > 0) {
-        const { data: repliesData } = await insforge.database
-          .from('comment_replies')
-          .select('*')
-          .in('rating_id', ratingIds)
+        const repliesData: Reply[] = []
+        for (let i = 0; i < ratingIds.length; i += CHUNK_SIZE) {
+          const { data } = await insforge.database
+            .from('comment_replies')
+            .select('*')
+            .in('rating_id', ratingIds.slice(i, i + CHUNK_SIZE))
+          if (data) repliesData.push(...(data as Reply[]))
+        }
 
         if (cancelled) return
 
