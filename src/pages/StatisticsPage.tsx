@@ -426,7 +426,8 @@ export function StatisticsPage() {
   const totalEvaluaciones = ratings.length
 
   const nivelLabel = avgScore >= 8 ? 'Alto' : avgScore >= 5 ? 'Medio' : 'Bajo'
-  const nivelColor = avgScore >= 8 ? 'text-primary' : avgScore >= 5 ? 'text-tertiary' : 'text-error'
+  const nivelColor = avgScore >= 8 ? 'text-green-600' : avgScore >= 5 ? 'text-yellow-600' : 'text-red-600'
+  const nivelIconColor = avgScore >= 8 ? 'text-green-500' : avgScore >= 5 ? 'text-yellow-500' : 'text-red-500'
   const nivelIcon = avgScore >= 8 ? 'sentiment_satisfied' : avgScore >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
   const canEdit = (studentId: string) => {
@@ -781,7 +782,7 @@ export function StatisticsPage() {
             <div className="bg-surface border border-outline-variant rounded-xl p-lg flex flex-col items-center text-center">
               <p className={`font-headline-lg text-headline-lg font-bold ${nivelColor}`}>{nivelLabel}</p>
               <div className="flex items-center gap-xs mt-xs">
-                <span className={`material-symbols-outlined text-base ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
+                <span className={`material-symbols-outlined text-base ${nivelIconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
                 <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
               </div>
             </div>
