@@ -32,7 +32,8 @@ const bottomNavItems = [
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
-  const { isImpersonating } = useImpersonation()
+  const { impersonatedRole, isImpersonating } = useImpersonation()
+  const effectiveRole = isImpersonating && impersonatedRole ? impersonatedRole : profile?.role
   const location = useLocation()
   const [adminOpen, setAdminOpen] = useState(location.pathname.startsWith('/admin'))
   const [mobileAdminOpen, setMobileAdminOpen] = useState(false)
@@ -53,13 +54,12 @@ export function Layout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(path)
   }
 
-  const role = profile?.role
-  const canManageUsers = role === 'admin' || role === 'coordinator'
-  const canManageVideos = role === 'admin' || role === 'coordinator' || role === 'teacher'
+  const canManageUsers = effectiveRole === 'admin' || effectiveRole === 'coordinator'
+  const canManageVideos = effectiveRole === 'admin' || effectiveRole === 'coordinator' || effectiveRole === 'teacher'
   const visibleAdminSubItems = adminSubItems.filter(sub =>
     sub.to === '/admin' ? canManageUsers : canManageVideos
   )
-  const canSeeAdmin = !isImpersonating && visibleAdminSubItems.length > 0
+  const canSeeAdmin = visibleAdminSubItems.length > 0
 
   const filteredNavItems = navItems.filter(item => item.adminOnly ? canSeeAdmin : true)
   const filteredBottomNav = bottomNavItems.filter(item => item.adminOnly ? canSeeAdmin : true)
