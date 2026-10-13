@@ -59,7 +59,7 @@ export function CourseMembersPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const canManage = effectiveRole === 'admin' || effectiveRole === 'teacher'
+  const canManage = effectiveRole === 'admin' || effectiveRole === 'teacher' || effectiveRole === 'coordinator'
 
   useEffect(() => {
     if (courseId) loadAll()

@@ -278,7 +278,7 @@ export function CoursesPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Cursos</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Gestiona tus cursos y estudiantes.</p>
         </div>
-        {(effectiveRole === 'admin' || effectiveRole === 'teacher') && (
+        {(effectiveRole === 'admin' || effectiveRole === 'teacher' || effectiveRole === 'coordinator') && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0 self-end md:self-auto"
@@ -471,7 +471,7 @@ export function CoursesPage() {
                   </span>
                 )}
               </Link>
-              {(effectiveRole === 'admin' || course.created_by === profile?.user_id) && (
+              {(effectiveRole === 'admin' || effectiveRole === 'coordinator' || course.created_by === profile?.user_id) && (
                 <button
                   onClick={() => openEdit(course)}
                   className="w-9 h-9 bg-surface-container border border-outline-variant text-on-surface-variant rounded-full hover:bg-secondary-container hover:text-on-secondary-container transition-colors flex items-center justify-center"
