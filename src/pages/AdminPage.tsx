@@ -374,6 +374,13 @@ export function AdminPage() {
               <div className="absolute right-0 top-full mt-1 w-56 bg-surface-container-high rounded-xl border border-outline-variant shadow-lg overflow-hidden z-50">
                 <p className="px-md pt-sm pb-xs font-label-xs text-label-xs text-on-surface-variant">Ver como</p>
                 <button
+                  onClick={() => { startImpersonation('coordinator'); navigate('/'); setShowMoreOptions(false) }}
+                  className="flex items-center gap-sm px-md py-sm w-full text-left text-on-surface hover:bg-secondary-container transition-colors"
+                >
+                  <span className="material-symbols-outlined text-lg">supervisor_account</span>
+                  <span className="font-body-sm text-body-sm">Coordinador</span>
+                </button>
+                <button
                   onClick={() => { startImpersonation('teacher'); navigate('/'); setShowMoreOptions(false) }}
                   className="flex items-center gap-sm px-md py-sm w-full text-left text-on-surface hover:bg-secondary-container transition-colors"
                 >
