@@ -227,7 +227,8 @@ export function DashboardPage() {
     ? courseRows.reduce((sum, r) => sum + r.avgScore * r.ratingCount, 0) / totalEvaluaciones
     : 0
   const nivelLabel = avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
-  const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
+  const nivelColor = avgGeneral >= 8 ? 'text-green-600' : avgGeneral >= 5 ? 'text-yellow-600' : 'text-red-600'
+  const nivelIconColor = avgGeneral >= 8 ? 'text-green-500' : avgGeneral >= 5 ? 'text-yellow-500' : 'text-red-500'
   const nivelIcon = avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
   const renderCourseCard = (session: TodaySession, isToday: boolean) => (
@@ -297,7 +298,7 @@ export function DashboardPage() {
             <div className="bg-surface-container-low rounded-xl p-md text-center">
               <p className={`font-headline-sm text-headline-sm ${nivelColor}`}>{nivelLabel}</p>
               <div className="flex items-center justify-center gap-xs mt-xs">
-                <span className={`material-symbols-outlined text-base ${nivelColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
+                <span className={`material-symbols-outlined text-base ${nivelIconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{nivelIcon}</span>
                 <span className="font-body-sm text-body-sm text-on-surface-variant">Nivel de satisfacción</span>
               </div>
             </div>
