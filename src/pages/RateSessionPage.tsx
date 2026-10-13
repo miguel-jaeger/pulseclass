@@ -264,16 +264,17 @@ export function RateSessionPage() {
 
               const icon = isInsatisfied ? 'sentiment_dissatisfied' : isNeutral ? 'sentiment_neutral' : 'sentiment_satisfied'
               const iconColor = isInsatisfied ? 'text-red-500' : isNeutral ? 'text-yellow-500' : 'text-green-500'
-              const selectedBg = isInsatisfied ? 'bg-red-50 ring-2 ring-red-500' : isNeutral ? 'bg-yellow-50 ring-2 ring-yellow-500' : 'bg-green-50 ring-2 ring-green-500'
+              const borderColor = isInsatisfied ? 'border-red-600' : isNeutral ? 'border-yellow-600' : 'border-green-600'
+              const selectedBg = isInsatisfied ? 'bg-red-100' : isNeutral ? 'bg-yellow-100' : 'bg-green-100'
               const selectedText = isInsatisfied ? 'text-red-700' : isNeutral ? 'text-yellow-700' : 'text-green-700'
 
               return (
                 <label
                   key={score}
-                  className={`relative flex flex-col items-center min-w-0 py-xs px-2xs rounded-xl cursor-pointer transition-all ${
+                  className={`relative flex flex-col items-center min-w-0 py-xs px-2xs rounded-xl cursor-pointer transition-all border ${
                     isSelected
-                      ? selectedBg
-                      : 'hover:bg-surface-container'
+                      ? `${selectedBg} ${borderColor}`
+                      : 'border-transparent hover:bg-surface-container'
                   }`}
                 >
                   <input
@@ -284,7 +285,10 @@ export function RateSessionPage() {
                     onChange={() => setRating({ ...rating, score })}
                     className="sr-only"
                   />
-                  <span className={`material-symbols-outlined text-[20px] md:text-[28px] ${iconColor}`}>
+                  <span
+                    className={`material-symbols-outlined text-[20px] md:text-[28px] ${iconColor}`}
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
                     {icon}
                   </span>
                   <span className={`font-label-sm text-label-sm md:font-label-md md:text-label-md mt-2xs ${isSelected ? selectedText : 'text-on-surface'}`}>
@@ -296,15 +300,15 @@ export function RateSessionPage() {
           </div>
           <div className="grid grid-cols-3 gap-xs font-body-xs text-body-xs text-on-surface-variant mt-sm px-xs">
             <span className="flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-red-500">sentiment_dissatisfied</span>
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>sentiment_dissatisfied</span>
               Insatisfecho
             </span>
             <span className="flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-yellow-500">sentiment_neutral</span>
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-yellow-500" style={{ fontVariationSettings: "'FILL' 1" }}>sentiment_neutral</span>
               Neutral
             </span>
             <span className="flex flex-col items-center text-center">
-              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-green-500">sentiment_satisfied</span>
+              <span className="material-symbols-outlined text-[20px] md:text-[24px] text-green-500" style={{ fontVariationSettings: "'FILL' 1" }}>sentiment_satisfied</span>
               Satisfecho
             </span>
           </div>
