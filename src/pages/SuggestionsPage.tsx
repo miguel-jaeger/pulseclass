@@ -112,7 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
-  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
+  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -126,7 +126,7 @@ export function SuggestionsPage() {
   }
 
   const toggleAuthor = (id: string) => {
-    setRevealedAuthors(prev => {
+    setHiddenAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -134,7 +134,7 @@ export function SuggestionsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -480,17 +480,17 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     )}
-                    {effectiveRole === 'student' && (
+                    {effectiveRole !== 'student' && (
                       <button
                         onClick={() => toggleAuthor(s.id)}
                         className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                          revealedAuthors.has(s.id)
+                          canSeeAuthor(s.id)
                             ? 'text-primary hover:bg-secondary-container'
                             : 'text-on-surface-variant hover:bg-secondary-container'
                         }`}
-                        title={revealedAuthors.has(s.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                        title={canSeeAuthor(s.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
                       >
-                        <span className="material-symbols-outlined text-lg">{revealedAuthors.has(s.id) ? 'visibility' : 'visibility_off'}</span>
+                        <span className="material-symbols-outlined text-lg">{canSeeAuthor(s.id) ? 'visibility' : 'visibility_off'}</span>
                       </button>
                     )}
                   </div>
@@ -507,13 +507,7 @@ export function SuggestionsPage() {
                   <span className="font-body-sm text-body-sm">
                     {canSeeAuthor(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
                   </span>
-                  {effectiveRole !== 'student' && s.profiles?.email && (
-                    <>
-                      <span className="font-body-sm text-body-sm">·</span>
-                      <span className="font-body-sm text-body-sm">{s.profiles.email}</span>
-                    </>
-                  )}
-                  <span className="font-body-sm text-body-sm">·</span>
+                  {canSeeAuthor(s.id) && <span className="font-body-sm text-body-sm">·</span>}
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
               </div>
@@ -791,13 +785,7 @@ export function SuggestionsPage() {
               <span className="font-body-sm text-body-sm">
                 {canSeeAuthor(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
               </span>
-              {effectiveRole !== 'student' && detailSuggestion.profiles?.email && (
-                <>
-                  <span className="font-body-sm text-body-sm">·</span>
-                  <span className="font-body-sm text-body-sm">{detailSuggestion.profiles.email}</span>
-                </>
-              )}
-              <span className="font-body-sm text-body-sm">·</span>
+              {canSeeAuthor(detailSuggestion.id) && <span className="font-body-sm text-body-sm">·</span>}
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>
           </div>
