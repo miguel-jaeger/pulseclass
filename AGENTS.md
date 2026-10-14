@@ -166,13 +166,13 @@ const canEditSuggestion = (userId: string) => {
 
 ### Patrón de privacidad de autores (mostrar/ocultar)
 
-Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia (oculto por defecto, "Anónimo").
+Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia (oculto por defecto, sin texto de relleno).
 
 - **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — un set con los IDs revelados.
 - **Helper:** `toggleAuthor(id)` agrega/quita el ID del set.
 - **Visibilidad del ojito:** `effectiveRole !== 'student'` (admin, coordinator, teacher)
 - **Regla de render:**
-  - Autor visible: `effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(name) : 'Anónimo'`
+  - Autor visible: `effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(name) : ''`
   - Correo: solo si `effectiveRole !== 'student' && revealedAuthors.has(item.id)` y existe `email`
 - **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
   - Oculto (clic muestra): icono `visibility_off`.

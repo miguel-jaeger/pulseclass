@@ -117,7 +117,7 @@ export function SessionDetailPage() {
           .in('user_id', studentIds)
 
         for (const p of studentProfiles || []) {
-          authorMap[p.user_id] = { name: p.name || 'Anónimo', email: p.email || '' }
+          authorMap[p.user_id] = { name: p.name || '', email: p.email || '' }
         }
       }
 
@@ -140,7 +140,7 @@ export function SessionDetailPage() {
         ...rating,
         star_count: starCounts[rating.id] || 0,
         has_starred: !!userStars[rating.id],
-        author_info: authorMap[rating.student_id] || { name: 'Anónimo', email: '' }
+        author_info: authorMap[rating.student_id] || { name: '', email: '' }
       }))
 
       setRatings(ratingsWithStars)
@@ -168,7 +168,7 @@ export function SessionDetailPage() {
         .in('user_id', userIds)
 
       for (const p of profilesData || []) {
-        profilesMap[p.user_id] = { name: p.name || 'Anónimo', email: p.email || '' }
+        profilesMap[p.user_id] = { name: p.name || '', email: p.email || '' }
       }
     }
 
@@ -531,7 +531,7 @@ export function SessionDetailPage() {
                   {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && rating.author_info && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
-                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
                       {rating.author_info.email && (
                         <>
                           <span className="font-body-sm text-body-sm">·</span>
@@ -577,7 +577,7 @@ export function SessionDetailPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : ''}
                               </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
@@ -759,7 +759,7 @@ export function SessionDetailPage() {
                   {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && rating.author_info && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
-                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
                       {rating.author_info.email && (
                         <>
                           <span className="font-body-sm text-body-sm">·</span>
@@ -805,7 +805,7 @@ export function SessionDetailPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : ''}
                               </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}

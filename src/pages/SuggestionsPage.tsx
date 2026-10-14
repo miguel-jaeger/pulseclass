@@ -503,7 +503,7 @@ export function SuggestionsPage() {
                 <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
                   <span className="font-body-sm text-body-sm">
-                    {effectiveRole !== 'student' && revealedAuthors.has(s.id) ? (formatDisplayName(s.profiles?.name) || 'Anónimo') : 'Anónimo'}
+                    {effectiveRole !== 'student' && revealedAuthors.has(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
                   </span>
                   {effectiveRole !== 'student' && revealedAuthors.has(s.id) && s.profiles?.email && (
                     <>
@@ -787,7 +787,7 @@ export function SuggestionsPage() {
             <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
               <span className="font-body-sm text-body-sm">
-                {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo') : 'Anónimo'}
+                {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
               </span>
               {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) && detailSuggestion.profiles?.email && (
                 <>

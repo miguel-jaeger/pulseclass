@@ -274,7 +274,7 @@ export function StatisticsPage() {
           .in('user_id', studentIds)
         const map: Record<string, { name: string; email: string }> = {}
         for (const p of (studentProfiles || []) as { user_id: string; name: string; email: string }[]) {
-          map[p.user_id] = { name: p.name || 'Anónimo', email: p.email || '' }
+          map[p.user_id] = { name: p.name || '', email: p.email || '' }
         }
         if (!cancelled) setAuthorMap(map)
       }
@@ -1148,7 +1148,7 @@ export function StatisticsPage() {
                       {effectiveRole !== 'student' && revealedAuthors.has(item.id) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
-                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || 'Anónimo'}</span>
+                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
                           {authorMap[item.studentId]?.email && (
                             <>
                               <span className="font-body-sm text-body-sm">·</span>
@@ -1203,7 +1203,7 @@ export function StatisticsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : ''}
                                   </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
@@ -1387,7 +1387,7 @@ export function StatisticsPage() {
                       {effectiveRole !== 'student' && revealedAuthors.has(item.id) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
-                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || 'Anónimo'}</span>
+                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
                           {authorMap[item.studentId]?.email && (
                             <>
                               <span className="font-body-sm text-body-sm">·</span>
@@ -1442,7 +1442,7 @@ export function StatisticsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : ''}
                                   </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
