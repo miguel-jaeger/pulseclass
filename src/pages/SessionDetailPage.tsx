@@ -62,7 +62,7 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
-  const [showAuthorInfo, setShowAuthorInfo] = useState(false)
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
 
   const commentsList = ratings.filter(r => r.comment)
   const suggestionsList = ratings.filter(r => r.suggestion)
@@ -267,6 +267,15 @@ export function SessionDetailPage() {
 
   const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin' || effectiveRole === 'teacher'
 
+  const toggleAuthor = (id: string) => {
+    setRevealedAuthors(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
       .from('ratings')
@@ -446,20 +455,6 @@ export function SessionDetailPage() {
           <span className="material-symbols-outlined text-lg">lightbulb</span>
           <span className="hidden sm:inline">Sugerencias</span>
         </button>
-        {effectiveRole !== 'student' && (
-          <button
-            title={showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}
-            onClick={() => setShowAuthorInfo(!showAuthorInfo)}
-            className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
-              showAuthorInfo
-                ? 'bg-primary-container text-on-primary-container'
-                : 'text-on-surface-variant hover:bg-secondary-container'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg">{showAuthorInfo ? 'visibility' : 'visibility_off'}</span>
-            <span className="hidden sm:inline">{showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}</span>
-          </button>
-        )}
       </div>
 
       {activeTab === 'comments' && (
@@ -497,6 +492,19 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
+                      {effectiveRole !== 'student' && (
+                        <button
+                          onClick={() => toggleAuthor(rating.id)}
+                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          className={`p-xs rounded-full transition-colors ${
+                            revealedAuthors.has(rating.id)
+                              ? 'text-primary hover:bg-secondary-container'
+                              : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                        </button>
+                      )}
                       {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
@@ -520,7 +528,7 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
-                  {effectiveRole !== 'student' && showAuthorInfo && rating.author_info && (
+                  {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && rating.author_info && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
@@ -569,12 +577,12 @@ export function SessionDetailPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
                               </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {effectiveRole !== 'student' && showAuthorInfo && reply.user_email && (
+                              {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && reply.user_email && (
                                 <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
                               )}
                               {canEdit(reply.user_id) && (
@@ -712,6 +720,19 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
+                      {effectiveRole !== 'student' && (
+                        <button
+                          onClick={() => toggleAuthor(rating.id)}
+                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          className={`p-xs rounded-full transition-colors ${
+                            revealedAuthors.has(rating.id)
+                              ? 'text-primary hover:bg-secondary-container'
+                              : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                        </button>
+                      )}
                       {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
@@ -735,7 +756,7 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
-                  {effectiveRole !== 'student' && showAuthorInfo && rating.author_info && (
+                  {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && rating.author_info && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
@@ -784,12 +805,12 @@ export function SessionDetailPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                                {effectiveRole !== 'student' && revealedAuthors.has(rating.id) ? formatDisplayName(reply.user_name) : 'Anónimo'}
                               </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {effectiveRole !== 'student' && showAuthorInfo && reply.user_email && (
+                              {effectiveRole !== 'student' && revealedAuthors.has(rating.id) && reply.user_email && (
                                 <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
                               )}
                               {canEdit(reply.user_id) && (

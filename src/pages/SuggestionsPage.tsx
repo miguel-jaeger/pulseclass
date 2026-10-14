@@ -112,7 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
-  const [showAuthorInfo, setShowAuthorInfo] = useState(false)
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -123,6 +123,15 @@ export function SuggestionsPage() {
     if (isAdmin) return true
     if (isTeacher) return teacherStudentIds.has(suggestionUserId)
     return false
+  }
+
+  const toggleAuthor = (id: string) => {
+    setRevealedAuthors(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -365,28 +374,13 @@ export function SuggestionsPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Sugerencias</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras, reporta problemas o sugiere nuevas funcionalidades para la plataforma.</p>
         </div>
-        <div className="flex items-center gap-sm shrink-0 self-end md:self-auto">
-          {effectiveRole !== 'student' && (
-            <button
-              onClick={() => setShowAuthorInfo(!showAuthorInfo)}
-              className={`flex items-center gap-xs px-md py-1 rounded-full font-label-md text-label-md transition-colors shrink-0 ${
-                showAuthorInfo
-                  ? 'bg-primary-container text-on-primary-container'
-                  : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
-              }`}
-            >
-              <span className="material-symbols-outlined text-lg">{showAuthorInfo ? 'visibility' : 'visibility_off'}</span>
-              <span className="hidden sm:inline">{showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}</span>
-            </button>
-          )}
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0"
-          >
-            <span className="material-symbols-outlined text-lg">feedback</span>
-            Crear
-          </button>
-        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0 self-end md:self-auto"
+        >
+          <span className="material-symbols-outlined text-lg">feedback</span>
+          Crear
+        </button>
       </header>
 
       {/* Status Filter */}
@@ -484,6 +478,19 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     )}
+                    {effectiveRole !== 'student' && (
+                      <button
+                        onClick={() => toggleAuthor(s.id)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                          revealedAuthors.has(s.id)
+                            ? 'text-primary hover:bg-secondary-container'
+                            : 'text-on-surface-variant hover:bg-secondary-container'
+                        }`}
+                        title={revealedAuthors.has(s.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                      >
+                        <span className="material-symbols-outlined text-lg">{revealedAuthors.has(s.id) ? 'visibility' : 'visibility_off'}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
@@ -496,9 +503,9 @@ export function SuggestionsPage() {
                 <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
                   <span className="font-body-sm text-body-sm">
-                    {effectiveRole !== 'student' && showAuthorInfo ? (formatDisplayName(s.profiles?.name) || 'Anónimo') : 'Anónimo'}
+                    {effectiveRole !== 'student' && revealedAuthors.has(s.id) ? (formatDisplayName(s.profiles?.name) || 'Anónimo') : 'Anónimo'}
                   </span>
-                  {effectiveRole !== 'student' && showAuthorInfo && s.profiles?.email && (
+                  {effectiveRole !== 'student' && revealedAuthors.has(s.id) && s.profiles?.email && (
                     <>
                       <span className="font-body-sm text-body-sm">·</span>
                       <span className="font-body-sm text-body-sm">{s.profiles.email}</span>
@@ -780,9 +787,9 @@ export function SuggestionsPage() {
             <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
               <span className="font-body-sm text-body-sm">
-                {effectiveRole !== 'student' && showAuthorInfo ? (formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo') : 'Anónimo'}
+                {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo') : 'Anónimo'}
               </span>
-              {effectiveRole !== 'student' && showAuthorInfo && detailSuggestion.profiles?.email && (
+              {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) && detailSuggestion.profiles?.email && (
                 <>
                   <span className="font-body-sm text-body-sm">·</span>
                   <span className="font-body-sm text-body-sm">{detailSuggestion.profiles.email}</span>

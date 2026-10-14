@@ -166,16 +166,20 @@ const canEditSuggestion = (userId: string) => {
 
 ### Patrón de privacidad de autores (mostrar/ocultar)
 
-Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia, como un campo de contraseña (oculto por defecto).
+Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia (oculto por defecto, "Anónimo").
 
-- **Estado local por página:** `const [showAuthorInfo, setShowAuthorInfo] = useState(false)`
-- **Visibilidad del toggle:** `effectiveRole !== 'student'` (admin, coordinator, teacher)
+- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — un set con los IDs revelados.
+- **Helper:** `toggleAuthor(id)` agrega/quita el ID del set.
+- **Visibilidad del ojito:** `effectiveRole !== 'student'` (admin, coordinator, teacher)
 - **Regla de render:**
-  - Autor visible: `effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(name) : 'Anónimo'`
-  - Correo: solo si `effectiveRole !== 'student' && showAuthorInfo` y existe `email`
-- **Botón toggle:** icono `visibility` / `visibility_off` + texto "Mostrar autores" / "Ocultar autores"
-  - `SessionDetailPage` → junto a los tabs Comentarios/Sugerencias
-  - `SuggestionsPage` → junto al botón "Crear" en el header
+  - Autor visible: `effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(name) : 'Anónimo'`
+  - Correo: solo si `effectiveRole !== 'student' && revealedAuthors.has(item.id)` y existe `email`
+- **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
+  - Oculto (clic muestra): icono `visibility_off`.
+  - Visible (clic oculta): icono `visibility` + color `text-primary`.
+  - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
+  - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
+  - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
 - **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
 - **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas) y `SuggestionsPage.tsx` (tarjetas y modal de detalle). `StatisticsPage` no muestra autor en comentarios/sugerencias, por lo que queda fuera.
 
