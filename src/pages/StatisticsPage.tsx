@@ -134,6 +134,8 @@ export function StatisticsPage() {
     })
   }
 
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
+
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
   useEffect(() => {
@@ -1131,7 +1133,7 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
-                        {effectiveRole !== 'student' && (
+                        {effectiveRole === 'student' && (
                           <button
                             onClick={() => toggleAuthor(item.id)}
                             className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
@@ -1145,11 +1147,11 @@ export function StatisticsPage() {
                           </button>
                         )}
                       </div>
-                      {effectiveRole !== 'student' && revealedAuthors.has(item.id) && (
+                      {canSeeAuthor(item.id) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
-                          {authorMap[item.studentId]?.email && (
+                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
                             <>
                               <span className="font-body-sm text-body-sm">·</span>
                               <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
@@ -1203,12 +1205,12 @@ export function StatisticsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : ''}
+                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
                                   </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {effectiveRole !== 'student' && revealedAuthors.has(item.id) && reply.user_email && (
+                                  {effectiveRole !== 'student' && reply.user_email && (
                                     <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
                                   )}
                                   {canEdit(reply.user_id) && (
@@ -1370,7 +1372,7 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
-                        {effectiveRole !== 'student' && (
+                        {effectiveRole === 'student' && (
                           <button
                             onClick={() => toggleAuthor(item.id)}
                             className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
@@ -1384,11 +1386,11 @@ export function StatisticsPage() {
                           </button>
                         )}
                       </div>
-                      {effectiveRole !== 'student' && revealedAuthors.has(item.id) && (
+                      {canSeeAuthor(item.id) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
-                          {authorMap[item.studentId]?.email && (
+                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
                             <>
                               <span className="font-body-sm text-body-sm">·</span>
                               <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
@@ -1442,12 +1444,12 @@ export function StatisticsPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(reply.user_name) : ''}
+                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
                                   </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {effectiveRole !== 'student' && revealedAuthors.has(item.id) && reply.user_email && (
+                                  {effectiveRole !== 'student' && reply.user_email && (
                                     <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
                                   )}
                                   {canEdit(reply.user_id) && (

@@ -166,14 +166,17 @@ const canEditSuggestion = (userId: string) => {
 
 ### Patrón de privacidad de autores (mostrar/ocultar)
 
-Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia (oculto por defecto, sin texto de relleno).
+Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias:
+
+- **Admin/coordinator/teacher:** el nombre del autor se muestra **siempre** por defecto debajo de la fecha, junto con el correo. No hay ojito.
+- **Student:** solo ve el **nombre completo** (sin correo) y con ojito mostrar/ocultar (oculto por defecto, sin texto de relleno).
 
 - **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — un set con los IDs revelados.
-- **Helper:** `toggleAuthor(id)` agrega/quita el ID del set.
-- **Visibilidad del ojito:** `effectiveRole !== 'student'` (admin, coordinator, teacher)
+- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' || revealedAuthors.has(id)`.
+- **Visibilidad del ojito:** `effectiveRole === 'student'`.
 - **Regla de render:**
-  - Autor visible: `effectiveRole !== 'student' && revealedAuthors.has(item.id) ? formatDisplayName(name) : ''`
-  - Correo: solo si `effectiveRole !== 'student' && revealedAuthors.has(item.id)` y existe `email`
+  - Autor visible: `canSeeAuthor(item.id) ? formatDisplayName(name) : ''`
+  - Correo: solo si `effectiveRole !== 'student'` y existe `email`.
 - **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
   - Oculto (clic muestra): icono `visibility_off`.
   - Visible (clic oculta): icono `visibility` + color `text-primary`.
