@@ -134,6 +134,8 @@ export function SuggestionsPage() {
     })
   }
 
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 4000)
@@ -478,7 +480,7 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     )}
-                    {effectiveRole !== 'student' && (
+                    {effectiveRole === 'student' && (
                       <button
                         onClick={() => toggleAuthor(s.id)}
                         className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
@@ -503,9 +505,9 @@ export function SuggestionsPage() {
                 <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
                   <span className="font-body-sm text-body-sm">
-                    {effectiveRole !== 'student' && revealedAuthors.has(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
+                    {canSeeAuthor(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
                   </span>
-                  {effectiveRole !== 'student' && revealedAuthors.has(s.id) && s.profiles?.email && (
+                  {effectiveRole !== 'student' && s.profiles?.email && (
                     <>
                       <span className="font-body-sm text-body-sm">·</span>
                       <span className="font-body-sm text-body-sm">{s.profiles.email}</span>
@@ -787,9 +789,9 @@ export function SuggestionsPage() {
             <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
               <span className="font-body-sm text-body-sm">
-                {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
+                {canSeeAuthor(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
               </span>
-              {effectiveRole !== 'student' && revealedAuthors.has(detailSuggestion.id) && detailSuggestion.profiles?.email && (
+              {effectiveRole !== 'student' && detailSuggestion.profiles?.email && (
                 <>
                   <span className="font-body-sm text-body-sm">·</span>
                   <span className="font-body-sm text-body-sm">{detailSuggestion.profiles.email}</span>
