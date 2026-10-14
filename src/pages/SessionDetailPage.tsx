@@ -62,7 +62,7 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
-  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
+  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
 
   const commentsList = ratings.filter(r => r.comment)
   const suggestionsList = ratings.filter(r => r.suggestion)
@@ -268,7 +268,7 @@ export function SessionDetailPage() {
   const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin' || effectiveRole === 'teacher'
 
   const toggleAuthor = (id: string) => {
-    setRevealedAuthors(prev => {
+    setHiddenAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -276,7 +276,7 @@ export function SessionDetailPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
@@ -494,17 +494,17 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
-                      {effectiveRole === 'student' && (
+                      {effectiveRole !== 'student' && (
                         <button
                           onClick={() => toggleAuthor(rating.id)}
-                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          title={canSeeAuthor(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
                           className={`p-xs rounded-full transition-colors ${
-                            revealedAuthors.has(rating.id)
+                            canSeeAuthor(rating.id)
                               ? 'text-primary hover:bg-secondary-container'
                               : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                          <span className="material-symbols-outlined text-lg">{canSeeAuthor(rating.id) ? 'visibility' : 'visibility_off'}</span>
                         </button>
                       )}
                       {effectiveRole === 'admin' && (
@@ -534,12 +534,6 @@ export function SessionDetailPage() {
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
-                      {effectiveRole !== 'student' && rating.author_info.email && (
-                        <>
-                          <span className="font-body-sm text-body-sm">·</span>
-                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
-                        </>
-                      )}
                     </div>
                   )}
 
@@ -584,9 +578,6 @@ export function SessionDetailPage() {
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {effectiveRole !== 'student' && reply.user_email && (
-                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
-                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
@@ -722,17 +713,17 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
-                      {effectiveRole === 'student' && (
+                      {effectiveRole !== 'student' && (
                         <button
                           onClick={() => toggleAuthor(rating.id)}
-                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          title={canSeeAuthor(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
                           className={`p-xs rounded-full transition-colors ${
-                            revealedAuthors.has(rating.id)
+                            canSeeAuthor(rating.id)
                               ? 'text-primary hover:bg-secondary-container'
                               : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                          <span className="material-symbols-outlined text-lg">{canSeeAuthor(rating.id) ? 'visibility' : 'visibility_off'}</span>
                         </button>
                       )}
                       {effectiveRole === 'admin' && (
@@ -762,12 +753,6 @@ export function SessionDetailPage() {
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
-                      {effectiveRole !== 'student' && rating.author_info.email && (
-                        <>
-                          <span className="font-body-sm text-body-sm">·</span>
-                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
-                        </>
-                      )}
                     </div>
                   )}
 
@@ -812,9 +797,6 @@ export function SessionDetailPage() {
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {effectiveRole !== 'student' && reply.user_email && (
-                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
-                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
