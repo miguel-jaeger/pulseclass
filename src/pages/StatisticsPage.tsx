@@ -1090,6 +1090,9 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
+                          {effectiveRole === 'student' && (
+                            <span className="font-body-sm text-body-sm text-primary font-medium block truncate">{item.courseName}</span>
+                          )}
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1323,6 +1326,9 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
+                          {effectiveRole === 'student' && (
+                            <span className="font-body-sm text-body-sm text-primary font-medium block truncate">{item.courseName}</span>
+                          )}
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
