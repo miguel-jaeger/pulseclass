@@ -1252,7 +1252,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-primary italic">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                                 )}
                               </div>
                             </div>
@@ -1491,7 +1491,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-primary italic">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                                 )}
                               </div>
                             </div>
