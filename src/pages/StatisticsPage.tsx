@@ -68,6 +68,7 @@ interface Reply {
   created_at: string
   user_name: string
   user_email?: string
+  user_role?: string
 }
 
 function getDefaultDateStart(): string {
@@ -116,7 +117,7 @@ export function StatisticsPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
-  const [authorMap, setAuthorMap] = useState<Record<string, { name: string; email: string }>>({})
+  const [authorMap, setAuthorMap] = useState<Record<string, { name: string; email: string; role: string }>>({})
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
@@ -134,7 +135,8 @@ export function StatisticsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
+  const isStaffAuthor = (role?: string) => !!role && role !== 'student'
+  const canSeeAuthor = (id: string, role?: string) => isStaffAuthor(role) || (effectiveRole !== 'student' && revealedAuthors.has(id))
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
@@ -272,11 +274,11 @@ export function StatisticsPage() {
       if (studentIds.length > 0) {
         const { data: studentProfiles } = await insforge.database
           .from('profiles')
-          .select('user_id, name, email')
+          .select('user_id, name, email, role')
           .in('user_id', studentIds)
-        const map: Record<string, { name: string; email: string }> = {}
-        for (const p of (studentProfiles || []) as { user_id: string; name: string; email: string }[]) {
-          map[p.user_id] = { name: p.name || '', email: p.email || '' }
+        const map: Record<string, { name: string; email: string; role: string }> = {}
+        for (const p of (studentProfiles || []) as { user_id: string; name: string; email: string; role: string }[]) {
+          map[p.user_id] = { name: p.name || '', email: p.email || '', role: p.role || '' }
         }
         if (!cancelled) setAuthorMap(map)
       }
@@ -299,14 +301,14 @@ export function StatisticsPage() {
         if (cancelled) return
 
         const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
-        let userNames: Record<string, { name: string; email: string }> = {}
+        let userNames: Record<string, { name: string; email: string; role: string }> = {}
         if (userIds.length > 0) {
           const { data: profilesData } = await insforge.database
             .from('profiles')
-            .select('user_id, name, email')
+            .select('user_id, name, email, role')
             .in('user_id', userIds)
-          for (const p of (profilesData || []) as { user_id: string; name: string; email: string }[]) {
-            userNames[p.user_id] = { name: p.name || 'Usuario', email: p.email || '' }
+          for (const p of (profilesData || []) as { user_id: string; name: string; email: string; role: string }[]) {
+            userNames[p.user_id] = { name: p.name || 'Usuario', email: p.email || '', role: p.role || '' }
           }
         }
 
@@ -318,7 +320,8 @@ export function StatisticsPage() {
           newRepliesMap[reply.rating_id].push({
             ...reply,
             user_name: userNames[reply.user_id]?.name || 'Usuario',
-            user_email: userNames[reply.user_id]?.email || ''
+            user_email: userNames[reply.user_id]?.email || '',
+            user_role: userNames[reply.user_id]?.role || ''
           })
         }
         setRepliesMap(newRepliesMap)
@@ -537,7 +540,7 @@ export function StatisticsPage() {
       ...prev,
       [ratingId]: [
         ...(prev[ratingId] || []),
-        { id: tempId, rating_id: ratingId, user_id: profile.user_id, content, created_at: new Date().toISOString(), user_name: userName }
+        { id: tempId, rating_id: ratingId, user_id: profile.user_id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile.role }
       ]
     }))
     setReplyText('')
@@ -1146,7 +1149,7 @@ export function StatisticsPage() {
                           </button>
                         )}
                       </div>
-                      {canSeeAuthor(item.id) && (
+                      {canSeeAuthor(item.id, authorMap[item.studentId]?.role) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
@@ -1219,7 +1222,7 @@ export function StatisticsPage() {
                                     )}
                                   </div>
                                 </div>
-                                {canSeeAuthor(item.id) && (
+                                {canSeeAuthor(item.id, reply.user_role) && (
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
                                     {formatDisplayName(reply.user_name)}
                                   </span>
@@ -1379,7 +1382,7 @@ export function StatisticsPage() {
                           </button>
                         )}
                       </div>
-                      {canSeeAuthor(item.id) && (
+                      {canSeeAuthor(item.id, authorMap[item.studentId]?.role) && (
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
@@ -1452,7 +1455,7 @@ export function StatisticsPage() {
                                     )}
                                   </div>
                                 </div>
-                                {canSeeAuthor(item.id) && (
+                                {canSeeAuthor(item.id, reply.user_role) && (
                                   <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
                                     {formatDisplayName(reply.user_name)}
                                   </span>
