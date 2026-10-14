@@ -19,7 +19,7 @@ interface Suggestion {
   images: string[]
   created_at: string
   updated_at: string
-  profiles?: { name: string; email: string }
+  profiles?: { name: string; email: string; role: string }
 }
 
 const typeLabels: Record<string, string> = {
@@ -134,7 +134,8 @@ export function SuggestionsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
+  const isStaffAuthor = (role?: string) => !!role && role !== 'student'
+  const canSeeAuthor = (id: string, role?: string) => isStaffAuthor(role) || (effectiveRole !== 'student' && revealedAuthors.has(id))
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -150,7 +151,7 @@ export function SuggestionsPage() {
     setLoading(true)
     const { data, error } = await insforge.database
       .from('suggestions')
-      .select('*, profiles(name, email)')
+      .select('*, profiles(name, email, role)')
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -504,7 +505,7 @@ export function SuggestionsPage() {
                 )}
                 <div className="flex flex-col gap-xs text-on-surface-variant">
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {canSeeAuthor(s.id) && (
+                  {canSeeAuthor(s.id, s.profiles?.role) && (
                     <span className="flex items-center gap-xs font-body-sm text-body-sm">
                       <span className="material-symbols-outlined text-lg">person</span>
                       {formatDisplayName(s.profiles?.name) || ''}
@@ -783,7 +784,7 @@ export function SuggestionsPage() {
 
             <div className="flex flex-col gap-xs text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              {canSeeAuthor(detailSuggestion.id) && (
+              {canSeeAuthor(detailSuggestion.id, detailSuggestion.profiles?.role) && (
                 <span className="flex items-center gap-xs font-body-sm text-body-sm">
                   <span className="material-symbols-outlined text-lg">person</span>
                   {formatDisplayName(detailSuggestion.profiles?.name) || ''}
