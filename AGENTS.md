@@ -180,8 +180,9 @@ Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y co
   - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
   - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
   - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
+  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar).
 - **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
-- **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas) y `SuggestionsPage.tsx` (tarjetas y modal de detalle). `StatisticsPage` no muestra autor en comentarios/sugerencias, por lo que queda fuera.
+- **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
 
 
 ## Backend (InsForge)
