@@ -115,7 +115,7 @@ export function StatisticsPage() {
   const [replyText, setReplyText] = useState('')
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
-  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
+  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
   const [authorMap, setAuthorMap] = useState<Record<string, { name: string; email: string }>>({})
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -126,7 +126,7 @@ export function StatisticsPage() {
   }
 
   const toggleAuthor = (id: string) => {
-    setRevealedAuthors(prev => {
+    setHiddenAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -134,7 +134,7 @@ export function StatisticsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
@@ -1087,7 +1087,7 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
+                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1133,17 +1133,17 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
-                        {effectiveRole === 'student' && (
+                        {effectiveRole !== 'student' && (
                           <button
                             onClick={() => toggleAuthor(item.id)}
                             className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                              revealedAuthors.has(item.id)
+                              canSeeAuthor(item.id)
                                 ? 'text-primary hover:bg-secondary-container'
                                 : 'text-on-surface-variant hover:bg-secondary-container'
                             }`}
-                            title={revealedAuthors.has(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                            title={canSeeAuthor(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
                           >
-                            <span className="material-symbols-outlined text-base">{revealedAuthors.has(item.id) ? 'visibility' : 'visibility_off'}</span>
+                            <span className="material-symbols-outlined text-base">{canSeeAuthor(item.id) ? 'visibility' : 'visibility_off'}</span>
                           </button>
                         )}
                       </div>
@@ -1151,12 +1151,6 @@ export function StatisticsPage() {
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
-                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
-                            <>
-                              <span className="font-body-sm text-body-sm">·</span>
-                              <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
-                            </>
-                          )}
                         </div>
                       )}
                       {editingCommentId === item.id ? (
@@ -1210,9 +1204,6 @@ export function StatisticsPage() {
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {effectiveRole !== 'student' && reply.user_email && (
-                                    <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
-                                  )}
                                   {canEdit(reply.user_id) && (
                                     <>
                                       <button
@@ -1326,7 +1317,7 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.courseName}</span>
+                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1372,17 +1363,17 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
-                        {effectiveRole === 'student' && (
+                        {effectiveRole !== 'student' && (
                           <button
                             onClick={() => toggleAuthor(item.id)}
                             className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                              revealedAuthors.has(item.id)
+                              canSeeAuthor(item.id)
                                 ? 'text-primary hover:bg-secondary-container'
                                 : 'text-on-surface-variant hover:bg-secondary-container'
                             }`}
-                            title={revealedAuthors.has(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                            title={canSeeAuthor(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
                           >
-                            <span className="material-symbols-outlined text-base">{revealedAuthors.has(item.id) ? 'visibility' : 'visibility_off'}</span>
+                            <span className="material-symbols-outlined text-base">{canSeeAuthor(item.id) ? 'visibility' : 'visibility_off'}</span>
                           </button>
                         )}
                       </div>
@@ -1390,12 +1381,6 @@ export function StatisticsPage() {
                         <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
-                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
-                            <>
-                              <span className="font-body-sm text-body-sm">·</span>
-                              <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
-                            </>
-                          )}
                         </div>
                       )}
                       {editingSuggestionId === item.id ? (
@@ -1449,9 +1434,6 @@ export function StatisticsPage() {
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {effectiveRole !== 'student' && reply.user_email && (
-                                    <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
-                                  )}
                                   {canEdit(reply.user_id) && (
                                     <>
                                       <button

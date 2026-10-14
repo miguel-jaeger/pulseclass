@@ -166,24 +166,22 @@ const canEditSuggestion = (userId: string) => {
 
 ### Patrón de privacidad de autores (mostrar/ocultar)
 
-Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias:
+Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias. Solo se muestra el **nombre** del autor (nunca el correo).
 
-- **Admin/coordinator/teacher:** el nombre del autor se muestra **siempre** por defecto debajo de la fecha, junto con el correo. No hay ojito.
-- **Student:** solo ve el **nombre completo** (sin correo) y con ojito mostrar/ocultar (oculto por defecto, sin texto de relleno).
+- **Admin/coordinator/teacher:** ven el nombre debajo de la fecha **visible por defecto** y tienen el ojito para ocultarlo/mostrarlo a voluntad.
+- **Student:** **nunca** ve el nombre ni el ojito.
 
-- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — un set con los IDs revelados.
-- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' || revealedAuthors.has(id)`.
-- **Visibilidad del ojito:** `effectiveRole === 'student'`.
-- **Regla de render:**
-  - Autor visible: `canSeeAuthor(item.id) ? formatDisplayName(name) : ''`
-  - Correo: solo si `effectiveRole !== 'student'` y existe `email`.
+- **Estado local por página:** `const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())` — IDs de autores que el staff ocultó.
+- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' && !hiddenAuthors.has(id)`.
+- **Visibilidad del ojito:** `effectiveRole !== 'student'`.
+- **Regla de render:** autor visible `canSeeAuthor(item.id) ? formatDisplayName(name) : ''` (sin correo).
 - **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
   - Oculto (clic muestra): icono `visibility_off`.
   - Visible (clic oculta): icono `visibility` + color `text-primary`.
   - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
   - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
   - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
-  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar).
+  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, el título de la sesión a la que pertenece).
 - **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
 - **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
 
