@@ -19,7 +19,7 @@ interface Suggestion {
   images: string[]
   created_at: string
   updated_at: string
-  profiles?: { name: string }
+  profiles?: { name: string; email: string }
 }
 
 const typeLabels: Record<string, string> = {
@@ -112,6 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
+  const [showAuthorInfo, setShowAuthorInfo] = useState(false)
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -138,7 +139,7 @@ export function SuggestionsPage() {
     setLoading(true)
     const { data, error } = await insforge.database
       .from('suggestions')
-      .select('*, profiles(name)')
+      .select('*, profiles(name, email)')
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -364,13 +365,28 @@ export function SuggestionsPage() {
           <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Sugerencias</h1>
           <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Propón mejoras, reporta problemas o sugiere nuevas funcionalidades para la plataforma.</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0 self-end md:self-auto"
-        >
-          <span className="material-symbols-outlined text-lg">feedback</span>
-          Crear
-        </button>
+        <div className="flex items-center gap-sm shrink-0 self-end md:self-auto">
+          {effectiveRole !== 'student' && (
+            <button
+              onClick={() => setShowAuthorInfo(!showAuthorInfo)}
+              className={`flex items-center gap-xs px-md py-1 rounded-full font-label-md text-label-md transition-colors shrink-0 ${
+                showAuthorInfo
+                  ? 'bg-primary-container text-on-primary-container'
+                  : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+              }`}
+            >
+              <span className="material-symbols-outlined text-lg">{showAuthorInfo ? 'visibility' : 'visibility_off'}</span>
+              <span className="hidden sm:inline">{showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}</span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-primary text-on-primary font-bold py-1 px-lg rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-xs shrink-0"
+          >
+            <span className="material-symbols-outlined text-lg">feedback</span>
+            Crear
+          </button>
+        </div>
       </header>
 
       {/* Status Filter */}
@@ -477,9 +493,17 @@ export function SuggestionsPage() {
                     <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
                   </div>
                 )}
-                <div className="flex items-center gap-sm text-on-surface-variant">
+                <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
-                  <span className="font-body-sm text-body-sm">{formatDisplayName(s.profiles?.name) || 'Anónimo'}</span>
+                  <span className="font-body-sm text-body-sm">
+                    {effectiveRole !== 'student' && showAuthorInfo ? (formatDisplayName(s.profiles?.name) || 'Anónimo') : 'Anónimo'}
+                  </span>
+                  {effectiveRole !== 'student' && showAuthorInfo && s.profiles?.email && (
+                    <>
+                      <span className="font-body-sm text-body-sm">·</span>
+                      <span className="font-body-sm text-body-sm">{s.profiles.email}</span>
+                    </>
+                  )}
                   <span className="font-body-sm text-body-sm">·</span>
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
@@ -753,9 +777,17 @@ export function SuggestionsPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
+            <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
-              <span className="font-body-sm text-body-sm">{formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo'}</span>
+              <span className="font-body-sm text-body-sm">
+                {effectiveRole !== 'student' && showAuthorInfo ? (formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo') : 'Anónimo'}
+              </span>
+              {effectiveRole !== 'student' && showAuthorInfo && detailSuggestion.profiles?.email && (
+                <>
+                  <span className="font-body-sm text-body-sm">·</span>
+                  <span className="font-body-sm text-body-sm">{detailSuggestion.profiles.email}</span>
+                </>
+              )}
               <span className="font-body-sm text-body-sm">·</span>
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>

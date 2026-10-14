@@ -5,7 +5,7 @@
 
 This project uses [InsForge](https://insforge.dev): an all-in-one, open-source Postgres-based backend (BaaS) that gives this app a database, authentication, file storage, edge functions, realtime, an AI model gateway, and payments through one platform.
 
-- **Project:** **pulseclassbackend** (API base `https://vph97w7w.us-west.insforge.app`)
+- **Project:** **Pulse Class** (API base `https://vph97w7w.us-west.insforge.app`)
 - **Skills:** these InsForge skills are installed for supported coding agents. Reach for them before implementing any InsForge feature instead of guessing the API:
   - `insforge`: app code with the `@insforge/sdk` client (database CRUD, auth, storage, edge functions, realtime, AI, email, and Stripe payments).
   - `insforge-cli`: backend and infrastructure via the `insforge` CLI (projects, SQL, migrations, RLS policies, storage buckets, functions, secrets, payment setup, schedules, deploys).
@@ -163,6 +163,22 @@ const canEditSuggestion = (userId: string) => {
   return false
 }
 ```
+
+### Patrón de privacidad de autores (mostrar/ocultar)
+
+Permite a todos los roles **excepto `student`** revelar u ocultar el nombre y correo del autor de un comentario o sugerencia, como un campo de contraseña (oculto por defecto).
+
+- **Estado local por página:** `const [showAuthorInfo, setShowAuthorInfo] = useState(false)`
+- **Visibilidad del toggle:** `effectiveRole !== 'student'` (admin, coordinator, teacher)
+- **Regla de render:**
+  - Autor visible: `effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(name) : 'Anónimo'`
+  - Correo: solo si `effectiveRole !== 'student' && showAuthorInfo` y existe `email`
+- **Botón toggle:** icono `visibility` / `visibility_off` + texto "Mostrar autores" / "Ocultar autores"
+  - `SessionDetailPage` → junto a los tabs Comentarios/Sugerencias
+  - `SuggestionsPage` → junto al botón "Crear" en el header
+- **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
+- **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas) y `SuggestionsPage.tsx` (tarjetas y modal de detalle). `StatisticsPage` no muestra autor en comentarios/sugerencias, por lo que queda fuera.
+
 
 ## Backend (InsForge)
 

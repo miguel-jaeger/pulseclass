@@ -23,6 +23,7 @@ interface Rating {
   created_at: string
   star_count?: number
   has_starred?: boolean
+  author_info?: { name: string; email: string }
 }
 
 interface Reply {
@@ -32,6 +33,7 @@ interface Reply {
   content: string
   created_at: string
   user_name?: string
+  user_email?: string
 }
 
 function isSessionToday(sessionDate: string): boolean {
@@ -60,6 +62,7 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
+  const [showAuthorInfo, setShowAuthorInfo] = useState(false)
 
   const commentsList = ratings.filter(r => r.comment)
   const suggestionsList = ratings.filter(r => r.suggestion)
@@ -104,6 +107,19 @@ export function SessionDetailPage() {
 
     if (!ratingsError && ratingsData) {
       const ratingIds = (ratingsData as Rating[]).map(r => r.id)
+      const studentIds = [...new Set((ratingsData as Rating[]).map(r => r.student_id))]
+
+      let authorMap: Record<string, { name: string; email: string }> = {}
+      if (studentIds.length > 0) {
+        const { data: studentProfiles } = await insforge.database
+          .from('profiles')
+          .select('user_id, name, email')
+          .in('user_id', studentIds)
+
+        for (const p of studentProfiles || []) {
+          authorMap[p.user_id] = { name: p.name || 'Anónimo', email: p.email || '' }
+        }
+      }
 
       const { data: starsData } = await insforge.database
         .from('comment_stars')
@@ -123,7 +139,8 @@ export function SessionDetailPage() {
       const ratingsWithStars = (ratingsData as Rating[]).map(rating => ({
         ...rating,
         star_count: starCounts[rating.id] || 0,
-        has_starred: !!userStars[rating.id]
+        has_starred: !!userStars[rating.id],
+        author_info: authorMap[rating.student_id] || { name: 'Anónimo', email: '' }
       }))
 
       setRatings(ratingsWithStars)
@@ -143,15 +160,15 @@ export function SessionDetailPage() {
 
     const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
 
-    let profilesMap: Record<string, string> = {}
+    let profilesMap: Record<string, { name: string; email: string }> = {}
     if (userIds.length > 0) {
       const { data: profilesData } = await insforge.database
         .from('profiles')
-        .select('user_id, name')
+        .select('user_id, name, email')
         .in('user_id', userIds)
 
       for (const p of profilesData || []) {
-        profilesMap[p.user_id] = p.name
+        profilesMap[p.user_id] = { name: p.name || 'Anónimo', email: p.email || '' }
       }
     }
 
@@ -160,7 +177,8 @@ export function SessionDetailPage() {
       if (!grouped[reply.rating_id]) grouped[reply.rating_id] = []
       grouped[reply.rating_id].push({
         ...reply,
-        user_name: profilesMap[reply.user_id] || 'Usuario'
+        user_name: profilesMap[reply.user_id]?.name || 'Usuario',
+        user_email: profilesMap[reply.user_id]?.email || ''
       })
     }
 
@@ -428,6 +446,20 @@ export function SessionDetailPage() {
           <span className="material-symbols-outlined text-lg">lightbulb</span>
           <span className="hidden sm:inline">Sugerencias</span>
         </button>
+        {effectiveRole !== 'student' && (
+          <button
+            title={showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}
+            onClick={() => setShowAuthorInfo(!showAuthorInfo)}
+            className={`flex items-center gap-xs px-md py-2 rounded-xl font-body-sm text-body-sm transition-colors ${
+              showAuthorInfo
+                ? 'bg-primary-container text-on-primary-container'
+                : 'text-on-surface-variant hover:bg-secondary-container'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">{showAuthorInfo ? 'visibility' : 'visibility_off'}</span>
+            <span className="hidden sm:inline">{showAuthorInfo ? 'Ocultar autores' : 'Mostrar autores'}</span>
+          </button>
+        )}
       </div>
 
       {activeTab === 'comments' && (
@@ -488,6 +520,19 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
+                  {effectiveRole !== 'student' && showAuthorInfo && rating.author_info && (
+                    <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
+                      {rating.author_info.email && (
+                        <>
+                          <span className="font-body-sm text-body-sm">·</span>
+                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {editingRating === rating.id ? (
                     <div className="mb-md space-y-sm">
                       <textarea
@@ -523,10 +568,15 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                {effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
+                              {effectiveRole !== 'student' && showAuthorInfo && reply.user_email && (
+                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
@@ -685,6 +735,19 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
+                  {effectiveRole !== 'student' && showAuthorInfo && rating.author_info && (
+                    <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || 'Anónimo'}</span>
+                      {rating.author_info.email && (
+                        <>
+                          <span className="font-body-sm text-body-sm">·</span>
+                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
                   {editingRating === rating.id ? (
                     <div className="mb-md space-y-sm">
                       <textarea
@@ -720,10 +783,15 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                {effectiveRole !== 'student' && showAuthorInfo ? formatDisplayName(reply.user_name) : 'Anónimo'}
+                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
+                              {effectiveRole !== 'student' && showAuthorInfo && reply.user_email && (
+                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
