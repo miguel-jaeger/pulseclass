@@ -166,15 +166,15 @@ const canEditSuggestion = (userId: string) => {
 
 ### Patrón de privacidad de autores (mostrar/ocultar)
 
-Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias. Solo se muestra el **nombre** del autor (nunca el correo).
+Depende del **rol de quien visualiza** (`effectiveRole`) y del **rol del autor** (`authorRole`), para comentarios y sugerencias. Solo se muestra el **nombre** del autor (nunca el correo).
 
-- **Admin/coordinator/teacher:** los nombres aparecen **ocultos por defecto** (ojito cerrado, `visibility_off`) y pueden mostrarlos/ocultarlos con el ojito.
-- **Student:** **nunca** ve el nombre ni el ojito.
+- **Autor que NO es estudiante** (teacher/coordinator/admin): su nombre se muestra **siempre** (para cualquier visor).
+- **Autor estudiante:** nombre **oculto por defecto** (ojito cerrado, `visibility_off`); solo `admin/coordinator/teacher` pueden revelarlo con el ojito. El `student` **nunca** ve el nombre ni el ojito.
 
-- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — IDs de autores que el staff reveló.
-- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' && revealedAuthors.has(id)`.
-- **Visibilidad del ojito:** `effectiveRole !== 'student'`.
-- **Regla de render:** `canSeeAuthor(item.id) ? formatDisplayName(name) : ''` (sin correo). La fecha va arriba y el nombre debajo.
+- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — IDs de autores estudiantes que el staff reveló.
+- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `isStaffAuthor(role)` = `!!role && role !== 'student'`; `canSeeAuthor(id, role)` = `isStaffAuthor(role) || (effectiveRole !== 'student' && revealedAuthors.has(id))`.
+- **Visibilidad del ojito:** `effectiveRole !== 'student'` (el ojito solo afecta a autores estudiantes).
+- **Regla de render:** `canSeeAuthor(item.id, authorRole) ? formatDisplayName(name) : ''` (sin correo). La fecha va arriba y el nombre debajo.
 - **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
   - Oculto (clic muestra): icono `visibility_off`.
   - Visible (clic oculta): icono `visibility` + color `text-primary`.
@@ -182,7 +182,7 @@ Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para come
   - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
   - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
   - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, la fecha corta de la sesión).
-- **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
+- **Datos:** los perfiles se traen con `select('user_id, name, email, role')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email` + `user_role`. Para sugerencias: `select('*, profiles(name, email, role)')`.
 - **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
 
 

@@ -23,7 +23,7 @@ interface Rating {
   created_at: string
   star_count?: number
   has_starred?: boolean
-  author_info?: { name: string; email: string }
+  author_info?: { name: string; email: string; role?: string }
 }
 
 interface Reply {
@@ -34,6 +34,7 @@ interface Reply {
   created_at: string
   user_name?: string
   user_email?: string
+  user_role?: string
 }
 
 function isSessionToday(sessionDate: string): boolean {
@@ -109,15 +110,15 @@ export function SessionDetailPage() {
       const ratingIds = (ratingsData as Rating[]).map(r => r.id)
       const studentIds = [...new Set((ratingsData as Rating[]).map(r => r.student_id))]
 
-      let authorMap: Record<string, { name: string; email: string }> = {}
+      let authorMap: Record<string, { name: string; email: string; role: string }> = {}
       if (studentIds.length > 0) {
         const { data: studentProfiles } = await insforge.database
           .from('profiles')
-          .select('user_id, name, email')
+          .select('user_id, name, email, role')
           .in('user_id', studentIds)
 
         for (const p of studentProfiles || []) {
-          authorMap[p.user_id] = { name: p.name || '', email: p.email || '' }
+          authorMap[p.user_id] = { name: p.name || '', email: p.email || '', role: p.role || '' }
         }
       }
 
@@ -140,7 +141,7 @@ export function SessionDetailPage() {
         ...rating,
         star_count: starCounts[rating.id] || 0,
         has_starred: !!userStars[rating.id],
-        author_info: authorMap[rating.student_id] || { name: '', email: '' }
+        author_info: authorMap[rating.student_id] || { name: '', email: '', role: '' }
       }))
 
       setRatings(ratingsWithStars)
@@ -160,15 +161,15 @@ export function SessionDetailPage() {
 
     const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
 
-    let profilesMap: Record<string, { name: string; email: string }> = {}
+    let profilesMap: Record<string, { name: string; email: string; role: string }> = {}
     if (userIds.length > 0) {
       const { data: profilesData } = await insforge.database
         .from('profiles')
-        .select('user_id, name, email')
+        .select('user_id, name, email, role')
         .in('user_id', userIds)
 
       for (const p of profilesData || []) {
-        profilesMap[p.user_id] = { name: p.name || '', email: p.email || '' }
+        profilesMap[p.user_id] = { name: p.name || '', email: p.email || '', role: p.role || '' }
       }
     }
 
@@ -178,7 +179,8 @@ export function SessionDetailPage() {
       grouped[reply.rating_id].push({
         ...reply,
         user_name: profilesMap[reply.user_id]?.name || 'Usuario',
-        user_email: profilesMap[reply.user_id]?.email || ''
+        user_email: profilesMap[reply.user_id]?.email || '',
+        user_role: profilesMap[reply.user_id]?.role || ''
       })
     }
 
@@ -236,7 +238,7 @@ export function SessionDetailPage() {
       ...prev,
       [ratingId]: [
         ...(prev[ratingId] || []),
-        { id: tempId, rating_id: ratingId, user_id: user.id, content, created_at: new Date().toISOString(), user_name: userName }
+        { id: tempId, rating_id: ratingId, user_id: user.id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile?.role }
       ]
     }))
     setReplyText('')
@@ -276,7 +278,8 @@ export function SessionDetailPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
+  const isStaffAuthor = (role?: string) => !!role && role !== 'student'
+  const canSeeAuthor = (id: string, role?: string) => isStaffAuthor(role) || (effectiveRole !== 'student' && revealedAuthors.has(id))
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
@@ -530,7 +533,7 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
-                  {rating.author_info && canSeeAuthor(rating.id) && (
+                  {rating.author_info && canSeeAuthor(rating.id, rating.author_info.role) && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
@@ -594,7 +597,7 @@ export function SessionDetailPage() {
                                 )}
                               </div>
                             </div>
-                            {canSeeAuthor(rating.id) && (
+                            {canSeeAuthor(rating.id, reply.user_role) && (
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
                                 {formatDisplayName(reply.user_name)}
                               </span>
@@ -753,7 +756,7 @@ export function SessionDetailPage() {
                     </div>
                   </div>
 
-                  {rating.author_info && canSeeAuthor(rating.id) && (
+                  {rating.author_info && canSeeAuthor(rating.id, rating.author_info.role) && (
                     <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
                       <span className="material-symbols-outlined text-sm">person</span>
                       <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
@@ -817,7 +820,7 @@ export function SessionDetailPage() {
                                 )}
                               </div>
                             </div>
-                            {canSeeAuthor(rating.id) && (
+                            {canSeeAuthor(rating.id, reply.user_role) && (
                               <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
                                 {formatDisplayName(reply.user_name)}
                               </span>
