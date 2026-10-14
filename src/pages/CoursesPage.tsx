@@ -353,7 +353,7 @@ export function CoursesPage() {
                 person
               </span>
               {teacherDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto scrollbar-nice">
                   <button
                     onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors ${

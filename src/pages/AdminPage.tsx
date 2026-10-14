@@ -770,7 +770,7 @@ export function AdminPage() {
                   </div>
                 )}
                 {importResult.skipped.length > 0 && (
-                  <div className="max-h-48 overflow-y-auto space-y-sm">
+                  <div className="max-h-48 overflow-y-auto space-y-sm scrollbar-nice">
                     {importResult.skipped.map((user, index) => (
                       <div key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0 pb-sm">
                         <p className="font-body-sm text-body-sm text-primary font-bold break-words">{formatDisplayName(user.name)}</p>

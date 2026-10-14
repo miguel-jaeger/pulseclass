@@ -649,7 +649,7 @@ export function StatisticsPage() {
                 search
               </span>
               {teacherDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto scrollbar-nice">
                   <button
                     onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
@@ -696,7 +696,7 @@ export function StatisticsPage() {
                 search
               </span>
               {courseDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto scrollbar-nice">
                   <button
                     onClick={() => { setSelectedCourse('all'); setCourseSearch(''); setCourseDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${

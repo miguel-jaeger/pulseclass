@@ -160,6 +160,29 @@ input[type="date"] {
   color-scheme: light;
 }
 
+.scrollbar-nice {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+
+.scrollbar-nice::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-nice::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-nice::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border-radius: 9999px;
+}
+
+.scrollbar-nice::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-outline);
+}
+
 .dark input[type="date"] {
   color-scheme: dark;
 }
