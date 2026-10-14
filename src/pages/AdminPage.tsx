@@ -637,13 +637,13 @@ export function AdminPage() {
                         >
                           <span className="material-symbols-outlined text-lg">edit</span>
                         </button>
-                        <button
-                          onClick={() => deleteUser(user.user_id)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
-                          title="Eliminar usuario"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
+                          <button
+                            onClick={() => deleteUser(user.user_id)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                            title="Eliminar usuario"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
                         <button
                           onClick={() => resetPassword(user.user_id)}
                           className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
@@ -695,13 +695,13 @@ export function AdminPage() {
                     >
                       <span className="material-symbols-outlined text-xl">edit</span>
                     </button>
-                    <button
-                      onClick={() => deleteUser(user.user_id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
-                      title="Eliminar"
-                    >
-                      <span className="material-symbols-outlined text-xl">delete</span>
-                    </button>
+<button
+                        onClick={() => deleteUser(user.user_id)}
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors"
+                        title="Eliminar"
+                      >
+                        <span className="material-symbols-outlined text-xl">delete</span>
+                      </button>
                     <button
                       onClick={() => resetPassword(user.user_id)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-tertiary hover:bg-tertiary-container hover:text-on-tertiary-container transition-colors"
@@ -770,7 +770,7 @@ export function AdminPage() {
                   </div>
                 )}
                 {importResult.skipped.length > 0 && (
-                  <div className="max-h-48 overflow-y-auto space-y-sm">
+                  <div className="max-h-48 overflow-y-auto space-y-sm scrollbar-nice">
                     {importResult.skipped.map((user, index) => (
                       <div key={`${user.email}-${index}`} className="border-b border-outline-variant last:border-0 pb-sm">
                         <p className="font-body-sm text-body-sm text-primary font-bold break-words">{formatDisplayName(user.name)}</p>

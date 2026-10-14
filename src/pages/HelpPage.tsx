@@ -556,7 +556,7 @@ export function HelpPage() {
                                       </div>
                                     </div>
                                   ) : (
-                                    <p className="font-body-xs text-body-xs text-primary font-bold">{reply.content}</p>
+                                    <p className="font-body-xs text-body-xs text-on-surface italic">{reply.content}</p>
                                   )}
                                   <div className="mt-xs">
                                     <LikeButtons likes={reply.likes} dislikes={reply.dislikes} userVote={reply.userVote}

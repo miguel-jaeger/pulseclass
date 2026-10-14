@@ -464,7 +464,7 @@ export function CourseMembersPage() {
             </label>
           )}
 
-          <div className="space-y-sm max-h-60 overflow-y-auto">
+          <div className="space-y-sm max-h-60 overflow-y-auto scrollbar-nice">
             {availableUsers.length === 0 ? (
               <p className="font-body-sm text-body-sm text-on-surface-variant">No se encontraron usuarios disponibles.</p>
             ) : (
@@ -667,7 +667,7 @@ export function CourseMembersPage() {
                   </div>
                 )}
                 {importResult.skipped.length > 0 && (
-                  <div className="max-h-48 overflow-y-auto">
+                  <div className="max-h-48 overflow-y-auto scrollbar-nice">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-outline-variant">

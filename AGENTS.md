@@ -5,7 +5,7 @@
 
 This project uses [InsForge](https://insforge.dev): an all-in-one, open-source Postgres-based backend (BaaS) that gives this app a database, authentication, file storage, edge functions, realtime, an AI model gateway, and payments through one platform.
 
-- **Project:** **pulseclassbackend** (API base `https://vph97w7w.us-west.insforge.app`)
+- **Project:** **Pulse Class** (API base `https://vph97w7w.us-west.insforge.app`)
 - **Skills:** these InsForge skills are installed for supported coding agents. Reach for them before implementing any InsForge feature instead of guessing the API:
   - `insforge`: app code with the `@insforge/sdk` client (database CRUD, auth, storage, edge functions, realtime, AI, email, and Stripe payments).
   - `insforge-cli`: backend and infrastructure via the `insforge` CLI (projects, SQL, migrations, RLS policies, storage buckets, functions, secrets, payment setup, schedules, deploys).
@@ -163,6 +163,30 @@ const canEditSuggestion = (userId: string) => {
   return false
 }
 ```
+
+### Patrón de privacidad de autores (mostrar/ocultar)
+
+Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias:
+
+- **Admin/coordinator/teacher:** el nombre del autor se muestra **siempre** por defecto debajo de la fecha, junto con el correo. No hay ojito.
+- **Student:** solo ve el **nombre completo** (sin correo) y con ojito mostrar/ocultar (oculto por defecto, sin texto de relleno).
+
+- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — un set con los IDs revelados.
+- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' || revealedAuthors.has(id)`.
+- **Visibilidad del ojito:** `effectiveRole === 'student'`.
+- **Regla de render:**
+  - Autor visible: `canSeeAuthor(item.id) ? formatDisplayName(name) : ''`
+  - Correo: solo si `effectiveRole !== 'student'` y existe `email`.
+- **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
+  - Oculto (clic muestra): icono `visibility_off`.
+  - Visible (clic oculta): icono `visibility` + color `text-primary`.
+  - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
+  - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
+  - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
+  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar).
+- **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
+- **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
+
 
 ## Backend (InsForge)
 

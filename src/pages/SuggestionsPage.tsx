@@ -19,7 +19,7 @@ interface Suggestion {
   images: string[]
   created_at: string
   updated_at: string
-  profiles?: { name: string }
+  profiles?: { name: string; email: string }
 }
 
 const typeLabels: Record<string, string> = {
@@ -112,6 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -123,6 +124,17 @@ export function SuggestionsPage() {
     if (isTeacher) return teacherStudentIds.has(suggestionUserId)
     return false
   }
+
+  const toggleAuthor = (id: string) => {
+    setRevealedAuthors(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -138,7 +150,7 @@ export function SuggestionsPage() {
     setLoading(true)
     const { data, error } = await insforge.database
       .from('suggestions')
-      .select('*, profiles(name)')
+      .select('*, profiles(name, email)')
       .order('created_at', { ascending: false })
 
     if (!error && data) {
@@ -468,6 +480,19 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     )}
+                    {effectiveRole === 'student' && (
+                      <button
+                        onClick={() => toggleAuthor(s.id)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                          revealedAuthors.has(s.id)
+                            ? 'text-primary hover:bg-secondary-container'
+                            : 'text-on-surface-variant hover:bg-secondary-container'
+                        }`}
+                        title={revealedAuthors.has(s.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                      >
+                        <span className="material-symbols-outlined text-lg">{revealedAuthors.has(s.id) ? 'visibility' : 'visibility_off'}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
                 <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
@@ -477,9 +502,17 @@ export function SuggestionsPage() {
                     <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
                   </div>
                 )}
-                <div className="flex items-center gap-sm text-on-surface-variant">
+                <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
                   <span className="material-symbols-outlined text-lg">person</span>
-                  <span className="font-body-sm text-body-sm">{formatDisplayName(s.profiles?.name) || 'Anónimo'}</span>
+                  <span className="font-body-sm text-body-sm">
+                    {canSeeAuthor(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
+                  </span>
+                  {effectiveRole !== 'student' && s.profiles?.email && (
+                    <>
+                      <span className="font-body-sm text-body-sm">·</span>
+                      <span className="font-body-sm text-body-sm">{s.profiles.email}</span>
+                    </>
+                  )}
                   <span className="font-body-sm text-body-sm">·</span>
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
@@ -753,9 +786,17 @@ export function SuggestionsPage() {
               </div>
             )}
 
-            <div className="flex items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
+            <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="material-symbols-outlined text-lg">person</span>
-              <span className="font-body-sm text-body-sm">{formatDisplayName(detailSuggestion.profiles?.name) || 'Anónimo'}</span>
+              <span className="font-body-sm text-body-sm">
+                {canSeeAuthor(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
+              </span>
+              {effectiveRole !== 'student' && detailSuggestion.profiles?.email && (
+                <>
+                  <span className="font-body-sm text-body-sm">·</span>
+                  <span className="font-body-sm text-body-sm">{detailSuggestion.profiles.email}</span>
+                </>
+              )}
               <span className="font-body-sm text-body-sm">·</span>
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>

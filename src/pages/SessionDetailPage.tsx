@@ -23,6 +23,7 @@ interface Rating {
   created_at: string
   star_count?: number
   has_starred?: boolean
+  author_info?: { name: string; email: string }
 }
 
 interface Reply {
@@ -32,6 +33,7 @@ interface Reply {
   content: string
   created_at: string
   user_name?: string
+  user_email?: string
 }
 
 function isSessionToday(sessionDate: string): boolean {
@@ -60,6 +62,7 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
 
   const commentsList = ratings.filter(r => r.comment)
   const suggestionsList = ratings.filter(r => r.suggestion)
@@ -104,6 +107,19 @@ export function SessionDetailPage() {
 
     if (!ratingsError && ratingsData) {
       const ratingIds = (ratingsData as Rating[]).map(r => r.id)
+      const studentIds = [...new Set((ratingsData as Rating[]).map(r => r.student_id))]
+
+      let authorMap: Record<string, { name: string; email: string }> = {}
+      if (studentIds.length > 0) {
+        const { data: studentProfiles } = await insforge.database
+          .from('profiles')
+          .select('user_id, name, email')
+          .in('user_id', studentIds)
+
+        for (const p of studentProfiles || []) {
+          authorMap[p.user_id] = { name: p.name || '', email: p.email || '' }
+        }
+      }
 
       const { data: starsData } = await insforge.database
         .from('comment_stars')
@@ -123,7 +139,8 @@ export function SessionDetailPage() {
       const ratingsWithStars = (ratingsData as Rating[]).map(rating => ({
         ...rating,
         star_count: starCounts[rating.id] || 0,
-        has_starred: !!userStars[rating.id]
+        has_starred: !!userStars[rating.id],
+        author_info: authorMap[rating.student_id] || { name: '', email: '' }
       }))
 
       setRatings(ratingsWithStars)
@@ -143,15 +160,15 @@ export function SessionDetailPage() {
 
     const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
 
-    let profilesMap: Record<string, string> = {}
+    let profilesMap: Record<string, { name: string; email: string }> = {}
     if (userIds.length > 0) {
       const { data: profilesData } = await insforge.database
         .from('profiles')
-        .select('user_id, name')
+        .select('user_id, name, email')
         .in('user_id', userIds)
 
       for (const p of profilesData || []) {
-        profilesMap[p.user_id] = p.name
+        profilesMap[p.user_id] = { name: p.name || '', email: p.email || '' }
       }
     }
 
@@ -160,7 +177,8 @@ export function SessionDetailPage() {
       if (!grouped[reply.rating_id]) grouped[reply.rating_id] = []
       grouped[reply.rating_id].push({
         ...reply,
-        user_name: profilesMap[reply.user_id] || 'Usuario'
+        user_name: profilesMap[reply.user_id]?.name || 'Usuario',
+        user_email: profilesMap[reply.user_id]?.email || ''
       })
     }
 
@@ -248,6 +266,17 @@ export function SessionDetailPage() {
   }
 
   const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin' || effectiveRole === 'teacher'
+
+  const toggleAuthor = (id: string) => {
+    setRevealedAuthors(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
@@ -465,6 +494,19 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
+                      {effectiveRole === 'student' && (
+                        <button
+                          onClick={() => toggleAuthor(rating.id)}
+                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          className={`p-xs rounded-full transition-colors ${
+                            revealedAuthors.has(rating.id)
+                              ? 'text-primary hover:bg-secondary-container'
+                              : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                        </button>
+                      )}
                       {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
@@ -487,6 +529,19 @@ export function SessionDetailPage() {
                       </button>
                     </div>
                   </div>
+
+                  {rating.author_info && canSeeAuthor(rating.id) && (
+                    <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
+                      {effectiveRole !== 'student' && rating.author_info.email && (
+                        <>
+                          <span className="font-body-sm text-body-sm">·</span>
+                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {editingRating === rating.id ? (
                     <div className="mb-md space-y-sm">
@@ -523,10 +578,15 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                {canSeeAuthor(rating.id) ? formatDisplayName(reply.user_name) : ''}
+                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
+                              {effectiveRole !== 'student' && reply.user_email && (
+                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
@@ -568,7 +628,7 @@ export function SessionDetailPage() {
                                 </div>
                               </div>
                             ) : (
-                              <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
+                              <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                             )}
                           </div>
                         </div>
@@ -662,6 +722,19 @@ export function SessionDetailPage() {
                           </button>
                         </>
                       )}
+                      {effectiveRole === 'student' && (
+                        <button
+                          onClick={() => toggleAuthor(rating.id)}
+                          title={revealedAuthors.has(rating.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          className={`p-xs rounded-full transition-colors ${
+                            revealedAuthors.has(rating.id)
+                              ? 'text-primary hover:bg-secondary-container'
+                              : 'text-on-surface-variant hover:text-primary hover:bg-secondary-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-lg">{revealedAuthors.has(rating.id) ? 'visibility' : 'visibility_off'}</span>
+                        </button>
+                      )}
                       {effectiveRole === 'admin' && (
                         <button
                           onClick={() => deleteRating(rating.id)}
@@ -684,6 +757,19 @@ export function SessionDetailPage() {
                       </button>
                     </div>
                   </div>
+
+                  {rating.author_info && canSeeAuthor(rating.id) && (
+                    <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-md">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      <span className="font-body-sm text-body-sm">{formatDisplayName(rating.author_info.name) || ''}</span>
+                      {effectiveRole !== 'student' && rating.author_info.email && (
+                        <>
+                          <span className="font-body-sm text-body-sm">·</span>
+                          <span className="font-body-sm text-body-sm">{rating.author_info.email}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {editingRating === rating.id ? (
                     <div className="mb-md space-y-sm">
@@ -720,10 +806,15 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                {canSeeAuthor(rating.id) ? formatDisplayName(reply.user_name) : ''}
+                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
+                              {effectiveRole !== 'student' && reply.user_email && (
+                                <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                              )}
                               {canEdit(reply.user_id) && (
                                 <>
                                   <button
@@ -765,7 +856,7 @@ export function SessionDetailPage() {
                                 </div>
                               </div>
                             ) : (
-                              <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
+                              <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                             )}
                           </div>
                         </div>

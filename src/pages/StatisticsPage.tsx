@@ -67,6 +67,7 @@ interface Reply {
   content: string
   created_at: string
   user_name: string
+  user_email?: string
 }
 
 function getDefaultDateStart(): string {
@@ -114,6 +115,8 @@ export function StatisticsPage() {
   const [replyText, setReplyText] = useState('')
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
+  const [authorMap, setAuthorMap] = useState<Record<string, { name: string; email: string }>>({})
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
@@ -121,6 +124,17 @@ export function StatisticsPage() {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
   }
+
+  const toggleAuthor = (id: string) => {
+    setRevealedAuthors(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' || revealedAuthors.has(id)
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
@@ -254,6 +268,19 @@ export function StatisticsPage() {
       setSessions(sessionsData as Session[])
       setRatings(ratingsData)
 
+      const studentIds = [...new Set(ratingsData.map(r => r.student_id))]
+      if (studentIds.length > 0) {
+        const { data: studentProfiles } = await insforge.database
+          .from('profiles')
+          .select('user_id, name, email')
+          .in('user_id', studentIds)
+        const map: Record<string, { name: string; email: string }> = {}
+        for (const p of (studentProfiles || []) as { user_id: string; name: string; email: string }[]) {
+          map[p.user_id] = { name: p.name || '', email: p.email || '' }
+        }
+        if (!cancelled) setAuthorMap(map)
+      }
+
       setLoading(false)
 
       const ratingIds = ratingsData.map(r => r.id)
@@ -272,14 +299,14 @@ export function StatisticsPage() {
         if (cancelled) return
 
         const userIds = [...new Set((repliesData || []).map(r => r.user_id))]
-        let userNames: Record<string, string> = {}
+        let userNames: Record<string, { name: string; email: string }> = {}
         if (userIds.length > 0) {
           const { data: profilesData } = await insforge.database
             .from('profiles')
-            .select('user_id, name')
+            .select('user_id, name, email')
             .in('user_id', userIds)
-          for (const p of (profilesData || []) as { user_id: string; name: string }[]) {
-            userNames[p.user_id] = p.name
+          for (const p of (profilesData || []) as { user_id: string; name: string; email: string }[]) {
+            userNames[p.user_id] = { name: p.name || 'Usuario', email: p.email || '' }
           }
         }
 
@@ -290,7 +317,8 @@ export function StatisticsPage() {
           }
           newRepliesMap[reply.rating_id].push({
             ...reply,
-            user_name: userNames[reply.user_id] || 'Usuario'
+            user_name: userNames[reply.user_id]?.name || 'Usuario',
+            user_email: userNames[reply.user_id]?.email || ''
           })
         }
         setRepliesMap(newRepliesMap)
@@ -623,7 +651,7 @@ export function StatisticsPage() {
                 search
               </span>
               {teacherDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto scrollbar-nice">
                   <button
                     onClick={() => { setSelectedTeacher('all'); setTeacherSearch(''); setTeacherDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
@@ -670,7 +698,7 @@ export function StatisticsPage() {
                 search
               </span>
               {courseDropdownOpen && (
-                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 left-0 right-0 mt-1 bg-surface border border-outline-variant rounded-xl shadow-lg max-h-60 overflow-y-auto scrollbar-nice">
                   <button
                     onClick={() => { setSelectedCourse('all'); setCourseSearch(''); setCourseDropdownOpen(false) }}
                     className={`w-full text-left px-md py-2 font-body-sm text-body-sm hover:bg-secondary-container transition-colors truncate ${
@@ -1105,7 +1133,32 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
+                        {effectiveRole === 'student' && (
+                          <button
+                            onClick={() => toggleAuthor(item.id)}
+                            className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                              revealedAuthors.has(item.id)
+                                ? 'text-primary hover:bg-secondary-container'
+                                : 'text-on-surface-variant hover:bg-secondary-container'
+                            }`}
+                            title={revealedAuthors.has(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          >
+                            <span className="material-symbols-outlined text-base">{revealedAuthors.has(item.id) ? 'visibility' : 'visibility_off'}</span>
+                          </button>
+                        )}
                       </div>
+                      {canSeeAuthor(item.id) && (
+                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
+                          <span className="material-symbols-outlined text-sm">person</span>
+                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
+                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
+                            <>
+                              <span className="font-body-sm text-body-sm">·</span>
+                              <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                       {editingCommentId === item.id ? (
                         <textarea
                           id="edit-comment"
@@ -1151,10 +1204,15 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
+                                  </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
+                                  {effectiveRole !== 'student' && reply.user_email && (
+                                    <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                                  )}
                                   {canEdit(reply.user_id) && (
                                     <>
                                       <button
@@ -1196,7 +1254,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                                 )}
                               </div>
                             </div>
@@ -1314,7 +1372,32 @@ export function StatisticsPage() {
                             )}
                           </div>
                         )}
+                        {effectiveRole === 'student' && (
+                          <button
+                            onClick={() => toggleAuthor(item.id)}
+                            className={`${canEdit(item.studentId) ? '' : 'ml-auto'} w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
+                              revealedAuthors.has(item.id)
+                                ? 'text-primary hover:bg-secondary-container'
+                                : 'text-on-surface-variant hover:bg-secondary-container'
+                            }`}
+                            title={revealedAuthors.has(item.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
+                          >
+                            <span className="material-symbols-outlined text-base">{revealedAuthors.has(item.id) ? 'visibility' : 'visibility_off'}</span>
+                          </button>
+                        )}
                       </div>
+                      {canSeeAuthor(item.id) && (
+                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
+                          <span className="material-symbols-outlined text-sm">person</span>
+                          <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
+                          {effectiveRole !== 'student' && authorMap[item.studentId]?.email && (
+                            <>
+                              <span className="font-body-sm text-body-sm">·</span>
+                              <span className="font-body-sm text-body-sm">{authorMap[item.studentId].email}</span>
+                            </>
+                          )}
+                        </div>
+                      )}
                       {editingSuggestionId === item.id ? (
                         <textarea
                           id="edit-suggestion"
@@ -1360,10 +1443,15 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">{formatDisplayName(reply.user_name)}</span>
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
+                                  </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
+                                  {effectiveRole !== 'student' && reply.user_email && (
+                                    <span className="font-body-xs text-body-xs text-on-surface-variant">· {reply.user_email}</span>
+                                  )}
                                   {canEdit(reply.user_id) && (
                                     <>
                                       <button
@@ -1405,7 +1493,7 @@ export function StatisticsPage() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <p className="font-body-sm text-body-sm text-primary font-bold">{reply.content}</p>
+                                  <p className="font-body-sm text-body-sm text-on-surface italic">{reply.content}</p>
                                 )}
                               </div>
                             </div>
