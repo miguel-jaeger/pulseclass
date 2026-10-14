@@ -181,7 +181,7 @@ Depende del **rol de quien visualiza** (`effectiveRole`) y del **rol del autor**
   - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
   - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
   - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
-  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, la fecha corta de la sesión).
+  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, la fecha corta de la sesión). Para el visor `student` se muestra encima de la fecha el nombre del curso al que pertenece el comentario/sugerencia.
 - **Datos:** los perfiles se traen con `select('user_id, name, email, role')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email` + `user_role`. Para sugerencias: `select('*, profiles(name, email, role)')`.
 - **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
 
