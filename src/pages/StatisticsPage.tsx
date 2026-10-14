@@ -1151,7 +1151,7 @@ export function StatisticsPage() {
                         )}
                       </div>
                       {canSeeAuthor(item.id, authorMap[item.studentId]?.role) && (
-                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
+                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs pl-10">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
                         </div>
@@ -1167,7 +1167,7 @@ export function StatisticsPage() {
                           className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none mt-sm"
                         />
                       ) : (
-                        <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                        <p className="font-body-md text-body-md text-on-surface break-words pl-10">{item.text}</p>
                       )}
                       <div className="flex items-center gap-md mt-sm">
                         <button
@@ -1385,7 +1385,7 @@ export function StatisticsPage() {
                         )}
                       </div>
                       {canSeeAuthor(item.id, authorMap[item.studentId]?.role) && (
-                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs">
+                        <div className="flex flex-wrap items-center gap-xs text-on-surface-variant mb-xs pl-10">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-body-sm text-body-sm">{formatDisplayName(authorMap[item.studentId]?.name) || ''}</span>
                         </div>
@@ -1401,7 +1401,7 @@ export function StatisticsPage() {
                           className="w-full border border-outline-variant rounded-xl px-md py-2 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary resize-none mt-sm"
                         />
                       ) : (
-                        <p className="font-body-md text-body-md text-on-surface break-words">{item.text}</p>
+                        <p className="font-body-md text-body-md text-on-surface break-words pl-10">{item.text}</p>
                       )}
                       <div className="flex items-center gap-md mt-sm">
                         <button
