@@ -168,20 +168,20 @@ const canEditSuggestion = (userId: string) => {
 
 Comportamiento **según el rol de quien visualiza** (`effectiveRole`), para comentarios y sugerencias. Solo se muestra el **nombre** del autor (nunca el correo).
 
-- **Admin/coordinator/teacher:** ven el nombre debajo de la fecha **visible por defecto** y tienen el ojito para ocultarlo/mostrarlo a voluntad.
+- **Admin/coordinator/teacher:** los nombres aparecen **ocultos por defecto** (ojito cerrado, `visibility_off`) y pueden mostrarlos/ocultarlos con el ojito.
 - **Student:** **nunca** ve el nombre ni el ojito.
 
-- **Estado local por página:** `const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())` — IDs de autores que el staff ocultó.
-- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' && !hiddenAuthors.has(id)`.
+- **Estado local por página:** `const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())` — IDs de autores que el staff reveló.
+- **Helpers:** `toggleAuthor(id)` agrega/quita el ID del set; `canSeeAuthor(id)` = `effectiveRole !== 'student' && revealedAuthors.has(id)`.
 - **Visibilidad del ojito:** `effectiveRole !== 'student'`.
-- **Regla de render:** autor visible `canSeeAuthor(item.id) ? formatDisplayName(name) : ''` (sin correo).
+- **Regla de render:** `canSeeAuthor(item.id) ? formatDisplayName(name) : ''` (sin correo). La fecha va arriba y el nombre debajo.
 - **Botón ojito:** un botón por tarjeta, junto a Editar/Eliminar.
   - Oculto (clic muestra): icono `visibility_off`.
   - Visible (clic oculta): icono `visibility` + color `text-primary`.
   - `title` = "Mostrar datos del autor" / "Ocultar datos del autor".
   - `SessionDetailPage` → comentarios y sugerencias; el mismo estado del padre aplica a las respuestas.
   - `SuggestionsPage` → tarjeta de sugerencia (el estado por `id` también controla el modal de detalle).
-  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, el título de la sesión a la que pertenece).
+  - `StatisticsPage` → tabs Comentarios/Sugerencias (autor y respuestas; la tarjeta muestra el ojito junto a Editar/Eliminar y, al lado de la puntuación, la fecha corta de la sesión).
 - **Datos:** los perfiles se traen con `select('user_id, name, email')` y se mapean por `user_id`/`student_id`; las respuestas usan `user_name` + `user_email`. Para sugerencias: `select('*, profiles(name, email)')`.
 - **Alcance:** `SessionDetailPage.tsx` (comentarios y sugerencias + respuestas), `SuggestionsPage.tsx` (tarjetas y modal de detalle) y `StatisticsPage.tsx` (tabs Comentarios/Sugerencias: autor + respuestas).
 

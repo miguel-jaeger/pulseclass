@@ -112,7 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
-  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -126,7 +126,7 @@ export function SuggestionsPage() {
   }
 
   const toggleAuthor = (id: string) => {
-    setHiddenAuthors(prev => {
+    setRevealedAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -134,7 +134,7 @@ export function SuggestionsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -502,13 +502,14 @@ export function SuggestionsPage() {
                     <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
                   </div>
                 )}
-                <div className="flex flex-wrap items-center gap-sm text-on-surface-variant">
-                  <span className="material-symbols-outlined text-lg">person</span>
-                  <span className="font-body-sm text-body-sm">
-                    {canSeeAuthor(s.id) ? (formatDisplayName(s.profiles?.name) || '') : ''}
-                  </span>
-                  {canSeeAuthor(s.id) && <span className="font-body-sm text-body-sm">·</span>}
+                <div className="flex flex-col gap-xs text-on-surface-variant">
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  {canSeeAuthor(s.id) && (
+                    <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                      <span className="material-symbols-outlined text-lg">person</span>
+                      {formatDisplayName(s.profiles?.name) || ''}
+                    </span>
+                  )}
                 </div>
               </div>
             )
@@ -780,13 +781,14 @@ export function SuggestionsPage() {
               </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-sm text-on-surface-variant border-t border-outline-variant pt-md">
-              <span className="material-symbols-outlined text-lg">person</span>
-              <span className="font-body-sm text-body-sm">
-                {canSeeAuthor(detailSuggestion.id) ? (formatDisplayName(detailSuggestion.profiles?.name) || '') : ''}
-              </span>
-              {canSeeAuthor(detailSuggestion.id) && <span className="font-body-sm text-body-sm">·</span>}
+            <div className="flex flex-col gap-xs text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              {canSeeAuthor(detailSuggestion.id) && (
+                <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                  <span className="material-symbols-outlined text-lg">person</span>
+                  {formatDisplayName(detailSuggestion.profiles?.name) || ''}
+                </span>
+              )}
             </div>
           </div>
         </div>
