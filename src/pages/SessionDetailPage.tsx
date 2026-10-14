@@ -62,7 +62,7 @@ export function SessionDetailPage() {
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
   const [activeTab, setActiveTab] = useState<'comments' | 'suggestions'>('comments')
-  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
 
   const commentsList = ratings.filter(r => r.comment)
   const suggestionsList = ratings.filter(r => r.suggestion)
@@ -268,7 +268,7 @@ export function SessionDetailPage() {
   const canEdit = (ownerId: string) => user?.id === ownerId || effectiveRole === 'admin' || effectiveRole === 'teacher'
 
   const toggleAuthor = (id: string) => {
-    setHiddenAuthors(prev => {
+    setRevealedAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -276,7 +276,7 @@ export function SessionDetailPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
 
   const updateRating = async (ratingId: string) => {
     const { error } = await insforge.database
@@ -572,29 +572,33 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {canSeeAuthor(rating.id) ? formatDisplayName(reply.user_name) : ''}
-                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {canEdit(reply.user_id) && (
-                                <>
-                                  <button
-                                    onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
-                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">edit</span>
-                                  </button>
-                                  <button
-                                    onClick={() => deleteReply(reply.id, rating.id)}
-                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">delete</span>
-                                  </button>
-                                </>
-                              )}
+                              <div className="ml-auto flex items-center gap-xs">
+                                {canEdit(reply.user_id) && (
+                                  <>
+                                    <button
+                                      onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button
+                                      onClick={() => deleteReply(reply.id, rating.id)}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
+                            {canSeeAuthor(rating.id) && (
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
+                                {formatDisplayName(reply.user_name)}
+                              </span>
+                            )}
                             {editingReply === reply.id ? (
                               <div className="mt-xs flex flex-col gap-xs">
                                 <textarea
@@ -791,29 +795,33 @@ export function SessionDetailPage() {
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
                             <div className="flex items-center gap-xs">
-                              <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                {canSeeAuthor(rating.id) ? formatDisplayName(reply.user_name) : ''}
-                              </span>
                               <span className="font-body-xs text-body-xs text-on-surface-variant">
                                 {new Date(reply.created_at).toLocaleDateString('es-ES')}
                               </span>
-                              {canEdit(reply.user_id) && (
-                                <>
-                                  <button
-                                    onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
-                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">edit</span>
-                                  </button>
-                                  <button
-                                    onClick={() => deleteReply(reply.id, rating.id)}
-                                    className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">delete</span>
-                                  </button>
-                                </>
-                              )}
+                              <div className="ml-auto flex items-center gap-xs">
+                                {canEdit(reply.user_id) && (
+                                  <>
+                                    <button
+                                      onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">edit</span>
+                                    </button>
+                                    <button
+                                      onClick={() => deleteReply(reply.id, rating.id)}
+                                      className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">delete</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
+                            {canSeeAuthor(rating.id) && (
+                              <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
+                                {formatDisplayName(reply.user_name)}
+                              </span>
+                            )}
                             {editingReply === reply.id ? (
                               <div className="mt-xs flex flex-col gap-xs">
                                 <textarea

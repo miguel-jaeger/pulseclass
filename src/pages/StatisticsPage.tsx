@@ -115,7 +115,7 @@ export function StatisticsPage() {
   const [replyText, setReplyText] = useState('')
   const [editingReply, setEditingReply] = useState<string | null>(null)
   const [editReplyText, setEditReplyText] = useState('')
-  const [hiddenAuthors, setHiddenAuthors] = useState<Set<string>>(new Set())
+  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
   const [authorMap, setAuthorMap] = useState<Record<string, { name: string; email: string }>>({})
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -126,7 +126,7 @@ export function StatisticsPage() {
   }
 
   const toggleAuthor = (id: string) => {
-    setHiddenAuthors(prev => {
+    setRevealedAuthors(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -134,7 +134,7 @@ export function StatisticsPage() {
     })
   }
 
-  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && !hiddenAuthors.has(id)
+  const canSeeAuthor = (id: string) => effectiveRole !== 'student' && revealedAuthors.has(id)
 
   const { voteCounts, userVotes, fetchVotes, vote } = useRatingVotes()
 
@@ -1087,7 +1087,6 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1198,29 +1197,33 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
-                                  </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {canEdit(reply.user_id) && (
-                                    <>
-                                      <button
-                                        onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
-                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">edit</span>
-                                      </button>
-                                      <button
-                                        onClick={() => deleteReply(reply.id, item.id)}
-                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">delete</span>
-                                      </button>
-                                    </>
-                                  )}
+                                  <div className="ml-auto flex items-center gap-xs">
+                                    {canEdit(reply.user_id) && (
+                                      <>
+                                        <button
+                                          onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                          className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button
+                                          onClick={() => deleteReply(reply.id, item.id)}
+                                          className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
+                                {canSeeAuthor(item.id) && (
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
+                                    {formatDisplayName(reply.user_name)}
+                                  </span>
+                                )}
                                 {editingReply === reply.id ? (
                                   <div className="mt-xs flex flex-col gap-xs">
                                     <textarea
@@ -1317,7 +1320,6 @@ export function StatisticsPage() {
                           {item.score}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <span className="font-body-sm text-body-sm text-primary font-medium block">{item.sessionTitle}</span>
                           {item.date && (
                             <span className="font-body-xs text-body-xs text-on-surface-variant">
                               {new Date(item.date + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
@@ -1428,29 +1430,33 @@ export function StatisticsPage() {
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
                                 <div className="flex items-center gap-xs">
-                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                                    {canSeeAuthor(item.id) ? formatDisplayName(reply.user_name) : ''}
-                                  </span>
                                   <span className="font-body-xs text-body-xs text-on-surface-variant">
                                     {new Date(reply.created_at).toLocaleDateString('es-ES')}
                                   </span>
-                                  {canEdit(reply.user_id) && (
-                                    <>
-                                      <button
-                                        onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
-                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">edit</span>
-                                      </button>
-                                      <button
-                                        onClick={() => deleteReply(reply.id, item.id)}
-                                        className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">delete</span>
-                                      </button>
-                                    </>
-                                  )}
+                                  <div className="ml-auto flex items-center gap-xs">
+                                    {canEdit(reply.user_id) && (
+                                      <>
+                                        <button
+                                          onClick={() => { setEditingReply(reply.id); setEditReplyText(reply.content) }}
+                                          className="p-[2px] rounded-full text-on-surface-variant hover:text-primary transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">edit</span>
+                                        </button>
+                                        <button
+                                          onClick={() => deleteReply(reply.id, item.id)}
+                                          className="p-[2px] rounded-full text-on-surface-variant hover:text-error transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
+                                {canSeeAuthor(item.id) && (
+                                  <span className="font-label-sm text-label-sm text-on-surface font-semibold block">
+                                    {formatDisplayName(reply.user_name)}
+                                  </span>
+                                )}
                                 {editingReply === reply.id ? (
                                   <div className="mt-xs flex flex-col gap-xs">
                                     <textarea
