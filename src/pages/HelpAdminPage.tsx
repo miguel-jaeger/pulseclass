@@ -38,6 +38,8 @@ export function HelpAdminPage() {
   const [categoryFilter, setCategoryFilter] = useState<'all' | VideoCategory>('all')
   const [videoStats, setVideoStats] = useState<Record<VideoCategory, number>>({ platform: 0, course: 0 })
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -216,43 +218,46 @@ const refreshVideos = async () => {
     }
   }
 
-  const moveVideo = async (id: string, direction: -1 | 1) => {
-    const sorted = [...videos].sort((a, b) => a.sort_order - b.sort_order)
-    const fromIndex = sorted.findIndex(v => v.id === id)
-    const toIndex = fromIndex + direction
-    if (fromIndex === -1 || toIndex < 0 || toIndex >= sorted.length) return
+  const persistSortOrder = async (ordered: HelpVideo[]) => {
+    for (const v of ordered) {
+      const { error } = await insforge.database
+        .from('help_videos')
+        .update({ sort_order: v.sort_order })
+        .eq('id', v.id)
+      if (error) return false
+    }
+    return true
+  }
 
-    const from = sorted[fromIndex]
-    const to = sorted[toIndex]
-
-    const applySwap = (list: HelpVideo[], fromOrder: number, toOrder: number) =>
-      list.map(v => {
-        if (v.id === from.id) return { ...v, sort_order: toOrder }
-        if (v.id === to.id) return { ...v, sort_order: fromOrder }
-        return v
-      }).sort((a, b) => a.sort_order - b.sort_order)
-
-    setVideos(applySwap(videos, from.sort_order, to.sort_order))
-
-    const { error } = await insforge.database
-      .from('help_videos')
-      .update({ sort_order: to.sort_order })
-      .eq('id', from.id)
-
-    if (error) {
-      setVideos(applySwap(videos, to.sort_order, from.sort_order))
-      showToast('No se pudo cambiar el orden', 'error')
+  const handleDrop = async (targetId: string) => {
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null)
+      setDragOverId(null)
       return
     }
 
-    const { error: err2 } = await insforge.database
-      .from('help_videos')
-      .update({ sort_order: from.sort_order })
-      .eq('id', to.id)
+    const list = [...sortedVideos]
+    const fromIdx = list.findIndex(v => v.id === draggedId)
+    const toIdx = list.findIndex(v => v.id === targetId)
+    if (fromIdx === -1 || toIdx === -1) {
+      setDraggedId(null)
+      setDragOverId(null)
+      return
+    }
 
-    if (err2) {
-      setVideos(applySwap(videos, to.sort_order, from.sort_order))
-      showToast('No se pudo cambiar el orden', 'error')
+    const [dragged] = list.splice(fromIdx, 1)
+    list.splice(toIdx, 0, dragged)
+    const reordered = list.map((v, i) => ({ ...v, sort_order: i }))
+
+    const prev = videos
+    setVideos(reordered)
+    setDraggedId(null)
+    setDragOverId(null)
+
+    const ok = await persistSortOrder(reordered)
+    if (!ok) {
+      setVideos(prev)
+      showToast('No se pudo reordenar los videos', 'error')
     }
   }
 
@@ -515,7 +520,15 @@ const refreshVideos = async () => {
               </thead>
               <tbody>
                 {paginatedVideos.map(video => (
-                  <tr key={video.id} className="border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors">
+                  <tr
+                    key={video.id}
+                    draggable
+                    onDragStart={(e) => { setDraggedId(video.id); e.dataTransfer.setData('text/plain', video.id); e.dataTransfer.effectAllowed = 'move' }}
+                    onDragOver={(e) => { e.preventDefault(); if (dragOverId !== video.id) setDragOverId(video.id) }}
+                    onDrop={() => handleDrop(video.id)}
+                    onDragEnd={() => { setDraggedId(null); setDragOverId(null) }}
+                    className={`border-b border-outline-variant last:border-0 hover:bg-surface-container-low transition-colors ${dragOverId === video.id ? 'bg-primary-container/20' : ''} ${draggedId === video.id ? 'opacity-50' : ''}`}
+                  >
                     <td className="px-md py-2">
                       <input
                         type="checkbox"
@@ -553,23 +566,8 @@ const refreshVideos = async () => {
                       </span>
                     </td>
                     <td className="px-sm py-2">
-                      <div className="flex items-center gap-xs">
-                        <button
-                          onClick={() => moveVideo(video.id, -1)}
-                          disabled={sortedVideos[0]?.id === video.id}
-                          className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Subir"
-                        >
-                          <span className="material-symbols-outlined text-lg">arrow_upward</span>
-                        </button>
-                        <button
-                          onClick={() => moveVideo(video.id, 1)}
-                          disabled={sortedVideos[sortedVideos.length - 1]?.id === video.id}
-                          className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                          title="Bajar"
-                        >
-                          <span className="material-symbols-outlined text-lg">arrow_downward</span>
-                        </button>
+                      <div className="flex items-center justify-center">
+                        <span className="material-symbols-outlined text-on-surface-variant cursor-grab select-none" title="Arrastrar para reordenar">drag_indicator</span>
                       </div>
                     </td>
                     <td className="px-sm py-2">
@@ -598,7 +596,15 @@ const refreshVideos = async () => {
           {/* Mobile cards */}
           <div className="xl:hidden">
             {paginatedVideos.map(video => (
-              <div key={video.id} className="border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors">
+              <div
+                key={video.id}
+                draggable
+                onDragStart={(e) => { setDraggedId(video.id); e.dataTransfer.setData('text/plain', video.id); e.dataTransfer.effectAllowed = 'move' }}
+                onDragOver={(e) => { e.preventDefault(); if (dragOverId !== video.id) setDragOverId(video.id) }}
+                onDrop={() => handleDrop(video.id)}
+                onDragEnd={() => { setDraggedId(null); setDragOverId(null) }}
+                className={`border-b border-outline-variant last:border-0 p-md hover:bg-surface-container-low transition-colors ${dragOverId === video.id ? 'bg-primary-container/20' : ''} ${draggedId === video.id ? 'opacity-50' : ''}`}
+              >
                 <div className="flex flex-col gap-sm">
                   <div className="flex items-start gap-sm min-w-0 flex-1">
                     <input
@@ -629,22 +635,7 @@ const refreshVideos = async () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-xs self-end">
-                    <button
-                      onClick={() => moveVideo(video.id, -1)}
-                      disabled={sortedVideos[0]?.id === video.id}
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Subir"
-                    >
-                      <span className="material-symbols-outlined text-xl">arrow_upward</span>
-                    </button>
-                    <button
-                      onClick={() => moveVideo(video.id, 1)}
-                      disabled={sortedVideos[sortedVideos.length - 1]?.id === video.id}
-                      className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title="Bajar"
-                    >
-                      <span className="material-symbols-outlined text-xl">arrow_downward</span>
-                    </button>
+                    <span className="material-symbols-outlined text-on-surface-variant cursor-grab select-none px-xs" title="Arrastrar para reordenar">drag_indicator</span>
                     <button
                       onClick={() => openEdit(video)}
                       className="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container text-primary hover:bg-primary-container hover:text-on-primary-container transition-colors"
