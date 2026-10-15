@@ -73,7 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className={`mb-lg ${collapsed ? 'flex justify-center' : ''}`}>
           <Link to="/" className={`group ${collapsed ? 'flex items-center justify-center' : 'flex items-center gap-sm mb-xs'}`}>
             <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-              <span className="material-symbols-outlined text-on-primary-container text-xl">school</span>
+              <span className="material-symbols-outlined text-on-primary-container text-xl">thumb_up</span>
             </div>
             {!collapsed && (
               <div>
@@ -246,7 +246,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-12 h-16 bg-surface border-b border-outline-variant md:hidden">
         <div className="flex items-center gap-sm">
           <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container text-lg">school</span>
+            <span className="material-symbols-outlined text-on-primary-container text-lg">thumb_up</span>
           </div>
           <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
         </div>
