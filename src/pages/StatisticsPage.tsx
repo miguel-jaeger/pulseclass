@@ -69,6 +69,7 @@ interface Reply {
   user_name: string
   user_email?: string
   user_role?: string
+  reply_type?: 'comment' | 'suggestion'
 }
 
 function getDefaultDateStart(): string {
@@ -535,12 +536,13 @@ export function StatisticsPage() {
     const content = replyText.trim()
     const tempId = `temp-${Date.now()}`
     const userName = profile.name || 'Tú'
+    const replyType = activeTab === 'suggestions' ? 'suggestion' : 'comment'
 
     setRepliesMap(prev => ({
       ...prev,
       [ratingId]: [
         ...(prev[ratingId] || []),
-        { id: tempId, rating_id: ratingId, user_id: profile.user_id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile.role }
+        { id: tempId, rating_id: ratingId, user_id: profile.user_id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile.role, reply_type: replyType }
       ]
     }))
     setReplyText('')
@@ -548,7 +550,7 @@ export function StatisticsPage() {
 
     const { data, error } = await insforge.database
       .from('comment_replies')
-      .insert([{ rating_id: ratingId, user_id: profile.user_id, content }])
+      .insert([{ rating_id: ratingId, user_id: profile.user_id, content, reply_type: replyType }])
       .select('id, created_at')
       .single()
 
@@ -1194,9 +1196,9 @@ export function StatisticsPage() {
                         </button>
                       </div>
 
-                      {(repliesMap[item.id]?.length || 0) > 0 && (
-                        <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
-                          {repliesMap[item.id]?.map(reply => (
+                      {(repliesMap[item.id]?.filter(r => r.reply_type !== 'suggestion').length || 0) > 0 && (
+                        <div className="mt-md ml-6 space-y-sm border-l-2 border-outline-variant pl-md">
+                          {repliesMap[item.id]?.filter(r => r.reply_type !== 'suggestion').map(reply => (
                             <div key={reply.id} className="flex gap-sm items-start">
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">
@@ -1428,9 +1430,9 @@ export function StatisticsPage() {
                         </button>
                       </div>
 
-                      {(repliesMap[item.id]?.length || 0) > 0 && (
-                        <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
-                          {repliesMap[item.id]?.map(reply => (
+                      {(repliesMap[item.id]?.filter(r => r.reply_type === 'suggestion').length || 0) > 0 && (
+                        <div className="mt-md ml-6 space-y-sm border-l-2 border-outline-variant pl-md">
+                          {repliesMap[item.id]?.filter(r => r.reply_type === 'suggestion').map(reply => (
                             <div key={reply.id} className="flex gap-sm items-start">
                               <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                               <div className="flex-1">

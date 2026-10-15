@@ -146,18 +146,17 @@ export function SessionDetailPage() {
       }))
 
       setRatings(ratingsWithStars)
-      fetchReplies(ratingIds, activeTab === 'suggestions' ? 'suggestion' : 'comment')
+      fetchReplies(ratingIds)
     }
     setLoading(false)
   }
 
-  const fetchReplies = async (ratingIds: string[], replyType: 'comment' | 'suggestion' = 'comment') => {
+  const fetchReplies = async (ratingIds: string[]) => {
     if (ratingIds.length === 0) return
 
     const { data: repliesData } = await insforge.database
       .from('comment_replies')
-      .select('id, rating_id, user_id, content, created_at')
-      .eq('reply_type', replyType)
+      .select('id, rating_id, user_id, content, created_at, reply_type')
       .in('rating_id', ratingIds)
       .order('created_at', { ascending: true })
 
@@ -235,12 +234,13 @@ export function SessionDetailPage() {
     const content = replyText.trim()
     const tempId = `temp-${Date.now()}`
     const userName = profile?.name || 'Tú'
+    const replyType = activeTab === 'suggestions' ? 'suggestion' : 'comment'
 
     setRepliesMap(prev => ({
       ...prev,
       [ratingId]: [
         ...(prev[ratingId] || []),
-        { id: tempId, rating_id: ratingId, user_id: user.id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile?.role }
+        { id: tempId, rating_id: ratingId, user_id: user.id, content, created_at: new Date().toISOString(), user_name: userName, user_role: profile?.role, reply_type: replyType }
       ]
     }))
     setReplyText('')
@@ -248,7 +248,7 @@ export function SessionDetailPage() {
 
     const { data, error } = await insforge.database
       .from('comment_replies')
-      .insert([{ rating_id: ratingId, user_id: user.id, content }])
+      .insert([{ rating_id: ratingId, user_id: user.id, content, reply_type: replyType }])
       .select('id, created_at')
       .single()
 
@@ -570,9 +570,9 @@ export function SessionDetailPage() {
                     <p className="font-body-md text-body-md text-on-surface mb-md">{rating.comment}</p>
                   )}
 
-                  {(repliesMap[rating.id]?.length || 0) > 0 && (
-                    <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
-                      {repliesMap[rating.id]?.map(reply => (
+                  {(repliesMap[rating.id]?.filter(r => r.reply_type !== 'suggestion').length || 0) > 0 && (
+                    <div className="mt-md ml-6 space-y-sm border-l-2 border-outline-variant pl-md">
+                      {repliesMap[rating.id]?.filter(r => r.reply_type !== 'suggestion').map(reply => (
                         <div key={reply.id} className="flex gap-sm items-start">
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
@@ -793,9 +793,9 @@ export function SessionDetailPage() {
                     <p className="font-body-md text-body-md text-on-surface mb-md">{rating.suggestion}</p>
                   )}
 
-                  {(repliesMap[rating.id]?.length || 0) > 0 && (
-                    <div className="mt-md space-y-sm border-t border-outline-variant pt-md">
-                      {repliesMap[rating.id]?.map(reply => (
+                  {(repliesMap[rating.id]?.filter(r => r.reply_type === 'suggestion').length || 0) > 0 && (
+                    <div className="mt-md ml-6 space-y-sm border-l-2 border-outline-variant pl-md">
+                      {repliesMap[rating.id]?.filter(r => r.reply_type === 'suggestion').map(reply => (
                         <div key={reply.id} className="flex gap-sm items-start">
                           <span className="material-symbols-outlined text-sm text-on-surface-variant mt-[2px]">reply</span>
                           <div className="flex-1">
