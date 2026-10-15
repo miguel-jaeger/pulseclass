@@ -44,7 +44,12 @@ export function HelpAdminPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => { fetchVideos(); fetchStats() }, [])
+const refreshVideos = async () => {
+    await fetchStats()
+    await fetchVideos()
+  }
+
+  useEffect(() => { refreshVideos() }, [])
 
   const fetchStats = async () => {
     const { data } = await insforge.database
@@ -221,7 +226,7 @@ export function HelpAdminPage() {
       if (v.id === from.id) return { ...v, sort_order: to.sort_order }
       if (v.id === to.id) return { ...v, sort_order: from.sort_order }
       return v
-    }).sort((a, b) => a.sort_order - b.sort_order))
+    }))
 
     const { error } = await insforge.database
       .from('help_videos')
@@ -233,12 +238,16 @@ export function HelpAdminPage() {
         .update({ sort_order: from.sort_order })
         .eq('id', to.id)
       if (err2) {
+        // Revert local state on error
+        setVideos(prev => prev.map(v => {
+          if (v.id === from.id) return { ...v, sort_order: from.sort_order }
+          if (v.id === to.id) return { ...v, sort_order: to.sort_order }
+          return v
+        }))
         showToast('No se pudo cambiar el orden', 'error')
-        fetchVideos()
       }
     } else {
       showToast('No se pudo cambiar el orden', 'error')
-      fetchVideos()
     }
   }
 
@@ -422,26 +431,26 @@ export function HelpAdminPage() {
 
       {videos.length > 0 && (
         <>
-          <div className="flex flex-wrap gap-md mb-lg">
-            {(isAdmin ? (['all', 'platform', 'course'] as const) : (['all', 'course'] as const)).map(cat => (
-              <button
-                key={cat}
-                onClick={() => { setCategoryFilter(cat); fetchStats() }}
-                className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
-                  categoryFilter === cat
-                    ? 'bg-primary text-on-primary font-bold'
-                    : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
-                }`}
-              >
-                {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat]}
-                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
-                  {cat === 'all'
-                    ? videoStats.platform + videoStats.course
-                    : videoStats[cat]}
-                </span>
-              </button>
-            ))}
-          </div>
+<div className="flex flex-wrap gap-md mb-lg">
+             {(isAdmin ? (['all', 'platform', 'course'] as const) : (['all', 'course'] as const)).map(cat => (
+               <button
+                 key={cat}
+                 onClick={() => { setCategoryFilter(cat); refreshVideos() }}
+                 className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+                   categoryFilter === cat
+                     ? 'bg-primary text-on-primary font-bold'
+                     : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                 }`}
+               >
+                 {cat === 'all' ? 'Todos' : CATEGORY_LABELS[cat]}
+                 <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
+                   {cat === 'all'
+                     ? videoStats.platform + videoStats.course
+                     : videoStats[cat]}
+                 </span>
+               </button>
+             ))}
+           </div>
           <div className="relative mb-lg overflow-hidden">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
             <input

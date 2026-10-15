@@ -79,7 +79,14 @@ export function HelpPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  useEffect(() => { fetchVideos(); fetchStats() }, [])
+  const refresh = async () => {
+    await fetchStats()
+    await fetchVideos()
+  }
+
+  useEffect(() => {
+    refresh()
+  }, [activeCategory])
 
   const fetchStats = async () => {
     const { data } = await insforge.database
@@ -402,21 +409,21 @@ export function HelpPage() {
       </header>
 
       <div className="flex flex-wrap gap-md mb-lg">
+          <button
+            onClick={() => { setActiveCategory('platform'); setExpandedVideo(null); refresh() }}
+            className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
+              activeCategory === 'platform'
+                ? 'bg-primary text-on-primary font-bold'
+                : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+            }`}
+          >
+            Uso de la plataforma
+            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
+              {videoStats.platform}
+            </span>
+          </button>
         <button
-          onClick={() => { setActiveCategory('platform'); setExpandedVideo(null) }}
-          className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
-            activeCategory === 'platform'
-              ? 'bg-primary text-on-primary font-bold'
-              : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
-          }`}
-        >
-          Uso de la plataforma
-          <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-error text-on-error text-[10px] font-bold leading-none shadow-sm">
-            {videoStats.platform}
-          </span>
-        </button>
-        <button
-          onClick={() => { setActiveCategory('course'); setExpandedVideo(null) }}
+          onClick={() => { setActiveCategory('course'); setExpandedVideo(null); refresh() }}
           className={`relative px-lg py-2 rounded-full font-label-md text-label-md transition-colors ${
             activeCategory === 'course'
               ? 'bg-primary text-on-primary font-bold'
