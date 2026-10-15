@@ -133,22 +133,25 @@ const refreshVideos = async () => {
         resetForm()
       }
     } else {
+      const maxSortOrder = videos.reduce((max, v) => Math.max(max, v.sort_order || 0), 0)
       const { data, error } = await insforge.database
         .from('help_videos')
-        .insert([{ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category, created_by: profile?.user_id }])
+        .insert([{ title: form.title.trim(), description: form.description.trim(), youtube_code: youtubeCode, category: form.category, created_by: profile?.user_id, sort_order: maxSortOrder + 1 }])
         .select('*')
         .single()
 
       if (error) {
         showToast('No se pudo crear el video', 'error')
       } else {
-        setVideos(prev => [data as HelpVideo, ...prev])
+        setVideos(prev => [...prev, data as HelpVideo].sort((a, b) => a.sort_order - b.sort_order))
         fetchStats()
         showToast('Video creado')
         resetForm()
       }
     }
   }
+
+  const sortedVideos = [...videos].sort((a, b) => a.sort_order - b.sort_order)
 
   const filteredVideos = videos.filter(v =>
     (categoryFilter === 'all' || v.category === categoryFilter) &&
@@ -222,31 +225,33 @@ const refreshVideos = async () => {
     const from = sorted[fromIndex]
     const to = sorted[toIndex]
 
-    setVideos(prev => prev.map(v => {
-      if (v.id === from.id) return { ...v, sort_order: to.sort_order }
-      if (v.id === to.id) return { ...v, sort_order: from.sort_order }
-      return v
-    }))
+    const applySwap = (list: HelpVideo[], fromOrder: number, toOrder: number) =>
+      list.map(v => {
+        if (v.id === from.id) return { ...v, sort_order: toOrder }
+        if (v.id === to.id) return { ...v, sort_order: fromOrder }
+        return v
+      }).sort((a, b) => a.sort_order - b.sort_order)
+
+    setVideos(applySwap(videos, from.sort_order, to.sort_order))
 
     const { error } = await insforge.database
       .from('help_videos')
       .update({ sort_order: to.sort_order })
       .eq('id', from.id)
-    if (!error) {
-      const { error: err2 } = await insforge.database
-        .from('help_videos')
-        .update({ sort_order: from.sort_order })
-        .eq('id', to.id)
-      if (err2) {
-        // Revert local state on error
-        setVideos(prev => prev.map(v => {
-          if (v.id === from.id) return { ...v, sort_order: from.sort_order }
-          if (v.id === to.id) return { ...v, sort_order: to.sort_order }
-          return v
-        }))
-        showToast('No se pudo cambiar el orden', 'error')
-      }
-    } else {
+
+    if (error) {
+      setVideos(applySwap(videos, to.sort_order, from.sort_order))
+      showToast('No se pudo cambiar el orden', 'error')
+      return
+    }
+
+    const { error: err2 } = await insforge.database
+      .from('help_videos')
+      .update({ sort_order: from.sort_order })
+      .eq('id', to.id)
+
+    if (err2) {
+      setVideos(applySwap(videos, to.sort_order, from.sort_order))
       showToast('No se pudo cambiar el orden', 'error')
     }
   }
@@ -551,7 +556,7 @@ const refreshVideos = async () => {
                       <div className="flex items-center gap-xs">
                         <button
                           onClick={() => moveVideo(video.id, -1)}
-                          disabled={paginatedVideos[0]?.id === video.id}
+                          disabled={sortedVideos[0]?.id === video.id}
                           className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Subir"
                         >
@@ -559,7 +564,7 @@ const refreshVideos = async () => {
                         </button>
                         <button
                           onClick={() => moveVideo(video.id, 1)}
-                          disabled={paginatedVideos[paginatedVideos.length - 1]?.id === video.id}
+                          disabled={sortedVideos[sortedVideos.length - 1]?.id === video.id}
                           className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Bajar"
                         >
@@ -626,7 +631,7 @@ const refreshVideos = async () => {
                   <div className="flex flex-wrap items-center gap-xs self-end">
                     <button
                       onClick={() => moveVideo(video.id, -1)}
-                      disabled={paginatedVideos[0]?.id === video.id}
+                      disabled={sortedVideos[0]?.id === video.id}
                       className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       title="Subir"
                     >
@@ -634,7 +639,7 @@ const refreshVideos = async () => {
                     </button>
                     <button
                       onClick={() => moveVideo(video.id, 1)}
-                      disabled={paginatedVideos[paginatedVideos.length - 1]?.id === video.id}
+                      disabled={sortedVideos[sortedVideos.length - 1]?.id === video.id}
                       className="w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       title="Bajar"
                     >
