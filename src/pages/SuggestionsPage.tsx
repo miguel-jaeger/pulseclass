@@ -112,7 +112,6 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
-  const [revealedAuthors, setRevealedAuthors] = useState<Set<string>>(new Set())
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -125,17 +124,7 @@ export function SuggestionsPage() {
     return false
   }
 
-  const toggleAuthor = (id: string) => {
-    setRevealedAuthors(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   const isStaffAuthor = (role?: string) => !!role && role !== 'student'
-  const canSeeAuthor = (id: string, role?: string) => isStaffAuthor(role) || (effectiveRole !== 'student' && revealedAuthors.has(id))
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -481,19 +470,6 @@ export function SuggestionsPage() {
                         <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     )}
-                    {effectiveRole !== 'student' && (
-                      <button
-                        onClick={() => toggleAuthor(s.id)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${
-                          canSeeAuthor(s.id)
-                            ? 'text-primary hover:bg-secondary-container'
-                            : 'text-on-surface-variant hover:bg-secondary-container'
-                        }`}
-                        title={canSeeAuthor(s.id) ? 'Ocultar datos del autor' : 'Mostrar datos del autor'}
-                      >
-                        <span className="material-symbols-outlined text-lg">{canSeeAuthor(s.id) ? 'visibility' : 'visibility_off'}</span>
-                      </button>
-                    )}
                   </div>
                 </div>
                 <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
@@ -505,7 +481,7 @@ export function SuggestionsPage() {
                 )}
                 <div className="flex flex-col gap-xs text-on-surface-variant">
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {canSeeAuthor(s.id, s.profiles?.role) && (
+                  {isStaffAuthor(s.profiles?.role) && (
                     <span className="flex items-center gap-xs font-body-sm text-body-sm">
                       <span className="material-symbols-outlined text-lg">person</span>
                       {formatDisplayName(s.profiles?.name) || ''}
@@ -784,7 +760,7 @@ export function SuggestionsPage() {
 
             <div className="flex flex-col gap-xs text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              {canSeeAuthor(detailSuggestion.id, detailSuggestion.profiles?.role) && (
+              {isStaffAuthor(detailSuggestion.profiles?.role) && (
                 <span className="flex items-center gap-xs font-body-sm text-body-sm">
                   <span className="material-symbols-outlined text-lg">person</span>
                   {formatDisplayName(detailSuggestion.profiles?.name) || ''}
