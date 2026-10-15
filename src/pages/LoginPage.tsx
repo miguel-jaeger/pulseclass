@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { PasswordInput } from '../components/PasswordInput'
+import { Logo } from '../components/Logo'
 
 export function LoginPage() {
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth()
@@ -45,9 +46,7 @@ export function LoginPage() {
       <div className="max-w-md w-full space-y-lg p-lg bg-surface-container-lowest rounded-xl border border-outline-variant">
         <div className="text-center">
           <div className="flex items-center justify-center gap-sm mb-md">
-            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary-container">school</span>
-            </div>
+            <Logo className="w-10 h-10" />
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">PulseClass</h1>
           </div>
           <p className="font-body-md text-body-md text-on-surface-variant">Evaluar la satisfacción estudiantil al finalizar cada clase</p>

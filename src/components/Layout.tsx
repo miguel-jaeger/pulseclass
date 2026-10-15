@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Avatar } from '../pages/ProfilePage'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { Logo } from './Logo'
 import { formatDisplayName } from '../lib/formatDisplayName'
 import type { ReactNode } from 'react'
 
@@ -72,9 +73,7 @@ export function Layout({ children }: { children: ReactNode }) {
         {/* Logo + Toggle */}
         <div className={`mb-lg ${collapsed ? 'flex justify-center' : ''}`}>
           <Link to="/" className={`group ${collapsed ? 'flex items-center justify-center' : 'flex items-center gap-sm mb-xs'}`}>
-            <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
-              <span className="material-symbols-outlined text-on-primary-container text-xl">thumb_up</span>
-            </div>
+            <Logo className="w-10 h-10 shrink-0 group-hover:scale-105 transition-transform" />
             {!collapsed && (
               <div>
                 <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
@@ -245,9 +244,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* TopAppBar (Mobile) */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-12 h-16 bg-surface border-b border-outline-variant md:hidden">
         <div className="flex items-center gap-sm">
-          <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary-container text-lg">thumb_up</span>
-          </div>
+          <Logo className="w-8 h-8" />
           <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
         </div>
         <Link to="/profile" className="flex items-center gap-4 text-primary">
