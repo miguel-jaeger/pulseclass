@@ -35,6 +35,7 @@ interface Reply {
   user_name?: string
   user_email?: string
   user_role?: string
+  reply_type?: 'comment' | 'suggestion'
 }
 
 function isSessionToday(sessionDate: string): boolean {
@@ -145,17 +146,18 @@ export function SessionDetailPage() {
       }))
 
       setRatings(ratingsWithStars)
-      fetchReplies(ratingIds)
+      fetchReplies(ratingIds, activeTab === 'suggestions' ? 'suggestion' : 'comment')
     }
     setLoading(false)
   }
 
-  const fetchReplies = async (ratingIds: string[]) => {
+  const fetchReplies = async (ratingIds: string[], replyType: 'comment' | 'suggestion' = 'comment') => {
     if (ratingIds.length === 0) return
 
     const { data: repliesData } = await insforge.database
       .from('comment_replies')
       .select('id, rating_id, user_id, content, created_at')
+      .eq('reply_type', replyType)
       .in('rating_id', ratingIds)
       .order('created_at', { ascending: true })
 
