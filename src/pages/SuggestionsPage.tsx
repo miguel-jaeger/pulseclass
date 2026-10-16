@@ -112,6 +112,7 @@ export function SuggestionsPage() {
   const [editPreviews, setEditPreviews] = useState<string[]>([])
   const [detailSuggestion, setDetailSuggestion] = useState<Suggestion | null>(null)
   const [detailImageIndex, setDetailImageIndex] = useState(0)
+  const [authorCourses, setAuthorCourses] = useState<Record<string, string[]>>({})
   const createFileRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
   const isAdmin = effectiveRole === 'admin'
@@ -143,8 +144,44 @@ export function SuggestionsPage() {
 
     if (!error && data) {
       setSuggestions(data as Suggestion[])
+      await fetchAuthorCourses((data as Suggestion[]).map(s => s.user_id))
     }
     setLoading(false)
+  }
+
+  const fetchAuthorCourses = async (userIds: string[]) => {
+    const uniqueUserIds = [...new Set(userIds)]
+    if (uniqueUserIds.length === 0) {
+      setAuthorCourses({})
+      return
+    }
+
+    const { data: members } = await insforge.database
+      .from('course_members')
+      .select('user_id, course_id')
+      .in('user_id', uniqueUserIds)
+
+    if (!members || members.length === 0) {
+      setAuthorCourses({})
+      return
+    }
+
+    const courseIds = [...new Set((members as { course_id: string }[]).map(m => m.course_id))]
+    const { data: courses } = await insforge.database
+      .from('courses')
+      .select('id, name')
+      .in('id', courseIds)
+
+    const nameById = new Map(((courses as { id: string; name: string }[] | null) || []).map(c => [c.id, c.name]))
+
+    const map: Record<string, string[]> = {}
+    for (const m of members as { user_id: string; course_id: string }[]) {
+      const name = nameById.get(m.course_id)
+      if (!name) continue
+      if (!map[m.user_id]) map[m.user_id] = []
+      if (!map[m.user_id].includes(name)) map[m.user_id].push(name)
+    }
+    setAuthorCourses(map)
   }
 
   const fetchTeacherStudents = async () => {
@@ -483,6 +520,12 @@ export function SuggestionsPage() {
                     <span className="material-symbols-outlined text-lg">person</span>
                     {formatDisplayName(s.profiles?.name) || ''}
                   </span>
+                  {authorCourses[s.user_id]?.length > 0 && (
+                    <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                      <span className="material-symbols-outlined text-lg">school</span>
+                      {authorCourses[s.user_id].join(', ')}
+                    </span>
+                  )}
                 </div>
               </div>
             )
@@ -760,6 +803,12 @@ export function SuggestionsPage() {
                 <span className="material-symbols-outlined text-lg">person</span>
                 {formatDisplayName(detailSuggestion.profiles?.name) || ''}
               </span>
+              {authorCourses[detailSuggestion.user_id]?.length > 0 && (
+                <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                  <span className="material-symbols-outlined text-lg">school</span>
+                  {authorCourses[detailSuggestion.user_id].join(', ')}
+                </span>
+              )}
             </div>
           </div>
         </div>
