@@ -124,8 +124,6 @@ export function SuggestionsPage() {
     return false
   }
 
-  const isStaffAuthor = (role?: string) => !!role && role !== 'student'
-
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 4000)
@@ -481,12 +479,10 @@ export function SuggestionsPage() {
                 )}
                 <div className="flex flex-col gap-xs text-on-surface-variant">
                   <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {isStaffAuthor(s.profiles?.role) && (
-                    <span className="flex items-center gap-xs font-body-sm text-body-sm">
-                      <span className="material-symbols-outlined text-lg">person</span>
-                      {formatDisplayName(s.profiles?.name) || ''}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                    <span className="material-symbols-outlined text-lg">person</span>
+                    {formatDisplayName(s.profiles?.name) || ''}
+                  </span>
                 </div>
               </div>
             )
@@ -760,12 +756,10 @@ export function SuggestionsPage() {
 
             <div className="flex flex-col gap-xs text-on-surface-variant border-t border-outline-variant pt-md">
               <span className="font-body-sm text-body-sm">{new Date(detailSuggestion.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              {isStaffAuthor(detailSuggestion.profiles?.role) && (
-                <span className="flex items-center gap-xs font-body-sm text-body-sm">
-                  <span className="material-symbols-outlined text-lg">person</span>
-                  {formatDisplayName(detailSuggestion.profiles?.name) || ''}
-                </span>
-              )}
+              <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                <span className="material-symbols-outlined text-lg">person</span>
+                {formatDisplayName(detailSuggestion.profiles?.name) || ''}
+              </span>
             </div>
           </div>
         </div>
