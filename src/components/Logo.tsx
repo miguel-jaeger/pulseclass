@@ -1,15 +1,13 @@
 export function Logo({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" className={className} aria-label="PulseClass">
-      <g transform="translate(1 4)">
-        <circle cx="16" cy="16" r="16" fill="#9e001f" />
-        <path d="M16 25 C9 20.5 6.5 16 6.5 12.5 C6.5 9.5 8.5 7.5 11 7.5 C13.2 7.5 14.8 8.8 16 10.8 C17.2 8.8 18.8 7.5 21 7.5 C23.5 7.5 25.5 9.5 25.5 12.5 C25.5 16 23 20.5 16 25 Z" fill="#ffffff" />
-        <path d="M10.5 15.5 L13 15.5 L15 12 L17 19 L19 15.5 L21.5 15.5" fill="none" stroke="#9e001f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-      <path d="M22.5 20.5 L31.5 20.5 L30.5 27 Q27 28 23.5 27 Z" fill="#ffffff" stroke="#9e001f" strokeWidth="1.1" strokeLinejoin="round" />
-      <path d="M27 11 L35 18 L27 25 L19 18 Z" fill="#ffffff" stroke="#9e001f" strokeWidth="1.1" strokeLinejoin="round" />
-      <path d="M35 18 L35.5 24" fill="none" stroke="#9e001f" strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx="35.5" cy="24.5" r="0.9" fill="#9e001f" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className={className} aria-label="PulseClass">
+      <circle cx="16" cy="16" r="16" fill="#9e001f" />
+      <path d="M16 25 C9 20.5 6.5 16 6.5 12.5 C6.5 9.5 8.5 7.5 11 7.5 C13.2 7.5 14.8 8.8 16 10.8 C17.2 8.8 18.8 7.5 21 7.5 C23.5 7.5 25.5 9.5 25.5 12.5 C25.5 16 23 20.5 16 25 Z" fill="#ffffff" />
+      <path d="M10.5 15.5 L13 15.5 L15 12 L17 19 L19 15.5 L21.5 15.5" fill="none" stroke="#9e001f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19.3 5.4 L23.7 5.4 L23.3 8.3 Q21.5 8.8 19.7 8.3 Z" fill="#ffffff" stroke="#9e001f" strokeWidth="0.6" strokeLinejoin="round" />
+      <path d="M21.5 2 L26 4.3 L21.5 6.6 L17 4.3 Z" fill="#ffffff" stroke="#9e001f" strokeWidth="0.6" strokeLinejoin="round" />
+      <path d="M26 4.3 L26 8" fill="none" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx="26" cy="8.4" r="0.8" fill="#ffffff" />
     </svg>
   )
 }
