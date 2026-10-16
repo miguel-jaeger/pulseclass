@@ -52,6 +52,10 @@ const typeStyles: Record<string, string> = {
   contenido: 'bg-cyan-100 text-cyan-800 border border-cyan-300',
 }
 
+function formatCourses(courses: string[]): string {
+  return courses.length > 1 ? `${courses[0]} y otros...` : courses[0]
+}
+
 async function uploadToCloudinary(file: File): Promise<string> {
   const formData = new FormData()
   formData.append('file', file)
@@ -523,7 +527,7 @@ export function SuggestionsPage() {
                   {authorCourses[s.user_id]?.length > 0 && (
                     <span className="flex items-center gap-xs font-body-sm text-body-sm">
                       <span className="material-symbols-outlined text-lg">school</span>
-                      {authorCourses[s.user_id].join(', ')}
+                      {formatCourses(authorCourses[s.user_id])}
                     </span>
                   )}
                 </div>
@@ -806,7 +810,7 @@ export function SuggestionsPage() {
               {authorCourses[detailSuggestion.user_id]?.length > 0 && (
                 <span className="flex items-center gap-xs font-body-sm text-body-sm">
                   <span className="material-symbols-outlined text-lg">school</span>
-                  {authorCourses[detailSuggestion.user_id].join(', ')}
+                  {formatCourses(authorCourses[detailSuggestion.user_id])}
                 </span>
               )}
             </div>
