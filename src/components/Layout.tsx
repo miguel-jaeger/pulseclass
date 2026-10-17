@@ -244,7 +244,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* TopAppBar (Mobile) */}
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-12 h-16 bg-surface border-b border-outline-variant md:hidden">
         <div className="flex items-center gap-sm">
-          <Logo className="w-9 h-9" />
+          <Logo className="w-10 h-10" />
           <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
         </div>
         <Link to="/profile" className="flex items-center gap-4 text-primary">
