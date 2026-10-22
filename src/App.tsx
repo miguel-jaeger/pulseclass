@@ -1,9 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ImpersonationProvider } from './hooks/useImpersonation'
 import { ThemeProvider } from './hooks/useTheme'
 import { Layout } from './components/Layout'
+import { SplashScreen } from './components/SplashScreen'
 import { LoginPage } from './pages/LoginPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -33,11 +34,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+    return <SplashScreen />
   }
 
   if (!user) {
@@ -49,13 +46,15 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth()
+  const [splashVisible, setSplashVisible] = useState(true)
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashVisible(false), 1400)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading || splashVisible) {
+    return <SplashScreen />
   }
 
   return (
