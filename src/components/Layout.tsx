@@ -76,7 +76,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Logo className="w-12 h-12 shrink-0 group-hover:scale-105 transition-transform" />
             {!collapsed && (
               <div>
-                <div className="font-headline-sm text-headline-sm font-bold text-brand">PulseClass</div>
+                <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
                 <div className="text-on-surface-variant font-label-sm text-label-sm">Satisfacción Estudiantil</div>
               </div>
             )}
@@ -245,7 +245,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 md:px-12 h-16 bg-surface border-b border-outline-variant md:hidden">
         <div className="flex items-center gap-sm">
           <Logo className="w-10 h-10" />
-          <div className="font-headline-sm text-headline-sm font-bold text-brand">PulseClass</div>
+          <div className="font-headline-sm text-headline-sm font-bold text-primary">PulseClass</div>
         </div>
         <Link to="/profile" className="flex items-center gap-4 text-primary">
           <Avatar url={profile?.avatar_url} name={profile?.name} size="sm" />
