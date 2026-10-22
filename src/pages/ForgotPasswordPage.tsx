@@ -136,7 +136,7 @@ export function ForgotPasswordPage() {
             <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
               <span className="material-symbols-outlined text-on-primary-container">lock_reset</span>
             </div>
-            <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">PulseClass</h1>
+            <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-bold text-brand">PulseClass</h1>
           </div>
 
           {step === 'done' ? (

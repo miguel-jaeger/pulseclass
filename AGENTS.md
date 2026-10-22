@@ -82,6 +82,7 @@ Todos los colores se definen como CSS custom properties dentro de `@theme { }` (
 | Token | Light | Dark | Uso |
 |-------|-------|------|-----|
 | `primary` | `#9e001f` | `#ffb3b1` | Botones principales, links |
+| `brand` | `#9e001f` | `#9e001f` | Logo y nombre PulseClass (siempre modo claro, NO se sobreescribe en `.dark`) |
 | `on-primary` | `#ffffff` | `#5a0010` | Texto sobre primary |
 | `surface` | `#f6faff` | `#141d23` | Fondo principal |
 | `on-surface` | `#141d23` | `#e1e2e3` | Texto principal |
