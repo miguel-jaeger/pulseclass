@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ImpersonationProvider } from './hooks/useImpersonation'
 import { ThemeProvider } from './hooks/useTheme'
 import { Layout } from './components/Layout'
-import { SplashScreen } from './components/SplashScreen'
 import { LoginPage } from './pages/LoginPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -22,6 +21,21 @@ import type { ReactNode } from 'react'
 
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage'))
 
+const SPLASH_MIN_MS = 2500
+
+function useSplashReady() {
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const started = (window as unknown as { __pulseclassSplashStart?: number }).__pulseclassSplashStart ?? Date.now()
+    const remaining = Math.max(0, SPLASH_MIN_MS - (Date.now() - started))
+    const timer = setTimeout(() => setReady(true), remaining)
+    return () => clearTimeout(timer)
+  }, [])
+
+  return ready
+}
+
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-xl">
@@ -34,7 +48,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return <SplashScreen />
+    return null
   }
 
   if (!user) {
@@ -46,15 +60,15 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth()
-  const [splashVisible, setSplashVisible] = useState(true)
+  const splashReady = useSplashReady()
 
   useEffect(() => {
-    const timer = setTimeout(() => setSplashVisible(false), 1400)
-    return () => clearTimeout(timer)
-  }, [])
+    if (loading || !splashReady) return
+    document.getElementById('splash')?.remove()
+  }, [loading, splashReady])
 
-  if (loading || splashVisible) {
-    return <SplashScreen />
+  if (loading || !splashReady) {
+    return null
   }
 
   return (
