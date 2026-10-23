@@ -38,6 +38,14 @@
           width: 13rem;
         }
       }
+      @media (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
+        #splash {
+          padding-bottom: 4.8vh;
+        }
+        #splash svg {
+          width: 12rem;
+        }
+      }
       @keyframes splash-glint {
         0% { stroke-dashoffset: 426; }
         70% { stroke-dashoffset: 184; }
