@@ -7,6 +7,7 @@ import { Pagination, usePagination } from '../components/Pagination'
 import { PasswordInput } from '../components/PasswordInput'
 import { normalizeRole, roleLabel, ROLE_FILTER_OPTIONS, ROLE_OPTIONS } from '../lib/roles'
 import { formatDisplayName } from '../lib/formatDisplayName'
+import { getErrorMessage } from '../lib/errorMessage'
 
 interface UserProfile {
   id: string
@@ -23,6 +24,8 @@ interface ImportResult {
   error?: string
   message?: string
 }
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export function AdminPage() {
   const { profile } = useAuth()
@@ -91,11 +94,22 @@ export function AdminPage() {
 
   const createUser = async () => {
     setFormError('')
+    const name = createForm.name.trim()
+    const email = createForm.email.trim().toLowerCase()
+    if (!name) {
+      setFormError('El nombre es obligatorio.')
+      return
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      setFormError('Ingresa un correo electrónico válido.')
+      return
+    }
+
     setFormLoading(true)
     try {
       const { data, error } = await insforge.functions.invoke('admin-create-user', {
         method: 'POST',
-        body: createForm
+        body: { name, email, role: createForm.role }
       })
 
       if (error) throw error
@@ -104,10 +118,9 @@ export function AdminPage() {
       setShowCreateModal(false)
       setCreateForm({ name: '', email: '', role: 'student' })
       await fetchUsers()
-      showToast('Usuario creado exitosamente')
+      showToast(data?.reused === true ? 'Usuario existente actualizado con el rol asignado' : 'Usuario creado exitosamente')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al crear usuario'
-      setFormError(message)
+      setFormError(getErrorMessage(err, 'Error al crear usuario'))
     } finally {
       setFormLoading(false)
     }
@@ -238,8 +251,7 @@ export function AdminPage() {
       setEditingUser(null)
       showToast(editForm.password ? 'Usuario y contraseña actualizados' : 'Usuario actualizado')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al guardar cambios'
-      setFormError(message)
+      setFormError(getErrorMessage(err, 'Error al guardar cambios'))
     } finally {
       setFormLoading(false)
     }
@@ -258,8 +270,7 @@ export function AdminPage() {
       if (data?.success !== true) throw new Error('El servidor no confirmó el cambio de contraseña')
       showToast('Contraseña restablecida a 12345678')
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al restablecer la contraseña'
-      showToast(message, 'error')
+      showToast(getErrorMessage(err, 'Error al restablecer la contraseña'), 'error')
     }
   }
 
@@ -271,10 +282,12 @@ export function AdminPage() {
       body: { userId }
     })
 
-    if (!error) {
-      setUsers(prev => prev.filter(u => u.user_id !== userId))
-      showToast('Usuario eliminado')
+    if (error) {
+      showToast(getErrorMessage(error, 'Error al eliminar usuario'), 'error')
+      return
     }
+    setUsers(prev => prev.filter(u => u.user_id !== userId))
+    showToast('Usuario eliminado')
   }
 
   const deleteSelectedUsers = async () => {
