@@ -1,7 +1,7 @@
 ﻿{
-  "name": "PulseClass - SatisfacciÃ³n Estudiantil",
+  "name": "PulseClass - Satisfacción Estudiantil",
   "short_name": "PulseClass",
-  "description": "Evaluar la satisfacciÃ³n estudiantil al finalizar cada clase",
+  "description": "Evaluar la satisfacción estudiantil al finalizar cada clase",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
