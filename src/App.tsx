@@ -65,6 +65,7 @@ function AppRoutes() {
   useEffect(() => {
     if (loading || !splashReady) return
     document.getElementById('splash')?.remove()
+    document.documentElement.classList.remove('splash-active')
   }, [loading, splashReady])
 
   if (loading || !splashReady) {

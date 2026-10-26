@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="h-full" lang="es">
+<html class="h-full splash-active" lang="es">
   <head>
     <meta charset="UTF-8" />
     <script>
@@ -10,6 +10,14 @@
           }
         } catch (e) {}
         window.__pulseclassSplashStart = Date.now()
+        try {
+          var standalone = window.matchMedia('(display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen)').matches
+          if (standalone) {
+            var gap = Math.round(window.screen.height - window.innerHeight)
+            var shift = gap > 0 && gap < 120 ? Math.round(gap / 2) : 0
+            document.documentElement.style.setProperty('--splash-shift', shift + 'px')
+          }
+        } catch (e) {}
       })()
     </script>
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
@@ -20,14 +28,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PulseClass - Satisfacción Estudiantil</title>
     <style>
+      :root {
+        --splash-bg: #ffffff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --splash-bg: #141d23;
+        }
+      }
+      html.splash-active,
+      html.splash-active body {
+        background: var(--splash-bg);
+      }
       #splash {
         position: fixed;
-        inset: 0;
+        inset: -1px;
         z-index: 9999;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #ffffff;
+        background: var(--splash-bg);
       }
       #splash svg {
         width: 11rem;
@@ -39,11 +59,9 @@
         }
       }
       @media (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
-        #splash {
-          padding-bottom: 4.8vh;
-        }
         #splash svg {
           width: 12rem;
+          transform: translateY(calc(var(--splash-shift, 0px) * -1));
         }
       }
       @keyframes splash-glint {
