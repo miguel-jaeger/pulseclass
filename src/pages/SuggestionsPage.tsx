@@ -1,56 +1,16 @@
-import { useState, useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
 import { Pagination, usePagination } from '../components/Pagination'
 import { formatDisplayName } from '../lib/formatDisplayName'
+import { STATUS_ORDER, statusLabels, statusStyles, typeLabels, typeStyles, type Suggestion } from '../lib/suggestions'
+
+const SuggestionsReport = lazy(() => import('../components/SuggestionsReport'))
 
 const CLOUDINARY_CLOUD = 'dhecags26'
 const CLOUDINARY_UPLOAD_PRESET = 'ml_default'
 const FUNCTIONS_URL = `${import.meta.env.VITE_INSFORGE_URL.replace('.us-west.', '.function2.')}`
-
-interface Suggestion {
-  id: string
-  user_id: string
-  type: string
-  description: string
-  status: string
-  rejection_reason?: string | null
-  images: string[]
-  created_at: string
-  updated_at: string
-  profiles?: { name: string; email: string; role: string }
-}
-
-const typeLabels: Record<string, string> = {
-  mejora: 'Mejora',
-  nuevo: 'Nuevo',
-  problema: 'Problema',
-  contenido: 'Contenido',
-}
-
-const statusLabels: Record<string, string> = {
-  recibida: 'Recibida',
-  revision: 'Revisión',
-  aprobada: 'Aprobada',
-  rechazada: 'Rechazada',
-  implementada: 'Implementada',
-}
-
-const statusStyles: Record<string, string> = {
-  recibida: 'bg-gray-100 text-gray-800 border border-gray-300',
-  revision: 'bg-amber-100 text-amber-800 border border-amber-300',
-  aprobada: 'bg-green-100 text-green-800 border border-green-300',
-  rechazada: 'bg-error-container text-on-error-container border border-error/30',
-  implementada: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
-}
-
-const typeStyles: Record<string, string> = {
-  mejora: 'bg-blue-100 text-blue-800 border border-blue-300',
-  nuevo: 'bg-purple-100 text-purple-800 border border-purple-300',
-  problema: 'bg-orange-100 text-orange-800 border border-orange-300',
-  contenido: 'bg-cyan-100 text-cyan-800 border border-cyan-300',
-}
 
 function formatCourses(courses: string[]): string {
   return courses.length > 1 ? `${courses[0]} y otros...` : courses[0]
@@ -104,6 +64,7 @@ export function SuggestionsPage() {
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [view, setView] = useState<'list' | 'report'>('list')
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
@@ -355,6 +316,15 @@ export function SuggestionsPage() {
     }
   }
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: suggestions.length }
+    for (const status of STATUS_ORDER) counts[status] = 0
+    for (const suggestion of suggestions) {
+      counts[suggestion.status] = (counts[suggestion.status] ?? 0) + 1
+    }
+    return counts
+  }, [suggestions])
+
   const filtered = suggestions.filter(s => statusFilter === 'all' || s.status === statusFilter)
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filtered.length, 10)
   const paginatedSuggestions = paginatedSlice(filtered)
@@ -414,136 +384,175 @@ export function SuggestionsPage() {
         </button>
       </header>
 
-      {/* Status Filter */}
-      <div className="flex gap-sm mb-lg flex-wrap">
-        {['all', 'recibida', 'revision', 'aprobada', 'rechazada', 'implementada'].map(s => (
+      <div role="tablist" className="flex w-full md:w-auto rounded-full bg-surface-container p-1 mb-lg">
+        {[
+          { value: 'list' as const, label: 'Listado', icon: 'list' },
+          { value: 'report' as const, label: 'Reporte', icon: 'insights' },
+        ].map(tab => (
           <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`px-md py-1 rounded-full font-label-md text-label-md transition-colors ${
-              statusFilter === s
-                ? s === 'all'
-                  ? 'bg-primary text-on-primary'
-                  : statusStyles[s]
-                : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+            key={tab.value}
+            role="tab"
+            aria-selected={view === tab.value}
+            onClick={() => setView(tab.value)}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-xs px-lg py-1.5 rounded-full text-sm transition-colors ${
+              view === tab.value
+                ? 'bg-surface text-primary font-bold shadow-sm'
+                : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            {s === 'all' ? 'Todas' : statusLabels[s]}
+            <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Suggestions List */}
-      {filtered.length === 0 ? (
-        <div className="bg-surface-container-lowest rounded-xl p-xl text-center border border-outline-variant">
-          <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-md block">lightbulb</span>
-          <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias {statusFilter !== 'all' ? 'con este estado' : 'aún'}</p>
-        </div>
-      ) : (
-        <div className="space-y-md">
-          {paginatedSuggestions.map(s => {
-            const isOwn = s.user_id === user?.id
-            const hasImages = s.images && s.images.length > 0
-            return (
-              <div key={s.id} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
-                <div className="flex flex-wrap items-start justify-between gap-sm mb-md">
-                  <div className="flex flex-wrap items-center gap-sm">
-                    <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${typeStyles[s.type]}`}>
-                      {typeLabels[s.type]}
-                    </span>
-                    <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${statusStyles[s.status]}`}>
-                      {statusLabels[s.status]}
-                    </span>
-                    {hasImages && (
-                      <span className="flex items-center gap-1 text-on-surface-variant">
-                        <span className="material-symbols-outlined text-lg">image</span>
-                        <span className="font-label-sm text-label-sm">{s.images.length}</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-sm">
-                    <button
-                      onClick={() => setDetailSuggestion(s)}
-                      className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
-                      title="Ver detalles"
-                    >
-                      <span className="material-symbols-outlined text-lg">visibility</span>
-                    </button>
-                    {(isAdmin || canEditSuggestion(s.user_id)) && (
-                      <div className="flex items-center gap-sm">
-                        <select
-                          id={`suggestion-status-${s.id}`}
-                          name="status"
-                          aria-label="Estado de sugerencia"
-                          value={s.status}
-                          disabled={updatingStatusId === s.id}
-                          onChange={(e) => handleStatusChange(s.id, e.target.value)}
-                          className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-wait"
-                        >
-                          <option value="recibida">Recibida</option>
-                          <option value="revision">Revisión</option>
-                          <option value="aprobada">Aprobada</option>
-                          <option value="rechazada">Rechazada</option>
-                          <option value="implementada">Implementada</option>
-                        </select>
-                        {updatingStatusId === s.id && (
-                          <span className="material-symbols-outlined text-primary animate-spin text-lg">progress_activity</span>
+      {view === 'list' ? (
+        <>
+          {/* Status Filter */}
+          <div className="flex gap-sm mb-lg flex-wrap">
+            {['all', ...STATUS_ORDER].map(s => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-md py-1 rounded-full text-sm transition-colors flex items-center gap-xs ${
+                  statusFilter === s
+                    ? s === 'all'
+                      ? 'bg-primary text-on-primary'
+                      : statusStyles[s]
+                    : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
+                }`}
+              >
+                {s === 'all' ? 'Todas' : statusLabels[s]}
+                <span className={`px-1.5 rounded-full text-xs font-semibold ${statusFilter === s ? 'bg-black/10' : 'bg-surface-container-lowest'}`}>
+                  {statusCounts[s] ?? 0}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Suggestions List */}
+          {filtered.length === 0 ? (
+            <div className="bg-surface-container-lowest rounded-xl p-xl text-center border border-outline-variant">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-md block">lightbulb</span>
+              <p className="font-body-md text-body-md text-on-surface-variant">No hay sugerencias {statusFilter !== 'all' ? 'con este estado' : 'aún'}</p>
+            </div>
+          ) : (
+            <div className="space-y-md">
+              {paginatedSuggestions.map(s => {
+                const isOwn = s.user_id === user?.id
+                const hasImages = s.images && s.images.length > 0
+                return (
+                  <div key={s.id} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
+                    <div className="flex flex-wrap items-start justify-between gap-sm mb-md">
+                      <div className="flex flex-wrap items-center gap-sm">
+                        <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${typeStyles[s.type]}`}>
+                          {typeLabels[s.type]}
+                        </span>
+                        <span className={`px-sm py-1 rounded-full font-label-sm text-label-sm ${statusStyles[s.status]}`}>
+                          {statusLabels[s.status]}
+                        </span>
+                        {hasImages && (
+                          <span className="flex items-center gap-1 text-on-surface-variant">
+                            <span className="material-symbols-outlined text-lg">image</span>
+                            <span className="font-label-sm text-label-sm">{s.images.length}</span>
+                          </span>
                         )}
                       </div>
+                      <div className="flex items-center gap-sm">
+                        <button
+                          onClick={() => setDetailSuggestion(s)}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                          title="Ver detalles"
+                        >
+                          <span className="material-symbols-outlined text-lg">visibility</span>
+                        </button>
+                        {(isAdmin || canEditSuggestion(s.user_id)) && (
+                          <div className="flex items-center gap-sm">
+                            <select
+                              id={`suggestion-status-${s.id}`}
+                              name="status"
+                              aria-label="Estado de sugerencia"
+                              value={s.status}
+                              disabled={updatingStatusId === s.id}
+                              onChange={(e) => handleStatusChange(s.id, e.target.value)}
+                              className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-wait"
+                            >
+                              <option value="recibida">Recibida</option>
+                              <option value="revision">Revisión</option>
+                              <option value="aprobada">Aprobada</option>
+                              <option value="rechazada">Rechazada</option>
+                              <option value="implementada">Implementada</option>
+                            </select>
+                            {updatingStatusId === s.id && (
+                              <span className="material-symbols-outlined text-primary animate-spin text-lg">progress_activity</span>
+                            )}
+                          </div>
+                        )}
+                        {(isOwn || canEditSuggestion(s.user_id)) && (
+                          <button
+                            onClick={() => handleEdit(s)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
+                            title="Editar"
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                        )}
+                        {(isOwn || canEditSuggestion(s.user_id)) && (
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
+                            title="Eliminar"
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
+                    {s.status === 'rechazada' && s.rejection_reason && (
+                      <div className="mb-md rounded-xl bg-error-container/60 border border-error/30 p-sm">
+                        <p className="font-label-sm text-label-sm text-on-error-container font-bold mb-xs">Motivo del rechazo</p>
+                        <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
+                      </div>
                     )}
-                    {(isOwn || canEditSuggestion(s.user_id)) && (
-                      <button
-                        onClick={() => handleEdit(s)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors"
-                        title="Editar"
-                      >
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
-                    )}
-                    {(isOwn || canEditSuggestion(s.user_id)) && (
-                      <button
-                        onClick={() => handleDelete(s.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error transition-colors"
-                        title="Eliminar"
-                      >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    )}
+                    <div className="flex flex-col gap-xs text-on-surface-variant">
+                      <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                        <span className="material-symbols-outlined text-lg">person</span>
+                        {formatDisplayName(s.profiles?.name) || ''}
+                      </span>
+                      {authorCourses[s.user_id]?.length > 0 && (
+                        <span className="flex items-center gap-xs font-body-sm text-body-sm">
+                          <span className="material-symbols-outlined text-lg">school</span>
+                          {formatCourses(authorCourses[s.user_id])}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <p className="font-body-md text-body-md text-on-surface mb-md whitespace-pre-wrap line-clamp-2">{s.description}</p>
-                {s.status === 'rechazada' && s.rejection_reason && (
-                  <div className="mb-md rounded-xl bg-error-container/60 border border-error/30 p-sm">
-                    <p className="font-label-sm text-label-sm text-on-error-container font-bold mb-xs">Motivo del rechazo</p>
-                    <p className="font-body-sm text-body-sm text-on-error-container whitespace-pre-wrap">{s.rejection_reason}</p>
-                  </div>
-                )}
-                <div className="flex flex-col gap-xs text-on-surface-variant">
-                  <span className="font-body-sm text-body-sm">{new Date(s.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  <span className="flex items-center gap-xs font-body-sm text-body-sm">
-                    <span className="material-symbols-outlined text-lg">person</span>
-                    {formatDisplayName(s.profiles?.name) || ''}
-                  </span>
-                  {authorCourses[s.user_id]?.length > 0 && (
-                    <span className="flex items-center gap-xs font-body-sm text-body-sm">
-                      <span className="material-symbols-outlined text-lg">school</span>
-                      {formatCourses(authorCourses[s.user_id])}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+                )
+              })}
+            </div>
+          )}
 
-      <Pagination
-        totalItems={filtered.length}
-        page={page}
-        perPage={perPage}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-      />
+          <Pagination
+            totalItems={filtered.length}
+            page={page}
+            perPage={perPage}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
+          />
+        </>
+      ) : (
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-xl">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          }
+        >
+          <SuggestionsReport suggestions={suggestions} />
+        </Suspense>
+      )}
 
       {/* Create Modal */}
       {showForm && (
