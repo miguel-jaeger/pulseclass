@@ -2,12 +2,24 @@ import { useState, useCallback, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from './useAuth'
 
+export type VoteKind = 'comment' | 'suggestion'
+
 interface VoteCounts {
-  [ratingId: string]: { likes: number; dislikes: number }
+  [key: string]: { likes: number; dislikes: number }
 }
 
 interface UserVotes {
-  [ratingId: string]: 'like' | 'dislike' | null
+  [key: string]: 'like' | 'dislike' | null
+}
+
+const KINDS: VoteKind[] = ['comment', 'suggestion']
+
+export function voteKey(ratingId: string, kind: VoteKind): string {
+  return `${ratingId}:${kind}`
+}
+
+function isKind(value: string): value is VoteKind {
+  return KINDS.includes(value as VoteKind)
 }
 
 export function useRatingVotes() {
@@ -17,42 +29,51 @@ export function useRatingVotes() {
   const userVotesRef = useRef<UserVotes>({})
   const voteCountsRef = useRef<VoteCounts>({})
 
+  const applyVotes = useCallback((counts: VoteCounts, votes: UserVotes) => {
+    voteCountsRef.current = counts
+    userVotesRef.current = votes
+    setVoteCounts(counts)
+    setUserVotes(votes)
+  }, [])
+
   const fetchVotes = useCallback(async (ratingIds: string[]) => {
     if (ratingIds.length === 0) return
 
     const { data: votesData } = await insforge.database
       .from('rating_votes')
-      .select('rating_id, vote_type, user_id')
+      .select('rating_id, vote_type, user_id, kind')
       .in('rating_id', ratingIds)
 
     const counts: VoteCounts = {}
     const votes: UserVotes = {}
 
     for (const id of ratingIds) {
-      counts[id] = { likes: 0, dislikes: 0 }
-      votes[id] = null
-    }
-
-    for (const v of (votesData || []) as { rating_id: string; vote_type: string; user_id: string }[]) {
-      if (v.vote_type === 'like') counts[v.rating_id].likes++
-      else counts[v.rating_id].dislikes++
-
-      if (v.user_id === user?.id) {
-        votes[v.rating_id] = v.vote_type as 'like' | 'dislike'
+      for (const kind of KINDS) {
+        counts[voteKey(id, kind)] = { likes: 0, dislikes: 0 }
+        votes[voteKey(id, kind)] = null
       }
     }
 
-    voteCountsRef.current = counts
-    userVotesRef.current = votes
-    setVoteCounts(counts)
-    setUserVotes(votes)
-  }, [user?.id])
+    for (const v of (votesData || []) as { rating_id: string; vote_type: string; user_id: string; kind: string }[]) {
+      const kind = isKind(v.kind) ? v.kind : 'comment'
+      const key = voteKey(v.rating_id, kind)
+      if (!counts[key]) counts[key] = { likes: 0, dislikes: 0 }
 
-  const vote = useCallback(async (ratingId: string, voteType: 'like' | 'dislike') => {
+      if (v.vote_type === 'like') counts[key].likes++
+      else counts[key].dislikes++
+
+      if (v.user_id === user?.id) votes[key] = v.vote_type as 'like' | 'dislike'
+    }
+
+    applyVotes(counts, votes)
+  }, [applyVotes, user?.id])
+
+  const vote = useCallback(async (ratingId: string, voteType: 'like' | 'dislike', kind: VoteKind = 'comment') => {
     if (!user) return
 
-    const currentVote = userVotesRef.current[ratingId]
-    const currentCounts = voteCountsRef.current[ratingId] || { likes: 0, dislikes: 0 }
+    const key = voteKey(ratingId, kind)
+    const currentVote = userVotesRef.current[key]
+    const currentCounts = voteCountsRef.current[key] || { likes: 0, dislikes: 0 }
 
     if (currentVote === voteType) {
       const { error } = await insforge.database
@@ -60,50 +81,47 @@ export function useRatingVotes() {
         .delete()
         .eq('rating_id', ratingId)
         .eq('user_id', user.id)
+        .eq('kind', kind)
 
       if (!error) {
-        const newVote = { ...userVotesRef.current, [ratingId]: null }
+        const newVote = { ...userVotesRef.current, [key]: null }
         const newCounts = {
           ...voteCountsRef.current,
-          [ratingId]: {
+          [key]: {
             likes: currentCounts.likes - (voteType === 'like' ? 1 : 0),
             dislikes: currentCounts.dislikes - (voteType === 'dislike' ? 1 : 0)
           }
         }
-        userVotesRef.current = newVote
-        voteCountsRef.current = newCounts
-        setUserVotes(newVote)
-        setVoteCounts(newCounts)
+        applyVotes(newCounts, newVote)
       }
-    } else {
-      if (currentVote) {
-        await insforge.database
-          .from('rating_votes')
-          .delete()
-          .eq('rating_id', ratingId)
-          .eq('user_id', user.id)
-      }
-
-      const { error } = await insforge.database
-        .from('rating_votes')
-        .insert([{ rating_id: ratingId, user_id: user.id, vote_type: voteType }])
-
-      if (!error) {
-        const newVote = { ...userVotesRef.current, [ratingId]: voteType }
-        const newCounts = {
-          ...voteCountsRef.current,
-          [ratingId]: {
-            likes: currentCounts.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
-            dislikes: currentCounts.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)
-          }
-        }
-        userVotesRef.current = newVote
-        voteCountsRef.current = newCounts
-        setUserVotes(newVote)
-        setVoteCounts(newCounts)
-      }
+      return
     }
-  }, [user])
+
+    if (currentVote) {
+      await insforge.database
+        .from('rating_votes')
+        .delete()
+        .eq('rating_id', ratingId)
+        .eq('user_id', user.id)
+        .eq('kind', kind)
+    }
+
+    const { error } = await insforge.database
+      .from('rating_votes')
+      .insert([{ rating_id: ratingId, user_id: user.id, vote_type: voteType, kind }])
+
+    if (!error) {
+      const newVote = { ...userVotesRef.current, [key]: voteType }
+      const newCounts = {
+        ...voteCountsRef.current,
+        [key]: {
+          likes: currentCounts.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
+          dislikes: currentCounts.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)
+        }
+      }
+      applyVotes(newCounts, newVote)
+    }
+  }, [applyVotes, user])
 
   return { voteCounts, userVotes, fetchVotes, vote }
 }

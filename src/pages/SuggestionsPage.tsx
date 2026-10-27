@@ -426,16 +426,16 @@ export function SuggestionsPage() {
             role="tab"
             aria-selected={view === tab.value}
             onClick={() => setView(tab.value)}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-xs px-lg py-1.5 rounded-full text-sm transition-colors ${
+            className={`flex-1 md:flex-none flex items-center justify-center gap-1 md:gap-xs px-2 md:px-lg py-1.5 rounded-full text-xs md:text-sm whitespace-nowrap transition-colors ${
               view === tab.value
                 ? 'bg-surface text-primary font-bold shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+            <span className="material-symbols-outlined text-base md:text-lg hidden sm:inline">{tab.icon}</span>
             {tab.label}
             {tab.value === 'trash' && deletedSuggestions.length > 0 && (
-              <span className="px-1.5 rounded-full bg-error-container text-on-error-container text-xs font-semibold">
+              <span className="px-1 md:px-1.5 rounded-full bg-error-container text-on-error-container text-[10px] md:text-xs font-semibold">
                 {deletedSuggestions.length}
               </span>
             )}

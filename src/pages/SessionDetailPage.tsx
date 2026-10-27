@@ -21,8 +21,10 @@ interface Rating {
   comment: string
   suggestion: string
   created_at: string
-  star_count?: number
-  has_starred?: boolean
+  star_count_comment?: number
+  star_count_suggestion?: number
+  has_starred_comment?: boolean
+  has_starred_suggestion?: boolean
   author_info?: { name: string; email: string; role?: string }
 }
 
@@ -125,23 +127,30 @@ export function SessionDetailPage() {
 
       const { data: starsData } = await insforge.database
         .from('comment_stars')
-        .select('rating_id, student_id')
+        .select('rating_id, student_id, kind')
         .in('rating_id', ratingIds)
 
-      const starCounts: Record<string, number> = {}
-      const userStars: Record<string, boolean> = {}
+      const commentStars: Record<string, number> = {}
+      const suggestionStars: Record<string, number> = {}
+      const userCommentStars: Record<string, boolean> = {}
+      const userSuggestionStars: Record<string, boolean> = {}
 
       for (const star of starsData || []) {
-        starCounts[star.rating_id] = (starCounts[star.rating_id] || 0) + 1
+        const isSuggestion = star.kind === 'suggestion'
+        const counts = isSuggestion ? suggestionStars : commentStars
+        counts[star.rating_id] = (counts[star.rating_id] || 0) + 1
         if (star.student_id === user?.id) {
-          userStars[star.rating_id] = true
+          if (isSuggestion) userSuggestionStars[star.rating_id] = true
+          else userCommentStars[star.rating_id] = true
         }
       }
 
       const ratingsWithStars = (ratingsData as Rating[]).map(rating => ({
         ...rating,
-        star_count: starCounts[rating.id] || 0,
-        has_starred: !!userStars[rating.id],
+        star_count_comment: commentStars[rating.id] || 0,
+        star_count_suggestion: suggestionStars[rating.id] || 0,
+        has_starred_comment: !!userCommentStars[rating.id],
+        has_starred_suggestion: !!userSuggestionStars[rating.id],
         author_info: authorMap[rating.student_id] || { name: '', email: '', role: '' }
       }))
 
@@ -188,18 +197,28 @@ export function SessionDetailPage() {
     setRepliesMap(grouped)
   }
 
-  const toggleStar = async (ratingId: string, hasStarred: boolean) => {
+  const toggleStar = async (ratingId: string, kind: 'comment' | 'suggestion', hasStarred: boolean) => {
     if (!user) return
 
     const prevRatings = ratingsRef.current
     const rating = prevRatings.find(r => r.id === ratingId)
     if (!rating) return
 
-    setRatings(prev => prev.map(r =>
-      r.id === ratingId
-        ? { ...r, has_starred: !hasStarred, star_count: (r.star_count || 0) + (hasStarred ? -1 : 1) }
-        : r
-    ))
+    setRatings(prev => prev.map(r => {
+      if (r.id !== ratingId) return r
+      if (kind === 'suggestion') {
+        return {
+          ...r,
+          has_starred_suggestion: !hasStarred,
+          star_count_suggestion: (r.star_count_suggestion || 0) + (hasStarred ? -1 : 1)
+        }
+      }
+      return {
+        ...r,
+        has_starred_comment: !hasStarred,
+        star_count_comment: (r.star_count_comment || 0) + (hasStarred ? -1 : 1)
+      }
+    }))
 
     if (hasStarred) {
       const { error } = await insforge.database
@@ -207,23 +226,24 @@ export function SessionDetailPage() {
         .delete()
         .eq('rating_id', ratingId)
         .eq('student_id', user.id)
+        .eq('kind', kind)
 
       if (error) {
         setRatings(prevRatings)
-        showToast('No se pudo quitar la estrella', 'error')
+        showToast('No se pudo quitar el me gusta', 'error')
       } else {
-        showToast('Estrella quitada')
+        showToast('Me gusta quitado')
       }
     } else {
       const { error } = await insforge.database
         .from('comment_stars')
-        .insert([{ rating_id: ratingId, student_id: user.id }])
+        .insert([{ rating_id: ratingId, student_id: user.id, kind }])
 
       if (error) {
         setRatings(prevRatings)
-        showToast('No se pudo marcar la estrella', 'error')
+        showToast('No se pudo marcar el me gusta', 'error')
       } else {
-        showToast('Estrella marcada')
+        showToast('Me gusta marcado')
       }
     }
   }
@@ -522,15 +542,15 @@ export function SessionDetailPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => toggleStar(rating.id, rating.has_starred || false)}
+                        onClick={() => toggleStar(rating.id, 'comment', rating.has_starred_comment || false)}
                         className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                          rating.has_starred
+                          rating.has_starred_comment
                             ? 'bg-primary-container text-on-primary-container'
                             : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
-                        <span>{rating.star_count || 0}</span>
+                        <span className="material-symbols-outlined text-lg" style={rating.has_starred_comment ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
+                        <span>{rating.star_count_comment || 0}</span>
                       </button>
                     </div>
                   </div>
@@ -745,15 +765,15 @@ export function SessionDetailPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => toggleStar(rating.id, rating.has_starred || false)}
+                        onClick={() => toggleStar(rating.id, 'suggestion', rating.has_starred_suggestion || false)}
                         className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                          rating.has_starred
+                          rating.has_starred_suggestion
                             ? 'bg-primary-container text-on-primary-container'
                             : 'bg-surface-container text-on-surface-variant hover:bg-secondary-container'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-lg" style={rating.has_starred ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
-                        <span>{rating.star_count || 0}</span>
+                        <span className="material-symbols-outlined text-lg" style={rating.has_starred_suggestion ? { fontVariationSettings: "'FILL' 1" } : undefined}>star</span>
+                        <span>{rating.star_count_suggestion || 0}</span>
                       </button>
                     </div>
                   </div>

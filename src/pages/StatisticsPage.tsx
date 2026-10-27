@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { insforge } from '../lib/insforge'
 import { useAuth } from '../hooks/useAuth'
 import { useImpersonation } from '../hooks/useImpersonation'
-import { useRatingVotes } from '../hooks/useRatingVotes'
+import { useRatingVotes, voteKey } from '../hooks/useRatingVotes'
 import { Pagination, usePagination } from '../components/Pagination'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts'
 import { useTheme } from '../hooks/useTheme'
@@ -1173,26 +1173,26 @@ export function StatisticsPage() {
                       )}
                       <div className="flex items-center gap-md mt-sm">
                         <button
-                          onClick={() => vote(item.id, 'like')}
+                          onClick={() => vote(item.id, 'like', 'comment')}
                           className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                            userVotes[item.id] === 'like'
+                            userVotes[voteKey(item.id, 'comment')] === 'like'
                               ? 'bg-primary-container text-on-primary-container'
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
-                          <span>{voteCounts[item.id]?.likes || 0}</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[voteKey(item.id, 'comment')] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span>{voteCounts[voteKey(item.id, 'comment')]?.likes || 0}</span>
                         </button>
                         <button
-                          onClick={() => vote(item.id, 'dislike')}
+                          onClick={() => vote(item.id, 'dislike', 'comment')}
                           className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                            userVotes[item.id] === 'dislike'
+                            userVotes[voteKey(item.id, 'comment')] === 'dislike'
                               ? 'bg-error-container text-on-error-container'
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
-                          <span>{voteCounts[item.id]?.dislikes || 0}</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[voteKey(item.id, 'comment')] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span>{voteCounts[voteKey(item.id, 'comment')]?.dislikes || 0}</span>
                         </button>
                       </div>
 
@@ -1407,26 +1407,26 @@ export function StatisticsPage() {
                       )}
                       <div className="flex items-center gap-md mt-sm">
                         <button
-                          onClick={() => vote(item.id, 'like')}
+                          onClick={() => vote(item.id, 'like', 'suggestion')}
                           className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                            userVotes[item.id] === 'like'
+                            userVotes[voteKey(item.id, 'suggestion')] === 'like'
                               ? 'bg-primary-container text-on-primary-container'
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
-                          <span>{voteCounts[item.id]?.likes || 0}</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[voteKey(item.id, 'suggestion')] === 'like' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_up</span>
+                          <span>{voteCounts[voteKey(item.id, 'suggestion')]?.likes || 0}</span>
                         </button>
                         <button
-                          onClick={() => vote(item.id, 'dislike')}
+                          onClick={() => vote(item.id, 'dislike', 'suggestion')}
                           className={`flex items-center gap-xs px-sm py-xs rounded-full font-label-sm text-label-sm transition-colors ${
-                            userVotes[item.id] === 'dislike'
+                            userVotes[voteKey(item.id, 'suggestion')] === 'dislike'
                               ? 'bg-error-container text-on-error-container'
                               : 'text-on-surface-variant hover:bg-secondary-container'
                           }`}
                         >
-                          <span className="material-symbols-outlined text-xl" style={userVotes[item.id] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
-                          <span>{voteCounts[item.id]?.dislikes || 0}</span>
+                          <span className="material-symbols-outlined text-xl" style={userVotes[voteKey(item.id, 'suggestion')] === 'dislike' ? { fontVariationSettings: "'FILL' 1" } : undefined}>thumb_down</span>
+                          <span>{voteCounts[voteKey(item.id, 'suggestion')]?.dislikes || 0}</span>
                         </button>
                       </div>
 
