@@ -27,7 +27,6 @@ const DAY_MS = 24 * 60 * 60 * 1000
 
 const STATUS_COLORS: Record<string, { light: string; dark: string }> = {
   recibida: { light: '#546e7a', dark: '#90a4ae' },
-  revision: { light: '#ef6c00', dark: '#ffb74d' },
   aprobada: { light: '#1565c0', dark: '#64b5f6' },
   implementada: { light: '#2e7d32', dark: '#81c784' },
   rechazada: { light: '#c62828', dark: '#ffb4ab' },
@@ -49,7 +48,7 @@ const RANGE_OPTIONS: { value: Range; label: string }[] = [
 ]
 
 function emptyCounts(): Record<SuggestionStatus, number> {
-  return { recibida: 0, revision: 0, aprobada: 0, implementada: 0, rechazada: 0 }
+  return { recibida: 0, aprobada: 0, implementada: 0, rechazada: 0 }
 }
 
 function monthKey(date: Date): string {
@@ -99,7 +98,7 @@ export function SuggestionsReport({ suggestions }: { suggestions: Suggestion[] }
       total,
       byStatus,
       implemented,
-      inProgress: byStatus.recibida + byStatus.revision + byStatus.aprobada,
+      inProgress: byStatus.recibida + byStatus.aprobada,
       rejected: byStatus.rechazada,
       withImages,
       implementationRate: total > 0 ? Math.round((implemented / total) * 100) : 0,
@@ -171,7 +170,7 @@ export function SuggestionsReport({ suggestions }: { suggestions: Suggestion[] }
     {
       label: 'En proceso',
       value: String(metrics.inProgress),
-      hint: `${metrics.byStatus.recibida} recibidas · ${metrics.byStatus.revision} en revisión · ${metrics.byStatus.aprobada} aprobadas`,
+      hint: `${metrics.byStatus.recibida} recibidas · ${metrics.byStatus.aprobada} aprobadas`,
       icon: 'pending_actions',
       tone: 'text-tertiary',
     },

@@ -1,4 +1,4 @@
-export type SuggestionStatus = 'recibida' | 'revision' | 'aprobada' | 'implementada' | 'rechazada'
+export type SuggestionStatus = 'recibida' | 'aprobada' | 'implementada' | 'rechazada'
 export type SuggestionType = 'mejora' | 'nuevo' | 'problema' | 'contenido'
 
 export interface Suggestion {
@@ -16,12 +16,11 @@ export interface Suggestion {
   profiles?: { name: string; email: string; role: string }
 }
 
-export const STATUS_ORDER: SuggestionStatus[] = ['recibida', 'revision', 'aprobada', 'implementada', 'rechazada']
+export const STATUS_ORDER: SuggestionStatus[] = ['recibida', 'aprobada', 'implementada', 'rechazada']
 export const TYPE_ORDER: SuggestionType[] = ['mejora', 'nuevo', 'problema', 'contenido']
 
 export const statusLabels: Record<string, string> = {
   recibida: 'Recibida',
-  revision: 'Revisión',
   aprobada: 'Aprobada',
   implementada: 'Implementada',
   rechazada: 'Rechazada',
@@ -36,7 +35,6 @@ export const typeLabels: Record<string, string> = {
 
 export const statusStyles: Record<string, string> = {
   recibida: 'bg-gray-100 text-gray-800 border border-gray-300',
-  revision: 'bg-amber-100 text-amber-800 border border-amber-300',
   aprobada: 'bg-green-100 text-green-800 border border-green-300',
   rechazada: 'bg-error-container text-on-error-container border border-error/30',
   implementada: 'bg-emerald-100 text-emerald-800 border border-emerald-300',

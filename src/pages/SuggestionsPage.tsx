@@ -515,7 +515,6 @@ export function SuggestionsPage() {
                               className="border border-outline-variant rounded-lg pl-sm pr-lg py-1 bg-surface font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary disabled:opacity-60 disabled:cursor-wait"
                             >
                               <option value="recibida">Recibida</option>
-                              <option value="revision">Revisión</option>
                               <option value="aprobada">Aprobada</option>
                               <option value="rechazada">Rechazada</option>
                               <option value="implementada">Implementada</option>

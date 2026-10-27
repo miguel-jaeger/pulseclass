@@ -199,7 +199,7 @@ Depende del **rol de quien visualiza** (`effectiveRole`) y del **rol del autor**
 - `course_members` — id, course_id, user_id
 - `sessions` — id, course_id, title, description, date
 - `ratings` — id, session_id, user_id, score, comment
-- `suggestions` — id, user_id, text, status (recibida/revision/aprobada/rechazada/implementada)
+- `suggestions` — id, user_id, text, status (recibida/aprobada/implementada/rechazada), deleted_at (papelera)
 - `rating_votes` — id, rating_id, user_id, vote
 
 ### RLS Policies

@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const STATUS_LABELS: Record<string, string> = {
   recibida: 'Recibida',
-  revision: 'En revisión',
   aprobada: 'Aprobada',
   rechazada: 'Rechazada',
   implementada: 'Implementada'
@@ -16,7 +15,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_MESSAGES: Record<string, string> = {
   recibida: 'Hemos recibido tu sugerencia y está en cola para ser revisada.',
-  revision: 'Tu sugerencia está siendo revisada por el equipo.',
   aprobada: '¡Buenas noticias! Tu sugerencia fue aprobada.',
   rechazada: 'Tu sugerencia fue revisada, pero por ahora no continuará adelante.',
   implementada: '¡Tu sugerencia fue implementada! Gracias por tu aporte.'
