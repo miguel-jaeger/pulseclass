@@ -64,7 +64,8 @@ export function SuggestionsPage() {
   const [uploading, setUploading] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
-  const [view, setView] = useState<'list' | 'report'>('list')
+  const [view, setView] = useState<'list' | 'report' | 'trash'>('list')
+  const [trashBusy, setTrashBusy] = useState<string | null>(null)
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
   const [rejectionTargetId, setRejectionTargetId] = useState<string | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
@@ -305,27 +306,57 @@ export function SuggestionsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta sugerencia?')) return
+    if (!confirm('¿Mover esta sugerencia a la papelera? Podrás restaurarla después.')) return
 
     try {
       await suggestAction('delete', id)
-      showToast('Sugerencia eliminada')
+      showToast('Sugerencia movida a la papelera')
       fetchSuggestions()
     } catch {
-      showToast('Error al eliminar la sugerencia', 'error')
+      showToast('Error al mover la sugerencia a la papelera', 'error')
     }
   }
 
+  const handleRestore = async (id: string) => {
+    setTrashBusy(id)
+    try {
+      await suggestAction('restore', id)
+      showToast('Sugerencia restaurada')
+      await fetchSuggestions()
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'No se pudo restaurar la sugerencia', 'error')
+    } finally {
+      setTrashBusy(null)
+    }
+  }
+
+  const handlePurge = async (id: string) => {
+    if (!confirm('¿Eliminar definitivamente esta sugerencia? Esta acción no se puede deshacer.')) return
+    setTrashBusy(id)
+    try {
+      await suggestAction('purge', id)
+      showToast('Sugerencia eliminada definitivamente')
+      await fetchSuggestions()
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'No se pudo eliminar la sugerencia', 'error')
+    } finally {
+      setTrashBusy(null)
+    }
+  }
+
+  const activeSuggestions = useMemo(() => suggestions.filter(s => !s.deleted_at), [suggestions])
+  const deletedSuggestions = useMemo(() => suggestions.filter(s => s.deleted_at), [suggestions])
+
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: suggestions.length }
+    const counts: Record<string, number> = { all: activeSuggestions.length }
     for (const status of STATUS_ORDER) counts[status] = 0
-    for (const suggestion of suggestions) {
+    for (const suggestion of activeSuggestions) {
       counts[suggestion.status] = (counts[suggestion.status] ?? 0) + 1
     }
     return counts
-  }, [suggestions])
+  }, [activeSuggestions])
 
-  const filtered = suggestions.filter(s => statusFilter === 'all' || s.status === statusFilter)
+  const filtered = activeSuggestions.filter(s => statusFilter === 'all' || s.status === statusFilter)
   const { page, perPage, setPage, setPerPage, paginatedSlice } = usePagination(filtered.length, 10)
   const paginatedSuggestions = paginatedSlice(filtered)
 
@@ -388,6 +419,7 @@ export function SuggestionsPage() {
         {[
           { value: 'list' as const, label: 'Listado', icon: 'list' },
           { value: 'report' as const, label: 'Reporte', icon: 'insights' },
+          ...(isAdmin ? [{ value: 'trash' as const, label: 'Papelera', icon: 'delete_sweep' }] : []),
         ].map(tab => (
           <button
             key={tab.value}
@@ -402,6 +434,11 @@ export function SuggestionsPage() {
           >
             <span className="material-symbols-outlined text-lg">{tab.icon}</span>
             {tab.label}
+            {tab.value === 'trash' && deletedSuggestions.length > 0 && (
+              <span className="px-1.5 rounded-full bg-error-container text-on-error-container text-xs font-semibold">
+                {deletedSuggestions.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -542,7 +579,7 @@ export function SuggestionsPage() {
             onPerPageChange={setPerPage}
           />
         </>
-      ) : (
+      ) : view === 'report' ? (
         <Suspense
           fallback={
             <div className="flex items-center justify-center py-xl">
@@ -550,8 +587,68 @@ export function SuggestionsPage() {
             </div>
           }
         >
-          <SuggestionsReport suggestions={suggestions} />
+          <SuggestionsReport suggestions={activeSuggestions} />
         </Suspense>
+      ) : (
+        <section>
+          <div className="flex items-start gap-sm bg-surface-container-lowest border border-outline-variant rounded-xl p-md mb-lg">
+            <span className="material-symbols-outlined text-primary">info</span>
+            <p className="text-sm text-on-surface-variant">
+              Las sugerencias eliminadas se guardan aquí y puedes restaurarlas cuando quieras. Solo los administradores ven esta papelera.
+            </p>
+          </div>
+
+          {deletedSuggestions.length === 0 ? (
+            <div className="bg-surface-container-lowest rounded-xl p-xl text-center border border-outline-variant">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-md block">delete_sweep</span>
+              <p className="text-sm text-on-surface-variant">La papelera está vacía.</p>
+            </div>
+          ) : (
+            <div className="space-y-md">
+              {deletedSuggestions.map(s => (
+                <div key={s.id} className="bg-surface-container-lowest rounded-xl p-lg border border-outline-variant">
+                  <div className="flex flex-wrap items-start justify-between gap-sm mb-sm">
+                    <div className="flex flex-wrap items-center gap-sm">
+                      <span className={`px-sm py-1 rounded-full text-xs ${typeStyles[s.type]}`}>{typeLabels[s.type]}</span>
+                      <span className={`px-sm py-1 rounded-full text-xs ${statusStyles[s.status]}`}>{statusLabels[s.status]}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-sm">
+                      <button
+                        onClick={() => handleRestore(s.id)}
+                        disabled={trashBusy === s.id}
+                        className="flex items-center gap-xs px-md py-1 rounded-full bg-primary text-on-primary text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-lg">restore_from_trash</span>
+                        Restaurar
+                      </button>
+                      <button
+                        onClick={() => handlePurge(s.id)}
+                        disabled={trashBusy === s.id}
+                        title="Eliminar definitivamente"
+                        className="flex items-center gap-xs px-md py-1 rounded-full text-sm text-on-surface-variant hover:bg-error-container hover:text-error transition-colors disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete_forever</span>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-on-surface mb-sm whitespace-pre-wrap line-clamp-3">{s.description}</p>
+
+                  <div className="flex flex-col gap-xs text-on-surface-variant">
+                    <span className="text-xs">
+                      Eliminada el {s.deleted_at ? new Date(s.deleted_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                    </span>
+                    <span className="flex items-center gap-xs text-xs">
+                      <span className="material-symbols-outlined text-base">person</span>
+                      {formatDisplayName(s.profiles?.name) || ''}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {/* Create Modal */}

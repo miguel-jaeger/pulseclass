@@ -78,6 +78,71 @@ async function getProfileEmail(
   return { email: rows[0].email, name: rows[0].name }
 }
 
+const adminHeaders = (apiKey: string) => ({
+  'Content-Type': 'application/json',
+  apikey: apiKey,
+  Authorization: `Bearer ${apiKey}`
+})
+
+async function getRequesterRole(recordsBaseUrl: string, apiKey: string, userId: string): Promise<string | null> {
+  const res = await fetch(
+    `${recordsBaseUrl}/profiles?user_id=eq.${userId}&select=role&limit=1`,
+    { headers: adminHeaders(apiKey) }
+  )
+  if (!res.ok) return null
+  const rows = await res.json()
+  return Array.isArray(rows) && rows.length > 0 ? rows[0].role : null
+}
+
+async function sharesCourseWith(
+  recordsBaseUrl: string,
+  apiKey: string,
+  requesterId: string,
+  authorId: string
+): Promise<boolean> {
+  const mineRes = await fetch(
+    `${recordsBaseUrl}/course_members?user_id=eq.${requesterId}&select=course_id`,
+    { headers: adminHeaders(apiKey) }
+  )
+  if (!mineRes.ok) return false
+  const mine = await mineRes.json()
+  const courseIds = Array.isArray(mine)
+    ? mine.map((row: { course_id: string }) => row.course_id).filter(Boolean)
+    : []
+  if (courseIds.length === 0) return false
+
+  const res = await fetch(
+    `${recordsBaseUrl}/course_members?user_id=eq.${authorId}&course_id=in.(${courseIds.join(',')})&select=user_id&limit=1`,
+    { headers: adminHeaders(apiKey) }
+  )
+  if (!res.ok) return false
+  const rows = await res.json()
+  return Array.isArray(rows) && rows.length > 0
+}
+
+interface SuggestionRow {
+  id: string
+  user_id: string
+  status: string
+  type: string
+  description: string
+  deleted_at: string | null
+}
+
+async function fetchSuggestion(
+  recordsUrl: string,
+  apiKey: string,
+  id: string
+): Promise<SuggestionRow | null> {
+  const res = await fetch(
+    `${recordsUrl}?id=eq.${id}&select=id,user_id,status,type,description,deleted_at&limit=1`,
+    { headers: adminHeaders(apiKey) }
+  )
+  if (!res.ok) return null
+  const rows = await res.json()
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null
+}
+
 function toBase64(bytes: Uint8Array): string {
   let binary = ''
   const chunk = 0x8000
@@ -201,7 +266,7 @@ export default async function(req: Request): Promise<Response> {
 
     const userToken = authHeader.replace('Bearer ', '')
     const { action, id, data } = await req.json() as {
-      action: 'create' | 'update' | 'delete'
+      action: 'create' | 'update' | 'delete' | 'restore' | 'purge'
       id?: string
       data?: Record<string, unknown>
     }
@@ -239,11 +304,32 @@ export default async function(req: Request): Promise<Response> {
     const recordsBaseUrl = `${baseUrl}/api/database/records`
     const recordsUrl = `${recordsBaseUrl}/suggestions`
 
+    const requesterId = userData.user.id
+    const requesterRole = await getRequesterRole(recordsBaseUrl, apiKey!, requesterId)
+    const isAdmin = requesterRole === 'admin'
+
+    const canManage = async (suggestion: SuggestionRow | null): Promise<boolean> => {
+      if (!suggestion) return false
+      if (isAdmin || requesterRole === 'coordinator') return true
+      if (suggestion.user_id === requesterId) return true
+      if (requesterRole === 'teacher') {
+        return await sharesCourseWith(recordsBaseUrl, apiKey!, requesterId, suggestion.user_id)
+      }
+      return false
+    }
+
+    const sanitize = (payload?: Record<string, unknown>) => {
+      const clean = { ...(payload ?? {}) }
+      delete clean.deleted_at
+      delete clean.deleted_by
+      return clean
+    }
+
     if (action === 'create') {
       const res = await fetch(recordsUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ ...data, user_id: userData.user.id })
+        body: JSON.stringify({ ...sanitize(data), user_id: userData.user.id })
       })
       const body = await res.json()
       if (!res.ok) {
@@ -282,24 +368,30 @@ export default async function(req: Request): Promise<Response> {
     }
 
     if (action === 'update' && id) {
-      let previous: { user_id: string; status: string; description: string; type: string } | null = null
-      try {
-        const currentRes = await fetch(
-          `${recordsUrl}?id=eq.${id}&select=user_id,status,description,type&limit=1`,
-          { headers }
-        )
-        if (currentRes.ok) {
-          const rows = await currentRes.json()
-          if (Array.isArray(rows) && rows.length > 0) previous = rows[0]
-        }
-      } catch (fetchError) {
-        console.error('No se pudo leer la sugerencia previa:', fetchError)
+      const previous = await fetchSuggestion(recordsUrl, apiKey!, id)
+      if (!previous) {
+        return new Response(JSON.stringify({ error: 'Sugerencia no encontrada' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      if (previous.deleted_at) {
+        return new Response(JSON.stringify({ error: 'La sugerencia está en la papelera' }), {
+          status: 409,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      if (!(await canManage(previous))) {
+        return new Response(JSON.stringify({ error: 'No tienes permisos para modificar esta sugerencia' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
       }
 
       const res = await fetch(`${recordsUrl}?id=eq.${id}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify(data)
+        body: JSON.stringify(sanitize(data))
       })
       const body = await res.json()
       if (!res.ok) {
@@ -343,6 +435,69 @@ export default async function(req: Request): Promise<Response> {
     }
 
     if (action === 'delete' && id) {
+      const target = await fetchSuggestion(recordsUrl, apiKey!, id)
+      if (!target) {
+        return new Response(JSON.stringify({ error: 'Sugerencia no encontrada' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      if (!(await canManage(target))) {
+        return new Response(JSON.stringify({ error: 'No tienes permisos para eliminar esta sugerencia' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      if (target.deleted_at) {
+        return new Response(null, { status: 204, headers: corsHeaders })
+      }
+
+      const res = await fetch(`${recordsUrl}?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ deleted_at: new Date().toISOString(), deleted_by: requesterId })
+      })
+      if (!res.ok) {
+        const body = await res.json()
+        return new Response(JSON.stringify(body), {
+          status: res.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      return new Response(null, { status: 204, headers: corsHeaders })
+    }
+
+    if (action === 'restore' && id) {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: 'Solo los administradores pueden restaurar sugerencias' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const res = await fetch(`${recordsUrl}?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ deleted_at: null, deleted_by: null })
+      })
+      if (!res.ok) {
+        const body = await res.json()
+        return new Response(JSON.stringify(body), {
+          status: res.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      return new Response(null, { status: 204, headers: corsHeaders })
+    }
+
+    if (action === 'purge' && id) {
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: 'Solo los administradores pueden eliminar sugerencias definitivamente' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
       const res = await fetch(`${recordsUrl}?id=eq.${id}`, {
         method: 'DELETE',
         headers: { ...headers, 'Prefer': 'return=minimal' }

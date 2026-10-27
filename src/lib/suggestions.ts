@@ -11,6 +11,8 @@ export interface Suggestion {
   images: string[]
   created_at: string
   updated_at: string
+  deleted_at?: string | null
+  deleted_by?: string | null
   profiles?: { name: string; email: string; role: string }
 }
 
