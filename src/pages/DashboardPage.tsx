@@ -37,6 +37,19 @@ interface DayGroup {
   isToday: boolean
 }
 
+interface CourseRow {
+  course_id: string
+  courseName: string
+  sessionCount: number
+  ratingCount: number
+  avgScore: number
+}
+
+interface RatingRow {
+  session_id: string
+  score: number
+}
+
 function formatShortDate(dateStr: string): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -159,30 +172,45 @@ export function DashboardPage() {
         }
 
         const sessionCourseIds = [...new Set(sessions.map(s => s.course_id))]
+        const sessionIds = sessions.map(s => s.id)
 
-        const [courseStatsRes, ratingStatsRes] = await Promise.all([
-          insforge.database
-            .from('course_stats')
-            .select('course_id, session_count')
-            .in('course_id', sessionCourseIds),
-          insforge.database
-            .from('course_rating_stats')
-            .select('course_id, rating_count, avg_score')
-            .in('course_id', sessionCourseIds)
-        ])
+        const { data: courseStatsData } = await insforge.database
+          .from('course_stats')
+          .select('course_id, session_count')
+          .in('course_id', sessionCourseIds)
+
+        if (cancelled) return
+
+        const CHUNK_SIZE = 50
+        const ratingsData: RatingRow[] = []
+        for (let i = 0; i < sessionIds.length; i += CHUNK_SIZE) {
+          const { data, error } = await insforge.database
+            .from('ratings')
+            .select('session_id, score')
+            .in('session_id', sessionIds.slice(i, i + CHUNK_SIZE))
+          if (error) {
+            console.error('Error fetching ratings:', error)
+            continue
+          }
+          if (data) ratingsData.push(...(data as RatingRow[]))
+        }
 
         if (cancelled) return
 
         const sessionCounts = new Map(
-          (courseStatsRes.data as { course_id: string; session_count: number }[] || []).map(r => [r.course_id, r.session_count])
+          ((courseStatsData as { course_id: string; session_count: number }[]) || []).map(r => [r.course_id, r.session_count])
         )
-        const ratingStats = new Map(
-          (ratingStatsRes.data as { course_id: string; rating_count: number; avg_score: number | string }[] || []).map(r => [r.course_id, r])
-        )
+
+        const sessionRatingStats = new Map<string, { count: number; sum: number }>()
+        for (const rating of ratingsData) {
+          const current = sessionRatingStats.get(rating.session_id) || { count: 0, sum: 0 }
+          sessionRatingStats.set(rating.session_id, { count: current.count + 1, sum: current.sum + rating.score })
+        }
 
         const courseNameById = new Map(courses.map(c => [c.id, c.name]))
         const result: TodaySession[] = sessions.map(session => {
-          const rs = ratingStats.get(session.course_id)
+          const stats = sessionRatingStats.get(session.id)
+          const ratingCount = stats?.count ?? 0
           return {
             id: session.id,
             course_id: session.course_id,
@@ -190,8 +218,8 @@ export function DashboardPage() {
             title: session.title,
             date: session.date,
             sessionCount: sessionCounts.get(session.course_id) ?? 0,
-            ratingCount: rs?.rating_count ?? 0,
-            avgScore: Number(rs?.avg_score ?? 0)
+            ratingCount,
+            avgScore: ratingCount > 0 ? (stats!.sum / ratingCount) : 0
           }
         })
 
@@ -220,16 +248,33 @@ export function DashboardPage() {
       .sort((a, b) => a.courseName.localeCompare(b.courseName))
   }))
 
-  const courseRows = Array.from(new Map(sessionsToday.map(s => [s.course_id, s])).values())
-    .sort((a, b) => b.avgScore - a.avgScore)
+  const courseRows: CourseRow[] = Array.from(
+    sessionsToday.reduce<Map<string, CourseRow & { weightedScore: number }>>((acc, session) => {
+      const row = acc.get(session.course_id) || {
+        course_id: session.course_id,
+        courseName: session.courseName,
+        sessionCount: session.sessionCount,
+        ratingCount: 0,
+        avgScore: 0,
+        weightedScore: 0
+      }
+      row.ratingCount += session.ratingCount
+      row.weightedScore += session.avgScore * session.ratingCount
+      acc.set(session.course_id, row)
+      return acc
+    }, new Map()).values()
+  ).map(({ weightedScore, ...row }) => ({
+    ...row,
+    avgScore: row.ratingCount > 0 ? weightedScore / row.ratingCount : 0
+  })).sort((a, b) => b.avgScore - a.avgScore)
   const totalEvaluaciones = courseRows.reduce((sum, r) => sum + r.ratingCount, 0)
   const avgGeneral = totalEvaluaciones > 0
     ? courseRows.reduce((sum, r) => sum + r.avgScore * r.ratingCount, 0) / totalEvaluaciones
     : 0
-  const nivelLabel = avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
-  const nivelColor = avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
-  const nivelIconColor = avgGeneral >= 8 ? 'text-green-500' : avgGeneral >= 5 ? 'text-yellow-500' : 'text-red-500'
-  const nivelIcon = avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
+  const nivelLabel = totalEvaluaciones === 0 ? '-' : avgGeneral >= 8 ? 'Alto' : avgGeneral >= 5 ? 'Medio' : 'Bajo'
+  const nivelColor = totalEvaluaciones === 0 ? 'text-on-surface-variant' : avgGeneral >= 8 ? 'text-primary' : avgGeneral >= 5 ? 'text-tertiary' : 'text-error'
+  const nivelIconColor = totalEvaluaciones === 0 ? 'text-on-surface-variant' : avgGeneral >= 8 ? 'text-green-500' : avgGeneral >= 5 ? 'text-yellow-500' : 'text-red-500'
+  const nivelIcon = totalEvaluaciones === 0 ? 'sentiment_neutral' : avgGeneral >= 8 ? 'sentiment_satisfied' : avgGeneral >= 5 ? 'sentiment_neutral' : 'sentiment_dissatisfied'
 
   const renderCourseCard = (session: TodaySession, isToday: boolean) => (
     <Link
@@ -255,11 +300,11 @@ export function DashboardPage() {
           <span className="material-symbols-outlined text-on-secondary-container text-lg">event</span>
           <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.sessionCount}</span>
         </div>
-        <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones del curso`}>
+        <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones de la sesión`}>
           <span className="material-symbols-outlined text-on-secondary-container text-lg">rate_review</span>
           <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.ratingCount}</span>
         </div>
-        <div className="flex items-center gap-xs" title={`Promedio del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
+        <div className="flex items-center gap-xs" title={`Promedio de la sesión: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
           <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
           <span className={`font-body-sm text-body-sm font-medium ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}</span>
         </div>
@@ -279,12 +324,12 @@ export function DashboardPage() {
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Consulta tus próximas sesiones con el resumen de evaluaciones de cada curso</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Consulta tus próximas sesiones con el resumen de evaluaciones de cada sesión</p>
       </header>
 
       {sessionsToday.length > 0 && (
         <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-lg overflow-hidden">
-          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Resumen de evaluaciones de los cursos del día</h3>
+          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Resumen de evaluaciones de las sesiones del día</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-lg">
             <div className="bg-surface-container-low rounded-xl p-md text-center">
