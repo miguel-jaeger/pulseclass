@@ -45,11 +45,6 @@ interface CourseRow {
   avgScore: number
 }
 
-interface RatingRow {
-  session_id: string
-  score: number
-}
-
 function formatShortDate(dateStr: string): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
@@ -172,45 +167,30 @@ export function DashboardPage() {
         }
 
         const sessionCourseIds = [...new Set(sessions.map(s => s.course_id))]
-        const sessionIds = sessions.map(s => s.id)
 
-        const { data: courseStatsData } = await insforge.database
-          .from('course_stats')
-          .select('course_id, session_count')
-          .in('course_id', sessionCourseIds)
-
-        if (cancelled) return
-
-        const CHUNK_SIZE = 50
-        const ratingsData: RatingRow[] = []
-        for (let i = 0; i < sessionIds.length; i += CHUNK_SIZE) {
-          const { data, error } = await insforge.database
-            .from('ratings')
-            .select('session_id, score')
-            .in('session_id', sessionIds.slice(i, i + CHUNK_SIZE))
-          if (error) {
-            console.error('Error fetching ratings:', error)
-            continue
-          }
-          if (data) ratingsData.push(...(data as RatingRow[]))
-        }
+        const [courseStatsRes, ratingStatsRes] = await Promise.all([
+          insforge.database
+            .from('course_stats')
+            .select('course_id, session_count')
+            .in('course_id', sessionCourseIds),
+          insforge.database
+            .from('course_rating_stats')
+            .select('course_id, rating_count, avg_score')
+            .in('course_id', sessionCourseIds)
+        ])
 
         if (cancelled) return
 
         const sessionCounts = new Map(
-          ((courseStatsData as { course_id: string; session_count: number }[]) || []).map(r => [r.course_id, r.session_count])
+          ((courseStatsRes.data as { course_id: string; session_count: number }[]) || []).map(r => [r.course_id, r.session_count])
         )
-
-        const sessionRatingStats = new Map<string, { count: number; sum: number }>()
-        for (const rating of ratingsData) {
-          const current = sessionRatingStats.get(rating.session_id) || { count: 0, sum: 0 }
-          sessionRatingStats.set(rating.session_id, { count: current.count + 1, sum: current.sum + rating.score })
-        }
+        const ratingStats = new Map(
+          ((ratingStatsRes.data as { course_id: string; rating_count: number; avg_score: number | string }[]) || []).map(r => [r.course_id, r])
+        )
 
         const courseNameById = new Map(courses.map(c => [c.id, c.name]))
         const result: TodaySession[] = sessions.map(session => {
-          const stats = sessionRatingStats.get(session.id)
-          const ratingCount = stats?.count ?? 0
+          const rs = ratingStats.get(session.course_id)
           return {
             id: session.id,
             course_id: session.course_id,
@@ -218,8 +198,8 @@ export function DashboardPage() {
             title: session.title,
             date: session.date,
             sessionCount: sessionCounts.get(session.course_id) ?? 0,
-            ratingCount,
-            avgScore: ratingCount > 0 ? (stats!.sum / ratingCount) : 0
+            ratingCount: rs?.rating_count ?? 0,
+            avgScore: Number(rs?.avg_score ?? 0)
           }
         })
 
@@ -248,25 +228,15 @@ export function DashboardPage() {
       .sort((a, b) => a.courseName.localeCompare(b.courseName))
   }))
 
-  const courseRows: CourseRow[] = Array.from(
-    sessionsToday.reduce<Map<string, CourseRow & { weightedScore: number }>>((acc, session) => {
-      const row = acc.get(session.course_id) || {
-        course_id: session.course_id,
-        courseName: session.courseName,
-        sessionCount: session.sessionCount,
-        ratingCount: 0,
-        avgScore: 0,
-        weightedScore: 0
-      }
-      row.ratingCount += session.ratingCount
-      row.weightedScore += session.avgScore * session.ratingCount
-      acc.set(session.course_id, row)
-      return acc
-    }, new Map()).values()
-  ).map(({ weightedScore, ...row }) => ({
-    ...row,
-    avgScore: row.ratingCount > 0 ? weightedScore / row.ratingCount : 0
-  })).sort((a, b) => b.avgScore - a.avgScore)
+  const courseRows: CourseRow[] = Array.from(new Map(sessionsToday.map(s => [s.course_id, s])).values())
+    .map(s => ({
+      course_id: s.course_id,
+      courseName: s.courseName,
+      sessionCount: s.sessionCount,
+      ratingCount: s.ratingCount,
+      avgScore: s.avgScore
+    }))
+    .sort((a, b) => b.avgScore - a.avgScore)
   const totalEvaluaciones = courseRows.reduce((sum, r) => sum + r.ratingCount, 0)
   const avgGeneral = totalEvaluaciones > 0
     ? courseRows.reduce((sum, r) => sum + r.avgScore * r.ratingCount, 0) / totalEvaluaciones
@@ -300,11 +270,11 @@ export function DashboardPage() {
           <span className="material-symbols-outlined text-on-secondary-container text-lg">event</span>
           <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.sessionCount}</span>
         </div>
-        <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones de la sesión`}>
+        <div className="flex items-center gap-xs" title={`${session.ratingCount} evaluaciones acumuladas del curso`}>
           <span className="material-symbols-outlined text-on-secondary-container text-lg">rate_review</span>
           <span className="font-body-sm text-body-sm text-on-secondary-container font-medium">{session.ratingCount}</span>
         </div>
-        <div className="flex items-center gap-xs" title={`Promedio de la sesión: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
+        <div className="flex items-center gap-xs" title={`Promedio acumulado del curso: ${session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}`}>
           <span className={`material-symbols-outlined text-lg ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>trending_up</span>
           <span className={`font-body-sm text-body-sm font-medium ${session.avgScore >= 8 ? 'text-success' : session.avgScore >= 5 ? 'text-tertiary' : 'text-error'}`}>{session.avgScore > 0 ? session.avgScore.toFixed(1) : '-'}</span>
         </div>
@@ -324,12 +294,12 @@ export function DashboardPage() {
     <div className="pb-20 md:pb-xl">
       <header className="mb-xl">
         <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary font-bold">Inicio</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Consulta tus próximas sesiones con el resumen de evaluaciones de cada sesión</p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Consulta tus próximas sesiones con el acumulado histórico de evaluaciones de cada curso</p>
       </header>
 
       {sessionsToday.length > 0 && (
         <div className="bg-surface border border-outline-variant rounded-xl p-lg mb-lg overflow-hidden">
-          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Resumen de evaluaciones de las sesiones del día</h3>
+          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-lg">Resumen de evaluaciones acumuladas de los cursos del día</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-lg">
             <div className="bg-surface-container-low rounded-xl p-md text-center">
