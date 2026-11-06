@@ -5,6 +5,7 @@ interface TurnstileProps {
   onVerify: (token: string) => void
   resetKey?: number
   theme?: 'auto' | 'light' | 'dark'
+  action?: string
   className?: string
 }
 
@@ -55,7 +56,7 @@ function currentTheme(): 'light' | 'dark' {
   return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
 }
 
-export function Turnstile({ siteKey, onVerify, resetKey = 0, theme, className }: TurnstileProps) {
+export function Turnstile({ siteKey, onVerify, resetKey = 0, theme, action, className }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetRef = useRef<string | null>(null)
   const onVerifyRef = useRef(onVerify)
@@ -80,6 +81,7 @@ export function Turnstile({ siteKey, onVerify, resetKey = 0, theme, className }:
         widgetRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
           size: 'flexible',
+          action: action ?? 'login',
           theme: theme ?? currentTheme(),
           language: 'es',
           'refresh-expired': 'auto',
@@ -99,7 +101,7 @@ export function Turnstile({ siteKey, onVerify, resetKey = 0, theme, className }:
       }
       widgetRef.current = null
     }
-  }, [siteKey, theme, resetKey])
+  }, [siteKey, theme, action, resetKey])
 
   return <div ref={containerRef} className={className ?? 'flex justify-center w-full min-h-[65px]'} />
 }

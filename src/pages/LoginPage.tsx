@@ -133,7 +133,12 @@ export function LoginPage() {
           </label>
 
           {isTurnstileEnabled && (
-            <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setTurnstileToken} resetKey={turnstileReset} />
+            <Turnstile
+              siteKey={TURNSTILE_SITE_KEY}
+              onVerify={setTurnstileToken}
+              resetKey={turnstileReset}
+              action={isSignUp ? 'signup' : 'login'}
+            />
           )}
 
           <button

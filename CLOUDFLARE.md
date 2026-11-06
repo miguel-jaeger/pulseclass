@@ -22,6 +22,7 @@ El proxy de Cloudflare protege el frontend. Las llamadas del SDK a InsForge van 
 |---|---|---|
 | `VITE_TURNSTILE_SITE_KEY` | Vercel (y `.env.local` para desarrollo) | Site key pública del widget |
 | `TURNSTILE_SECRET_KEY` | Secreto de InsForge (nunca en el frontend) | Secret key del widget |
+| `TURNSTILE_HOSTNAMES` | Secreto de InsForge (opcional) | Lista separada por comas de hostnames permitidos |
 
 Con `VITE_TURNSTILE_SITE_KEY` vacía o ausente, la app funciona como antes: no muestra el widget y usa el login directo del SDK.
 
@@ -76,6 +77,15 @@ Cada vez que se modifique `functions/auth-guard.ts` hay que volver a desplegar.
 3. En local, agregar la misma variable a `.env.local` y reiniciar `npm run dev`.
 
 El widget aparece en `LoginPage` debajo de "Mantener sesión iniciada". Si el usuario intenta enviar el formulario sin completarlo, se muestra un toast y no se llama al backend.
+
+La función `auth-guard` valida en `siteverify`:
+
+- `success === true`
+- `action` coincide con el formulario (`login` o `signup`)
+- `hostname` está en la allowlist (`pulseclass-seven.vercel.app` por defecto, configurable con `TURNSTILE_HOSTNAMES`)
+- token no vacío y de máximo 2048 caracteres
+
+Si algún despliegue usa otro dominio, agrégalo a `TURNSTILE_HOSTNAMES`. Para probar en local con la site key configurada, incluye `localhost` explícitamente en ese secreto.
 
 > El botón **Continuar con Google** es un flujo OAuth por redirección y no pasa por Turnstile. Su protección depende de Google + los rate limits de InsForge.
 

@@ -12,18 +12,44 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   })
 
-async function verifyTurnstile(secret: string, token: string, ip?: string): Promise<boolean> {
+const DEFAULT_HOSTNAMES = 'pulseclass-seven.vercel.app'
+
+interface SiteverifyResult {
+  success?: boolean
+  action?: string
+  hostname?: string
+  'error-codes'?: string[]
+}
+
+function allowedHostnames(): Set<string> {
+  return new Set(
+    (Deno.env.get('TURNSTILE_HOSTNAMES') ?? DEFAULT_HOSTNAMES)
+      .split(',')
+      .map(hostname => hostname.trim().toLowerCase())
+      .filter(Boolean)
+  )
+}
+
+async function verifyTurnstile(
+  secret: string,
+  token: string,
+  ip?: string
+): Promise<SiteverifyResult | null> {
   const form = new URLSearchParams({ secret, response: token })
   if (ip) form.set('remoteip', ip)
 
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: form
-  })
-  if (!res.ok) return false
-
-  const data = await res.json() as { success?: boolean }
-  return data.success === true
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+      signal: AbortSignal.timeout(10_000)
+    })
+    if (!res.ok) return null
+    return await res.json() as SiteverifyResult
+  } catch {
+    return null
+  }
 }
 
 export default async function (req: Request): Promise<Response> {
@@ -50,7 +76,10 @@ export default async function (req: Request): Promise<Response> {
 
     const secret = Deno.env.get('TURNSTILE_SECRET_KEY')
     if (secret) {
-      if (!turnstileToken) {
+      const expectedAction = action === 'signUp' ? 'signup' : 'login'
+      const token = typeof turnstileToken === 'string' ? turnstileToken : ''
+
+      if (!token || token.length > 2048) {
         return json(
           { error: 'TURNSTILE_REQUIRED', message: 'Completa la verificación de seguridad' },
           403
@@ -58,8 +87,15 @@ export default async function (req: Request): Promise<Response> {
       }
 
       const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      const valid = await verifyTurnstile(secret, turnstileToken, ip)
-      if (!valid) {
+      const result = await verifyTurnstile(secret, token, ip)
+
+      if (
+        !result ||
+        result.success !== true ||
+        result.action !== expectedAction ||
+        !result.hostname ||
+        !allowedHostnames().has(result.hostname.toLowerCase())
+      ) {
         return json(
           {
             error: 'TURNSTILE_FAILED',
