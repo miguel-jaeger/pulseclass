@@ -191,7 +191,15 @@ Depende del **rol de quien visualiza** (`effectiveRole`) y del **rol del autor**
 
 ### Edge Functions
 - `functions/suggest.ts` — CRUD de sugerencias (`create`, `update`, `delete`)
+- `functions/auth-guard.ts` — login/registro con verificación Turnstile (`signIn`, `signUp`)
 - Acceso vía `insforge.functions.invoke('suggest', { body: { action, ... } })`
+
+### Seguridad (Cloudflare)
+
+- Guía completa en `CLOUDFLARE.md`
+- `VITE_TURNSTILE_SITE_KEY` (frontend) + secreto `TURNSTILE_SECRET_KEY` (InsForge) activan Turnstile
+- Sin `VITE_TURNSTILE_SITE_KEY` la app usa el login directo del SDK
+- Headers de seguridad (CSP, HSTS, etc.) definidos en `vercel.json`
 
 ### Tablas principales
 - `profiles` — id, user_id, name, email, role (admin/teacher/student), theme

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { PasswordInput } from '../components/PasswordInput'
 import { Logo } from '../components/Logo'
+import { Turnstile } from '../components/Turnstile'
+import { TURNSTILE_SITE_KEY, isTurnstileEnabled } from '../lib/turnstile'
 
 export function LoginPage() {
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth()
@@ -11,6 +13,8 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileReset, setTurnstileReset] = useState(0)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -19,23 +23,40 @@ export function LoginPage() {
     setTimeout(() => setToast(null), 4000)
   }
 
+  const resetTurnstile = () => {
+    setTurnstileToken('')
+    setTurnstileReset(current => current + 1)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setToast(null)
+
+    if (isTurnstileEnabled && !turnstileToken) {
+      showToast('Completa la verificación de seguridad')
+      return
+    }
+
     setLoading(true)
     try {
       if (isSignUp) {
-        await signUpWithEmail(email, password, name, rememberMe)
+        await signUpWithEmail(email, password, name, rememberMe, turnstileToken)
       } else {
-        await signInWithEmail(email, password, rememberMe)
+        await signInWithEmail(email, password, rememberMe, turnstileToken)
       }
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : ''
-      const message = raw.includes('Invalid login credentials') ? 'Correo o contraseña incorrectos'
+      const lower = raw.toLowerCase()
+      const message = raw.includes('Invalid login credentials') || raw.includes('Invalid credentials')
+          ? 'Correo o contraseña incorrectos'
         : raw.includes('Email not confirmed') ? 'Correo no verificado. Revisa tu bandeja de entrada.'
+        : lower.includes('already') ? 'Ese correo ya está registrado'
         : raw.includes('rate') ? 'Demasiados intentos. Espera un momento e intenta de nuevo.'
-        : 'Error al autenticarse'
+        : lower.includes('turnstile') || lower.includes('verificación de seguridad')
+          ? 'Verificación de seguridad fallida. Intenta de nuevo.'
+          : 'Error al autenticarse'
       showToast(message)
+      if (isTurnstileEnabled) resetTurnstile()
     } finally {
       setLoading(false)
     }
@@ -111,6 +132,10 @@ export function LoginPage() {
             <span className="font-body-sm text-body-sm text-on-surface-variant">Mantener sesión iniciada</span>
           </label>
 
+          {isTurnstileEnabled && (
+            <Turnstile siteKey={TURNSTILE_SITE_KEY} onVerify={setTurnstileToken} resetKey={turnstileReset} />
+          )}
+
           <button
             type="submit"
             disabled={loading}
@@ -123,7 +148,7 @@ export function LoginPage() {
 
         <div className="text-center">
           <button
-            onClick={() => { setIsSignUp(!isSignUp); setToast(null) }}
+            onClick={() => { setIsSignUp(!isSignUp); setToast(null); if (isTurnstileEnabled) resetTurnstile() }}
             className="font-body-sm text-body-sm text-primary hover:underline"
           >
             {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}

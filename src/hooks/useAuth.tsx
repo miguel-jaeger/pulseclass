@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { insforge } from '../lib/insforge'
 import { normalizeRole } from '../lib/roles'
+import { isTurnstileEnabled } from '../lib/turnstile'
 import { AuthChangeEvent } from '@insforge/sdk'
 
 interface User {
@@ -24,8 +25,8 @@ interface AuthContextType {
   user: User | null
   profile: Profile | null
   loading: boolean
-  signInWithEmail: (email: string, password: string, remember?: boolean) => Promise<void>
-  signUpWithEmail: (email: string, password: string, name: string, remember?: boolean) => Promise<void>
+  signInWithEmail: (email: string, password: string, remember?: boolean, turnstileToken?: string) => Promise<void>
+  signUpWithEmail: (email: string, password: string, name: string, remember?: boolean, turnstileToken?: string) => Promise<void>
   signInWithGoogle: (remember?: boolean) => Promise<void>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -94,6 +95,20 @@ function persistCurrentSession(user: User, kind: StorageKind) {
   } catch {}
 }
 
+async function fetchGuardedSession(
+  action: 'signIn' | 'signUp',
+  payload: Record<string, unknown>
+): Promise<SavedSession> {
+  const { data, error } = await insforge.functions.invoke<SavedSession>('auth-guard', {
+    body: { action, ...payload }
+  })
+
+  if (error) throw error
+  if (!data?.accessToken || !data?.user) throw new Error('No se pudo autenticar')
+
+  return data
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -122,6 +137,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
     const profileData = await fetchProfile(user.id)
     setProfile(profileData)
+  }
+
+  const applySession = (session: SavedSession, kind: StorageKind) => {
+    insforge.setAccessToken(session.accessToken, AuthChangeEvent.SIGNED_IN)
+    if (session.refreshToken) {
+      try { insforge.getHttpClient().setRefreshToken(session.refreshToken) } catch {}
+    }
+    const tokenManager = (insforge as any).tokenManager
+    try { tokenManager?.setUser?.(session.user) } catch {}
+    setUser(session.user)
+    saveSession(session, kind)
   }
 
   useEffect(() => {
@@ -215,14 +241,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [])
 
-  const signInWithEmail = async (email: string, password: string, remember = true) => {
+  const signInWithEmail = async (
+    email: string,
+    password: string,
+    remember = true,
+    turnstileToken?: string
+  ) => {
     const kind = getStorageKindForRemember(remember)
+
+    if (isTurnstileEnabled) {
+      const session = await fetchGuardedSession('signIn', { email, password, turnstileToken })
+      applySession(session, kind)
+      const profileData = await fetchProfile(session.user.id)
+      setProfile(profileData)
+      return
+    }
+
     const { data, error } = await insforge.auth.signInWithPassword({ email, password })
     if (error) throw error
     if (data?.user && data?.accessToken) {
-      setUser(data.user as User)
-      saveSession(
-        { user: data.user as User, accessToken: data.accessToken, refreshToken: data.refreshToken || getSdkRefreshToken() },
+      applySession(
+        {
+          user: data.user as User,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken || getSdkRefreshToken()
+        },
         kind
       )
       const profileData = await fetchProfile(data.user.id)
@@ -230,14 +273,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signUpWithEmail = async (email: string, password: string, name: string, remember = true) => {
+  const signUpWithEmail = async (
+    email: string,
+    password: string,
+    name: string,
+    remember = true,
+    turnstileToken?: string
+  ) => {
     const kind = getStorageKindForRemember(remember)
+
+    if (isTurnstileEnabled) {
+      const session = await fetchGuardedSession('signUp', { email, password, name, turnstileToken })
+      applySession(session, kind)
+      const profileData = await fetchProfile(session.user.id)
+      setProfile(profileData)
+      return
+    }
+
     const { data, error } = await insforge.auth.signUp({ email, password, name })
     if (error) throw error
     if (data?.user && data?.accessToken) {
-      setUser(data.user as User)
-      saveSession(
-        { user: data.user as User, accessToken: data.accessToken, refreshToken: data.refreshToken || getSdkRefreshToken() },
+      applySession(
+        {
+          user: data.user as User,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken || getSdkRefreshToken()
+        },
         kind
       )
       const profileData = await fetchProfile(data.user.id)
