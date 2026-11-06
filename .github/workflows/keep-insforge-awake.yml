@@ -1,0 +1,47 @@
+name: Keep InsForge awake
+
+# InsForge pausa los proyectos tras ~7 días sin actividad.
+# Este workflow hace ping cada 3 días para que el backend nunca llegue al límite.
+on:
+  schedule:
+    # 06:00 UTC cada 3 días (01:00 en Perú, UTC-5)
+    - cron: '0 6 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-insforge-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Health check
+        run: |
+          set -euo pipefail
+          url="https://vph97w7w.us-west.insforge.app/api/health"
+          body="$(curl -fsS --max-time 30 --retry 3 --retry-delay 10 "$url")"
+          echo "Respuesta: $body"
+          echo "$body" | jq -e '.status == "ok"' > /dev/null
+
+      - name: Database activity
+        env:
+          INSFORGE_ANON_KEY: ${{ secrets.INSFORGE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${INSFORGE_ANON_KEY:-}" ]; then
+            echo "INSFORGE_ANON_KEY no configurada: se omite el ping a la base de datos."
+            exit 0
+          fi
+          url="https://vph97w7w.us-west.insforge.app/api/database/records/profiles?select=id&limit=1"
+          code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "apikey: $INSFORGE_ANON_KEY" "$url")"
+          echo "HTTP $code"
+          case "$code" in
+            200|401) echo "Backend activo." ;;
+            *) echo "Respuesta inesperada del backend: $code"; exit 1 ;;
+          esac
