@@ -41,3 +41,7 @@ dist-ssr
 .roo
 .trae
 .windsurf
+cloudflare.key
+
+# Salidas compiladas dentro de src (Vite resuelve .js antes que .ts)
+src/**/*.js
