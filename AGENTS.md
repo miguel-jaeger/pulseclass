@@ -25,6 +25,14 @@ Key patterns:
 
 **PulseClass** es una aplicación web educativa para gestionar sesiones de clase, cursos, miembros, calificaciones y sugerencias. Construida con React + TypeScript + Vite + Tailwind CSS v4 + InsForge.
 
+## Git y despliegue
+
+- **Nunca** hacer commits ni cambios directos en `main`.
+- Todo el trabajo (features, fixes, docs) se hace en `dev` y se pushea a `origin/dev`.
+- Para desplegar, `dev` se mezcla a `main` (merge, no rebase) y se pushea `main`; Vercel despliega automáticamente desde `main`.
+- Antes de empezar cualquier tarea: `git checkout dev` y `git pull origin dev`.
+- Si `main` ya avanzó, sincronizar `dev` con `main` antes de trabajar para no perder cambios ni generar conflictos.
+
 ## Tech Stack
 
 - **Frontend:** React 19, TypeScript, Vite, React Router v7
