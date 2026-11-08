@@ -215,7 +215,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Bottom section: profile + logout */}
-        <div className={`mt-auto space-y-sm ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <div className={`mt-auto pb-md space-y-sm ${collapsed ? 'flex flex-col items-center' : ''}`}>
           <div className={`border-t border-outline-variant pt-sm space-y-sm ${collapsed ? 'flex flex-col items-center border-t w-full' : ''}`}>
             <Link
               to="/profile"
