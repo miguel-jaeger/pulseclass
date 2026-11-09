@@ -1,7 +1,7 @@
 name: Keep InsForge awake
 
 # InsForge pausa los proyectos Free tras 1 semana sin actividad.
-# Este workflow hace ping cada 3 días para que el backend nunca llegue al límite.
+# Este workflow hace ping diariamente para que el backend nunca llegue al límite.
 #
 # Nota: en repositorios públicos GitHub desactiva los workflows programados
 # tras 60 días sin actividad en el repositorio. Si el repo va a estar inactivo
@@ -9,8 +9,8 @@ name: Keep InsForge awake
 # o un schedule de pg_cron dentro de InsForge.
 on:
   schedule:
-    # 06:00 UTC cada 3 días (01:00 en Perú, UTC-5)
-    - cron: '0 6 */3 * *'
+    # 06:00 UTC todos los días (01:00 en Perú, UTC-5)
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 permissions:
