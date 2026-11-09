@@ -11,6 +11,8 @@ on:
   schedule:
     # 06:00 UTC todos los días (01:00 en Perú, UTC-5)
     - cron: '0 6 * * *'
+    # Respaldo cada 5 días a distinta hora (18:00 UTC / 13:00 Perú)
+    - cron: '0 18 */5 * *'
   workflow_dispatch:
 
 permissions:
