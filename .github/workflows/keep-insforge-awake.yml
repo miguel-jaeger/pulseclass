@@ -1,7 +1,12 @@
 name: Keep InsForge awake
 
-# InsForge pausa los proyectos tras ~7 días sin actividad.
+# InsForge pausa los proyectos Free tras 1 semana sin actividad.
 # Este workflow hace ping cada 3 días para que el backend nunca llegue al límite.
+#
+# Nota: en repositorios públicos GitHub desactiva los workflows programados
+# tras 60 días sin actividad en el repositorio. Si el repo va a estar inactivo
+# mucho tiempo, conviene además un monitor externo (UptimeRobot, cron-job.org)
+# o un schedule de pg_cron dentro de InsForge.
 on:
   schedule:
     # 06:00 UTC cada 3 días (01:00 en Perú, UTC-5)
@@ -39,9 +44,15 @@ jobs:
             exit 0
           fi
           url="https://vph97w7w.us-west.insforge.app/api/database/records/profiles?select=id&limit=1"
-          code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "apikey: $INSFORGE_ANON_KEY" "$url")"
+          # Se envían apikey y Authorization: el ping debe llegar a Postgres,
+          # no quedarse en un 401 del middleware de autenticación.
+          code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+            -H "apikey: $INSFORGE_ANON_KEY" \
+            -H "Authorization: Bearer $INSFORGE_ANON_KEY" \
+            "$url")"
           echo "HTTP $code"
-          case "$code" in
-            200|401) echo "Backend activo." ;;
-            *) echo "Respuesta inesperada del backend: $code"; exit 1 ;;
-          esac
+          if [ "$code" != "200" ]; then
+            echo "El ping a la base de datos falló (HTTP $code)."
+            exit 1
+          fi
+          echo "Base de datos activa."
