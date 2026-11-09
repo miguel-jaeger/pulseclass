@@ -1,7 +1,7 @@
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-keepalive-secret'
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 }
 
 const json = (body: unknown, status: number) =>
@@ -13,11 +13,6 @@ const json = (body: unknown, status: number) =>
 export default async function (req: Request): Promise<Response> {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders })
-  }
-
-  const expectedSecret = Deno.env.get('KEEPALIVE_SECRET')
-  if (expectedSecret && req.headers.get('x-keepalive-secret') !== expectedSecret) {
-    return json({ error: 'No autorizado' }, 401)
   }
 
   const baseUrl = Deno.env.get('INSFORGE_BASE_URL')
