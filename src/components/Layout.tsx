@@ -18,8 +18,9 @@ const navItems = [
 ]
 
 const adminSubItems = [
-  { to: '/admin', icon: 'people', label: 'Usuarios' },
-  { to: '/admin/videos', icon: 'video_library', label: 'Videos' },
+  { to: '/admin', icon: 'people', label: 'Usuarios', roles: ['admin', 'coordinator'] },
+  { to: '/admin/videos', icon: 'video_library', label: 'Videos', roles: ['admin', 'coordinator', 'teacher'] },
+  { to: '/admin/keepalive', icon: 'monitor_heart', label: 'Monitoreo', roles: ['admin'] },
 ]
 
 const bottomNavItems = [
@@ -55,10 +56,8 @@ export function Layout({ children }: { children: ReactNode }) {
     return location.pathname.startsWith(path)
   }
 
-  const canManageUsers = effectiveRole === 'admin' || effectiveRole === 'coordinator'
-  const canManageVideos = effectiveRole === 'admin' || effectiveRole === 'coordinator' || effectiveRole === 'teacher'
   const visibleAdminSubItems = adminSubItems.filter(sub =>
-    sub.to === '/admin' ? canManageUsers : canManageVideos
+    effectiveRole ? sub.roles.includes(effectiveRole) : false
   )
   const canSeeAdmin = visibleAdminSubItems.length > 0
 
