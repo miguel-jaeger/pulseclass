@@ -70,7 +70,7 @@ export function Layout({ children }: { children: ReactNode }) {
       {/* SideNavBar (Desktop) */}
       <nav className={`hidden md:flex flex-col h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant transition-all duration-200 ease-in-out z-40 ${collapsed ? 'w-16 p-2' : 'w-64 p-md'}`}>
         {/* Logo + Toggle */}
-        <div className={`mb-lg ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-lg shrink-0 sidebar-logo ${collapsed ? 'flex justify-center' : ''}`}>
           <Link to="/" className={`group ${collapsed ? 'flex items-center justify-center' : 'flex items-center gap-sm mb-xs'}`}>
             <Logo className="w-12 h-12 shrink-0 group-hover:scale-105 transition-transform" />
             {!collapsed && (
@@ -103,7 +103,7 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
 
         {/* Navigation */}
-        <div className={`flex-1 space-y-xs ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <div className={`flex-1 min-h-0 space-y-xs sidebar-nav ${collapsed ? 'flex flex-col items-center' : 'overflow-y-auto scrollbar-nice'}`}>
           {filteredNavItems.map((item) => {
             const isLast = item.to === '/admin'
 
@@ -214,7 +214,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Bottom section: profile + logout */}
-        <div className={`mt-auto pb-md space-y-sm ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <div className={`mt-auto shrink-0 pb-md space-y-sm sidebar-footer ${collapsed ? 'flex flex-col items-center' : ''}`}>
           <div className={`border-t border-outline-variant pt-sm space-y-sm ${collapsed ? 'flex flex-col items-center border-t w-full' : ''}`}>
             <Link
               to="/profile"

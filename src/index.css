@@ -191,3 +191,22 @@ input[type="date"] {
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
+
+/* Sidebar compacto en pantallas de poca altura (laptops con zoom/escala). */
+@media (max-height: 720px) {
+  .sidebar-logo {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .sidebar-nav a,
+  .sidebar-nav button {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+
+  .sidebar-footer a,
+  .sidebar-footer button {
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+  }
+}
